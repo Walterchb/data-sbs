@@ -1,0 +1,45 @@
+name: Sincronizar BanBif Regulatory Hub
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "35 12 * * *"
+  push:
+    branches: [ main ]
+    paths:
+      - "scripts/sync_hub.py"
+      - "requirements.txt"
+      - ".github/workflows/sync-hub.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: banbif-regulatory-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar parser XLS
+        run: pip install -r requirements.txt
+
+      - name: Sincronizar SBS
+        run: python scripts/sync_hub.py
+
+      - name: Guardar cambios
+        run: |
+          git config user.name "sbs-data-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/hub.json
+          git diff --cached --quiet || git commit -m "SBS: actualizar Regulatory & Financial Hub"
+          git pull --rebase
+          git push

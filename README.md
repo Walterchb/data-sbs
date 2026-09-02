@@ -1,87 +1,78 @@
-# BanBif Regulatory & Financial Intelligence Hub
+# BanBif Regulatory & Financial Intelligence Hub · v3
 
-Hub estático para GitHub Pages con **frecuencia mensual SBS**.
+## Qué se corrigió
 
-## Compatibilidad visual con `Walterchb/sbs-tc-contable`
+1. **Data regulatoria**
+   - El sincronizador ahora soporta archivos SBS OOXML y archivos `.xls` binarios reales mediante `xlrd`.
+   - RCL usa el reporte público vigente **B-230811**.
+   - RFNE usa el reporte público vigente **R-0010**.
+   - Cada fuente guarda su estado de sincronización y errores en `data/hub.json`.
 
-La interfaz fue construida para poder integrarse después con Treasury Hub sin un cambio visual:
+2. **Móvil**
+   - Topbar y acciones siguen la lógica responsive del TC Hub.
+   - Módulos regulatorios se desplazan horizontalmente.
+   - KPIs quedan 2×N.
+   - Gráficos pasan a una columna.
+   - La matriz de datos se transforma en tarjetas móviles con MN / ME / Total / Variación.
 
-- misma familia **Manrope**;
-- mismos tokens `--navy`, `--bg`, `--panel`, `--ink`, `--line`, etc.;
-- mismo ancho máximo: **1500 px**;
-- mismo `--radius: 7px`;
-- botones base: **34 px** de alto;
-- botones de icono: **34 × 34 px**;
-- mismo topbar, logo BIF, status, KPI cards, paneles, tablas y responsive;
-- mismo orden de layout principal:
-  1. Topbar
-  2. Snapshot / Fecha SBS
-  3. KPI grid
-  4. Tendencia + Variación
-  5. Estadísticas + herramienta + tabla
-  6. Footer
+3. **Fecha**
+   - Se eliminó el texto redundante que aparecía debajo del selector de fecha.
 
-Los estilos compartidos están aislados en `assets/treasuryhub.css`.  
-Los únicos estilos nuevos están en `assets/hub.css`, para que una integración futura pueda compartir el CSS base entre ambos proyectos.
+4. **Actualizar**
+   - Ya no recarga la web.
+   - Abre un popup de sincronización.
+   - El popup abre el workflow de GitHub Actions y monitorea `hub.json` cada 15 segundos para detectar el nuevo commit sin recargar la página.
 
-## Módulos
+   > GitHub Pages es estático: disparar `workflow_dispatch` directamente desde JavaScript requeriría exponer una credencial. Por seguridad el botón abre Actions y el Hub monitorea el resultado.
 
-### Financieros — B-2201
-- Resumen financiero
-- Balance
-- Cartera y calidad
-- Estado de Resultados
-- Peers y market share
+5. **Gráficos**
+   - Ejes y tooltips quedan con máximo **1 decimal**.
 
-### Regulatorios
-- **C-1203** — Créditos Directos por Sector Económico
-- **B-2401** — Indicadores Financieros
-- **B-3302** — Patrimonio Efectivo y Ratio de Capital Global
-- **B-2340** — Ratios de Liquidez
-- **B-230809** — Ratio de Cobertura de Liquidez
-- **B-234021** — Ratio de Financiación Neta Estable
-- **B-2368** — Posición Global en Moneda Extranjera
+6. **Consultas rápidas**
+   - Eliminadas.
 
-## Data
+7. **Datos y cuentas**
+   - Panel de ancho completo.
+   - Desktop: matriz con encabezado y primera columna sticky.
+   - Columnas: **MN · ME · Total · Comparativo · Δ · Δ% · Fuente**.
+   - Búsqueda.
+   - Filtro Todas / Principales / Con variación.
+   - Orden por impacto.
+   - Toggle de decimales.
+   - Toggle de barras de proporción.
+   - Vista móvil mediante tarjetas agrupadas.
 
-El seed entregado contiene información B-2201 verificada disponible durante la construcción:
-Dic-2021, Dic-2022, Dic-2023, Dic-2024, Dic-2025 y Jun-2026, incluyendo peers.
+## Archivos que debes reemplazar en `Walterchb/data-sbs`
 
-Al hacer el primer push, GitHub Actions:
-- completa B-2201 mensualmente desde 2021;
-- carga los módulos regulatorios desde 2024;
-- vuelve a revisar los periodos recientes por correcciones SBS;
-- no estima ni interpola datos.
+Sube/reemplaza:
 
-Puedes cambiar `REG_START_YEAR=2024` a `2021` en `scripts/sync_hub.py` si quieres backfill regulatorio más largo.
+- `index.html`
+- `assets/treasuryhub.css`
+- `assets/hub.css`
+- `data/hub.json`
+- `scripts/sync_hub.py`
+- `requirements.txt`
+- `.github/workflows/sync-hub.yml`
 
-## Publicación
+El ZIP incluye además `WORKFLOW_BACKUP_sync-hub.yml` como copia visible del workflow.
 
-1. Sube **el contenido de esta carpeta** a la raíz de un repositorio GitHub.
-2. `Settings → Actions → General → Workflow permissions → Read and write permissions`.
-3. `Actions → Sincronizar BanBif Regulatory Hub → Run workflow`.
-4. `Settings → Pages → Deploy from a branch → main → / (root)`.
+## Primera ejecución
 
-## Metodología
+Después de subir los archivos:
 
-- **Balance:** stock al cierre mensual.
-- **P&L:** acumulado YTD; el hub usa el mismo mes del año anterior para comparaciones de resultados.
-- **Peers:** B-2201 se extrae para todas las empresas bancarias y el front prioriza BCP, BBVA, Scotiabank, Interbank y BanBif.
-- **Módulos regulatorios:** se conservan las etiquetas originales del XLS SBS. El normalizador busca BanBif tanto en orientación por filas como por columnas.
+1. `Settings → Actions → General → Workflow permissions → Read and write permissions`
+2. `Actions → Sincronizar BanBif Regulatory Hub`
+3. `Run workflow`
 
-## Estructura
+La primera ejecución hará el backfill; luego el cron corre diariamente a las **12:35 UTC / 07:35 Perú**.
 
-```text
-/
-├─ index.html
-├─ favicon.svg
-├─ assets/
-│  ├─ treasuryhub.css   # CSS compartido / integración futura
-│  └─ hub.css           # solo extensiones del Regulatory Hub
-├─ data/
-│  └─ hub.json
-├─ scripts/
-│  └─ sync_hub.py
-└─ .github/workflows/
-   └─ sync-hub.yml
-```
+## Fuentes regulatorias
+
+- B-2201 — Balance y P&L
+- C-1203 — Créditos Directos por Sector Económico
+- B-2401 — Indicadores Financieros
+- B-3302 — Patrimonio Efectivo y Ratio de Capital Global
+- B-2340 — Ratios de Liquidez
+- B-230811 — Ratio de Cobertura de Liquidez
+- R-0010 — Ratio de Financiación Neta Estable
+- B-2368 — Posición Global en Moneda Extranjera
