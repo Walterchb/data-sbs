@@ -76,3 +76,17 @@ La primera ejecución hará el backfill; luego el cron corre diariamente a las *
 - B-230811 — Ratio de Cobertura de Liquidez
 - R-0010 — Ratio de Financiación Neta Estable
 - B-2368 — Posición Global en Moneda Extranjera
+
+
+## v3.1 — Datos y cuentas SBS
+
+La matriz fue rediseñada para respetar el orden y la jerarquía visual de la SBS:
+
+- se conserva el orden original del archivo SBS;
+- cada rubro principal aparece como fila destacada;
+- subcuentas aparecen indentadas debajo de su rubro;
+- secciones Activo / Pasivo / Patrimonio / Estado de Resultados tienen separadores claros;
+- encabezado en dos niveles: Moneda (MN, ME, Total) y Variación (Δ, Δ%);
+- columnas numéricas con ancho fijo, tabular-nums y alineación a la derecha;
+- primera columna y encabezados sticky;
+- en móvil se conserva la jerarquía mediante rubros y subcuentas apiladas.
