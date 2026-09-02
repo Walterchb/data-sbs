@@ -78,15 +78,12 @@ La primera ejecución hará el backfill; luego el cron corre diariamente a las *
 - B-2368 — Posición Global en Moneda Extranjera
 
 
-## v3.1 — Datos y cuentas SBS
+## v3.2 — Ajuste solicitado
 
-La matriz fue rediseñada para respetar el orden y la jerarquía visual de la SBS:
-
-- se conserva el orden original del archivo SBS;
-- cada rubro principal aparece como fila destacada;
-- subcuentas aparecen indentadas debajo de su rubro;
-- secciones Activo / Pasivo / Patrimonio / Estado de Resultados tienen separadores claros;
-- encabezado en dos niveles: Moneda (MN, ME, Total) y Variación (Δ, Δ%);
-- columnas numéricas con ancho fijo, tabular-nums y alineación a la derecha;
-- primera columna y encabezados sticky;
-- en móvil se conserva la jerarquía mediante rubros y subcuentas apiladas.
+- La sección **Datos y cuentas SBS** volvió al diseño de la v3.
+- Se mantiene el encabezado fijo al hacer scroll.
+- Todos los importes, porcentajes, KPIs, estadísticas y tooltips se muestran con **2 decimales**.
+- Se agregó la columna **Rubro**.
+- El buscador ahora busca tanto por **cuenta** como por **rubro**.
+- Esto permite distinguir, por ejemplo, `Fondos Interbancarios` bajo `Ingresos Financieros` de `Fondos Interbancarios` bajo `Gastos Financieros`.
+- Se mantiene el orden original SBS salvo que el usuario active manualmente el botón de ordenar por impacto.

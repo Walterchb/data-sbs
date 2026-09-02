@@ -110,3 +110,79 @@ dialog.sync-dialog::backdrop{background:rgba(5,17,29,.58);backdrop-filter:blur(2
   .download-card{grid-template-columns:1fr!important}
   .data-line-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* v3.2 — Datos y cuentas: v3 layout + Rubro + sticky header */
+.data-matrix-wrap{
+  position:relative;
+  max-height:560px;
+  overflow:auto;
+}
+.data-matrix{
+  min-width:1220px;
+  table-layout:auto;
+}
+.data-matrix thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:8!important;
+  box-shadow:0 1px 0 var(--line2);
+}
+.data-matrix thead th:first-child{
+  left:0!important;
+  z-index:10!important;
+}
+.data-matrix th:first-child,
+.data-matrix td:first-child{
+  min-width:300px;
+  max-width:410px;
+}
+.data-matrix th:nth-child(2),
+.data-matrix td:nth-child(2){
+  min-width:190px;
+  max-width:260px;
+  text-align:left;
+}
+.data-matrix th:nth-child(n+3):nth-child(-n+8),
+.data-matrix td:nth-child(n+3):nth-child(-n+8){
+  min-width:105px;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+}
+.data-matrix th:nth-child(9),
+.data-matrix td:nth-child(9){
+  min-width:80px;
+  text-align:center;
+}
+.rubric-cell{
+  color:var(--muted);
+  font-size:.70rem;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.rubric-self{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 6px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  background:var(--soft);
+  color:var(--muted);
+  font-size:.62rem;
+  font-weight:650;
+  white-space:nowrap;
+}
+.major-row .rubric-cell{
+  background:var(--soft);
+}
+.data-rubric-mobile{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:-1px 0 7px;
+  color:var(--muted);
+  font-size:.62rem;
+  line-height:1.3;
+}
+.data-rubric-mobile i{font-size:.58rem;color:var(--navy3)}
