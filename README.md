@@ -87,3 +87,20 @@ La primera ejecución hará el backfill; luego el cron corre diariamente a las *
 - El buscador ahora busca tanto por **cuenta** como por **rubro**.
 - Esto permite distinguir, por ejemplo, `Fondos Interbancarios` bajo `Ingresos Financieros` de `Fondos Interbancarios` bajo `Gastos Financieros`.
 - Se mantiene el orden original SBS salvo que el usuario active manualmente el botón de ordenar por impacto.
+
+
+## v3.3
+
+- Se eliminó la columna **Rubro**.
+- Al buscar, el rubro principal se mantiene visible en la misma columna de Cuenta/Indicador.
+  Esto permite distinguir líneas repetidas como `Fondos Interbancarios` bajo `Ingresos Financieros`
+  y `Gastos Financieros`.
+- Se mantienen **2 decimales**.
+- Se agregó selector de vista en **Datos y cuentas SBS**:
+  - **ACTUAL**: MN / ME / Total / Comparativo / Δ / Δ%.
+  - **5 AÑOS**: mismo mes del periodo seleccionado en los últimos cinco años. Esto evita comparar
+    acumulados YTD de meses diferentes.
+  - **12 MESES**: evolución mensual de Total durante los últimos doce meses.
+- En móvil, las vistas históricas se muestran como tarjetas con scroll horizontal por periodo.
+- Se hizo un nuevo pase responsive completo para topbar, fecha, módulos, KPIs, gráficos,
+  paneles, toolbar de datos y fuentes.
