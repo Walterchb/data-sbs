@@ -104,3 +104,35 @@ La primera ejecución hará el backfill; luego el cron corre diariamente a las *
 - En móvil, las vistas históricas se muestran como tarjetas con scroll horizontal por periodo.
 - Se hizo un nuevo pase responsive completo para topbar, fecha, módulos, KPIs, gráficos,
   paneles, toolbar de datos y fuentes.
+
+
+## v3.4 — Ratings Lens + jerarquía + señales de tendencia
+
+### Datos y cuentas SBS
+- Jerarquía reforzada: rubros principales destacados y subcuentas indentadas.
+- El rubro sigue apareciendo cuando una búsqueda encuentra una subcuenta.
+- Se eliminó `dataSummary`.
+- En **5 AÑOS** y **12 MESES** cada valor incluye:
+  - ▲ verde: aumentó frente al periodo previo.
+  - ▼ rojo: cayó frente al periodo previo.
+  - ● gris: sin cambio.
+- El color en esta tabla indica **dirección**, no si el movimiento es bueno o malo.
+
+### Clasificadoras / Ratings Lens
+Nuevo módulo basado en los informes PCR y Moody's Local auditados a diciembre de 2025.
+
+Organiza las métricas que las clasificadoras monitorean en:
+- Calidad de activos
+- Cobertura
+- Liquidez y fondeo
+- Solvencia
+- Rentabilidad
+- Eficiencia
+- Riesgo de mercado
+
+Vistas:
+- **Comparar**: SBS actual vs valor usado por las clasificadoras, benchmark y lectura.
+- **Histórico 5Y**: serie anual 2021-2025 usada en los anexos / análisis.
+- **Watchlist**: indicadores del informe que no pueden reconstruirse directamente desde B-2201, como concentración Top 20, provisiones voluntarias o garantías.
+
+La capa de referencias queda en `data/hub.json` bajo `ratings` y no se elimina cuando el workflow actualiza SBS.
