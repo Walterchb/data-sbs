@@ -2,7 +2,7 @@
   "meta": {
     "title": "BanBif Regulatory & Financial Intelligence Hub",
     "bank": "Banco Interamericano de Finanzas (BanBif)",
-    "generated_at": "2026-09-02T07:52:22.023827+00:00",
+    "generated_at": "2026-09-02T08:13:51.209953+00:00",
     "frequency": "monthly",
     "financial_source": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2201",
     "financial_start_year": 2021,
@@ -18,7 +18,7 @@
     "sync_repo": "Walterchb/data-sbs",
     "sync_workflow": "sync-hub.yml",
     "financial_sync": {
-      "last_attempt": "2026-09-02T07:50:00.396818+00:00",
+      "last_attempt": "2026-09-02T08:11:18.555430+00:00",
       "discovered_links": 67,
       "candidate_links": 75,
       "attempted_periods": 3,
@@ -76,10 +76,10 @@
         "errors": 7
       },
       "B-2368": {
-        "status": "error",
-        "loaded": 0,
-        "latest": null,
-        "errors": 67
+        "status": "ok",
+        "loaded": 67,
+        "latest": "2026-07-31",
+        "errors": 0
       }
     }
   },
@@ -99829,7 +99829,7 @@
       "periods": [],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T07:50:32.714304+00:00",
+        "last_attempt": "2026-09-02T08:12:01.322344+00:00",
         "discovered_links": 67,
         "candidate_links": 75,
         "attempted_periods": 69,
@@ -99841,27 +99841,27 @@
         "error_samples": [
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Enero/C-1203-en2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Febrero/C-1203-fe2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Marzo/C-1203-ma2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Abril/C-1203-ab2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Mayo/C-1203-my2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Junio/C-1203-jn2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           }
         ],
         "status": "error"
@@ -149992,13 +149992,13 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T07:50:47.155378+00:00",
+        "last_attempt": "2026-09-02T08:12:07.986806+00:00",
         "discovered_links": 67,
         "candidate_links": 75,
-        "attempted_periods": 39,
+        "attempted_periods": 3,
         "loaded": 67,
         "latest": "2026-07-31",
-        "updated": 37,
+        "updated": 1,
         "unpublished_or_missing": 2,
         "errors": 0,
         "error_samples": [],
@@ -150013,7 +150013,7 @@
       "periods": [],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T07:51:19.403375+00:00",
+        "last_attempt": "2026-09-02T08:12:48.270551+00:00",
         "discovered_links": 66,
         "candidate_links": 75,
         "attempted_periods": 69,
@@ -150025,27 +150025,27 @@
         "error_samples": [
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Enero/B-3302-en2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Febrero/B-3302-fe2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Marzo/B-3302-ma2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Abril/B-3302-ab2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Mayo/B-3302-my2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           },
           {
             "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Junio/B-3302-jn2021.XLS",
-            "error": "No module named 'xlrd'"
+            "error": "BanBif encontrado sin métricas extraíbles"
           }
         ],
         "status": "error"
@@ -158658,13 +158658,13 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T07:51:31.363849+00:00",
+        "last_attempt": "2026-09-02T08:12:54.586505+00:00",
         "discovered_links": 66,
         "candidate_links": 75,
-        "attempted_periods": 39,
+        "attempted_periods": 3,
         "loaded": 66,
         "latest": "2026-06-30",
-        "updated": 36,
+        "updated": 0,
         "unpublished_or_missing": 3,
         "errors": 0,
         "error_samples": [],
@@ -158676,45 +158676,2299 @@
       "short": "Posición ME",
       "source": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2368",
       "icon": "fa-money-bill-transfer",
-      "periods": [],
+      "periods": [
+        {
+          "date": "2021-01-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Enero/B-2368-en2021.XLS",
+          "source_file": "B-2368-en2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -420192.75997,
+            "- | -": 381011.23644,
+            "Posición Global en M.E. (a)+(b)+(c)": -39181.52353
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -420192.75997,
+              "- | -": 381011.23644,
+              "Posición Global en M.E. (a)+(b)+(c)": -39181.52353
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 544771.9695299999,
+              "Posición Neta en Derivados de M. E. * (b)": -860842.9082300001,
+              "Posición Global en M.E. (a)+(b)+(c)": -316070.93869999994
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3479837.6105199996,
+              "- | -": 3391239.2740100003,
+              "Posición Global en M.E. (a)+(b)+(c)": -88598.33651000002
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3212522.60711,
+              "- | -": 3253077.8314599996,
+              "- | - #2": 2369.47023,
+              "Posición Global en M.E. (a)+(b)+(c)": 42924.694579999996
+            }
+          }
+        },
+        {
+          "date": "2021-02-28",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Febrero/B-2368-fe2021.XLS",
+          "source_file": "B-2368-fe2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -381319.30834999995,
+            "- | -": 388033.10579,
+            "Posición Global en M.E. (a)+(b)+(c)": 6713.79744
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -381319.30834999995,
+              "- | -": 388033.10579,
+              "Posición Global en M.E. (a)+(b)+(c)": 6713.79744
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -415394.88026999997,
+              "Posición Neta en Derivados de M. E. * (b)": 786517.96639,
+              "Posición Global en M.E. (a)+(b)+(c)": 371123.08612
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2345130.11173,
+              "- | -": 2532938.66796,
+              "Posición Global en M.E. (a)+(b)+(c)": 187808.55623
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3863921.9905400006,
+              "- | -": 3856814.19184,
+              "- | - #2": 1458.9524099999999,
+              "Posición Global en M.E. (a)+(b)+(c)": -5648.84629
+            }
+          }
+        },
+        {
+          "date": "2021-03-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Marzo/B-2368-ma2021.XLS",
+          "source_file": "B-2368-ma2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -356878.60627999995,
+            "- | -": 417070.62379000004,
+            "Posición Global en M.E. (a)+(b)+(c)": 60192.01751
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -356878.60627999995,
+              "- | -": 417070.62379000004,
+              "Posición Global en M.E. (a)+(b)+(c)": 60192.01751
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -2959259.1936300006,
+              "Posición Neta en Derivados de M. E. * (b)": 3020291.30617,
+              "Posición Global en M.E. (a)+(b)+(c)": 61032.11254000002
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2607216.6219,
+              "- | -": 2747196.2837400003,
+              "Posición Global en M.E. (a)+(b)+(c)": 139979.66184000002
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2823028.7264400003,
+              "- | -": 2914599.4187900005,
+              "- | - #2": -144.23997,
+              "Posición Global en M.E. (a)+(b)+(c)": 91426.45238000002
+            }
+          }
+        },
+        {
+          "date": "2021-04-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Abril/B-2368-ab2021.XLS",
+          "source_file": "B-2368-ab2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -724707.8060900001,
+            "Posición Neta en Derivados de M. E. * (b) | -": 770650.20502,
+            "Posición Global en M.E. (a)+(b)+(c)": 45942.39893
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -724707.8060900001,
+              "Posición Neta en Derivados de M. E. * (b) | -": 770650.20502,
+              "Posición Global en M.E. (a)+(b)+(c)": 45942.39893
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -4761915.6958099995,
+              "Posición Neta en Derivados de M. E. * (b)": 5038058.0570600005,
+              "Posición Global en M.E. (a)+(b)+(c)": 276142.36125
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4416584.23463,
+              "Posición Neta en Derivados de M. E. * (b) | -": 4576914.148599999,
+              "Posición Global en M.E. (a)+(b)+(c)": 160329.91397
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3942725.2499299995,
+              "Posición Neta en Derivados de M. E. * (b) | -": 4013577.9171599997,
+              "- | -": -224.13529,
+              "Posición Global en M.E. (a)+(b)+(c)": 70628.53193999999
+            }
+          }
+        },
+        {
+          "date": "2021-05-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Mayo/B-2368-my2021.XLS",
+          "source_file": "B-2368-my2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -891610.51304,
+            "Posición Neta en Derivados de M. E. * (b) | -": 821933.1593200001,
+            "Posición Global en M.E. (a)+(b)+(c)": -69677.35372000001
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -891610.51304,
+              "Posición Neta en Derivados de M. E. * (b) | -": 821933.1593200001,
+              "Posición Global en M.E. (a)+(b)+(c)": -69677.35372000001
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -4931155.222689999,
+              "Posición Neta en Derivados de M. E. * (b)": 4780670.721220001,
+              "Posición Global en M.E. (a)+(b)+(c)": -150484.50147
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -6291860.60584,
+              "Posición Neta en Derivados de M. E. * (b) | -": 6077073.14941,
+              "Posición Global en M.E. (a)+(b)+(c)": -214787.45643000002
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3789386.16588,
+              "Posición Neta en Derivados de M. E. * (b) | -": 3952957.1630300004,
+              "- | -": -166.78182999999999,
+              "Posición Global en M.E. (a)+(b)+(c)": 163404.21532
+            }
+          }
+        },
+        {
+          "date": "2021-06-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Junio/B-2368-jn2021.XLS",
+          "source_file": "B-2368-jn2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -615785.5973499999,
+            "Posición Neta en Derivados de M. E. * (b) | -": 607184.67505,
+            "Posición Global en M.E. (a)+(b)+(c)": -8600.9223
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -615785.5973499999,
+              "Posición Neta en Derivados de M. E. * (b) | -": 607184.67505,
+              "Posición Global en M.E. (a)+(b)+(c)": -8600.9223
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -3957636.73568,
+              "Posición Neta en Derivados de M. E. * (b)": 4020899.58619,
+              "Posición Global en M.E. (a)+(b)+(c)": 63262.85051
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5259994.98952,
+              "Posición Neta en Derivados de M. E. * (b) | -": 5233191.65603,
+              "Posición Global en M.E. (a)+(b)+(c)": -26803.333489999997
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3962057.79778,
+              "Posición Neta en Derivados de M. E. * (b) | -": 4058749.45137,
+              "- | -": -5966.14267,
+              "Posición Global en M.E. (a)+(b)+(c)": 90725.51092000002
+            }
+          }
+        },
+        {
+          "date": "2021-07-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Julio/B-2368-jl2021.XLS",
+          "source_file": "B-2368-jl2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -767751.40917,
+            "Posición Neta en Derivados de M. E. * (b) | -": 789987.2471599999,
+            "Posición Global en M.E. (a)+(b)+(c)": 22235.83799
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -767751.40917,
+              "Posición Neta en Derivados de M. E. * (b) | -": 789987.2471599999,
+              "Posición Global en M.E. (a)+(b)+(c)": 22235.83799
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -4112161.2193300007,
+              "Posición Neta en Derivados de M. E. * (b)": 4162823.5609199996,
+              "Posición Global en M.E. (a)+(b)+(c)": 50662.34159
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -6650714.25305,
+              "Posición Neta en Derivados de M. E. * (b) | -": 6613289.8241799995,
+              "Posición Global en M.E. (a)+(b)+(c)": -37424.428869999996
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3077909.76223,
+              "Posición Neta en Derivados de M. E. * (b) | -": 3156990.0304199997,
+              "- | -": -7901.63577,
+              "Posición Global en M.E. (a)+(b)+(c)": 71178.63242000001
+            }
+          }
+        },
+        {
+          "date": "2021-08-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Agosto/B-2368-ag2021.XLS",
+          "source_file": "B-2368-ag2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -571815.51653,
+            "Posición Neta en Derivados de M. E. * (b) | -": 533876.93818,
+            "Posición Global en M.E. (a)+(b)+(c)": -37938.57835
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -571815.51653,
+              "Posición Neta en Derivados de M. E. * (b) | -": 533876.93818,
+              "Posición Global en M.E. (a)+(b)+(c)": -37938.57835
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -4143309.9881400005,
+              "Posición Neta en Derivados de M. E. * (b)": 4538075.045899999,
+              "Posición Global en M.E. (a)+(b)+(c)": 394765.05776000005
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3999984.8019499998,
+              "Posición Neta en Derivados de M. E. * (b) | -": 3904487.1975,
+              "Posición Global en M.E. (a)+(b)+(c)": -95497.60445
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2528692.14693,
+              "Posición Neta en Derivados de M. E. * (b) | -": 2609236.7371799997,
+              "- | -": -8961.95673,
+              "Posición Global en M.E. (a)+(b)+(c)": 71582.63352000003
+            }
+          }
+        },
+        {
+          "date": "2021-09-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Setiembre/B-2368-se2021.XLS",
+          "source_file": "B-2368-se2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -465386.02593,
+            "Posición Neta en Derivados de M. E. * (b) | -": 464546.28694,
+            "Posición Global en M.E. (a)+(b)+(c)": -839.73899
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -465386.02593,
+              "Posición Neta en Derivados de M. E. * (b) | -": 464546.28694,
+              "Posición Global en M.E. (a)+(b)+(c)": -839.73899
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -722242.6177599999,
+              "Posición Neta en Derivados de M. E. * (b)": 1359805.5561399998,
+              "Posición Global en M.E. (a)+(b)+(c)": 637562.93838
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -7055938.319429999,
+              "Posición Neta en Derivados de M. E. * (b) | -": 7105036.308110001,
+              "Posición Global en M.E. (a)+(b)+(c)": 49097.98868
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1803170.6567399998,
+              "Posición Neta en Derivados de M. E. * (b) | -": 1842530.0041299998,
+              "- | -": -6412.165660000001,
+              "Posición Global en M.E. (a)+(b)+(c)": 32947.181730000004
+            }
+          }
+        },
+        {
+          "date": "2021-10-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Octubre/B-2368-oc2021.XLS",
+          "source_file": "B-2368-oc2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -37412.38219,
+            "- | -": 104510.91967,
+            "Posición Global en M.E. (a)+(b)+(c)": 67098.53748
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -37412.38219,
+              "- | -": 104510.91967,
+              "Posición Global en M.E. (a)+(b)+(c)": 67098.53748
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -3722167.97421,
+              "Posición Neta en Derivados de M. E. * (b)": 4393409.02108,
+              "Posición Global en M.E. (a)+(b)+(c)": 671241.0468700001
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5792049.73623,
+              "- | -": 5971411.99737,
+              "Posición Global en M.E. (a)+(b)+(c)": 179362.26114
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1879914.24053,
+              "- | -": 1882864.16457,
+              "- | - #2": -2581.88654,
+              "Posición Global en M.E. (a)+(b)+(c)": 368.0375000000001
+            }
+          }
+        },
+        {
+          "date": "2021-11-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Noviembre/B-2368-no2021.XLS",
+          "source_file": "B-2368-no2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 170422.511,
+            "- | -": -166281.60902,
+            "Posición Global en M.E. (a)+(b)+(c)": 4140.901980000001
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 170422.511,
+              "- | -": -166281.60902,
+              "Posición Global en M.E. (a)+(b)+(c)": 4140.901980000001
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -3043124.95658,
+              "Posición Neta en Derivados de M. E. * (b)": 3701136.36722,
+              "Posición Global en M.E. (a)+(b)+(c)": 658011.41064
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -6677451.0539299995,
+              "- | -": 6819857.16778,
+              "Posición Global en M.E. (a)+(b)+(c)": 142406.11385000002
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2396527.5044800006,
+              "- | -": 2420580.561,
+              "- | - #2": -177.45957,
+              "Posición Global en M.E. (a)+(b)+(c)": 23875.596949999996
+            }
+          }
+        },
+        {
+          "date": "2021-12-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Diciembre/B-2368-di2021.XLS",
+          "source_file": "B-2368-di2021.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -97733.34973999999,
+            "- | -": 163642.77605000001,
+            "Posición Global en M.E. (a)+(b)+(c)": 65909.42631
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -97733.34973999999,
+              "- | -": 163642.77605000001,
+              "Posición Global en M.E. (a)+(b)+(c)": 65909.42631
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -1622441.0616400002,
+              "Posición Neta en Derivados de M. E. * (b)": 2350020.8385799997,
+              "Posición Global en M.E. (a)+(b)+(c)": 727579.7769399999
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -7363970.26059,
+              "- | -": 7271114.2880299995,
+              "Posición Global en M.E. (a)+(b)+(c)": -92855.97256
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3112272.1753999996,
+              "- | -": 3229739.9236799995,
+              "- | - #2": -329.03125,
+              "Posición Global en M.E. (a)+(b)+(c)": 117138.71702999999
+            }
+          }
+        },
+        {
+          "date": "2022-01-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Enero/B-2368-en2022.XLS",
+          "source_file": "B-2368-en2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 157904.58765,
+            "- | -": -156615.07309999998,
+            "Posición Global en M.E. (a)+(b)+(c)": 1289.5145499999999
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 157904.58765,
+              "- | -": -156615.07309999998,
+              "Posición Global en M.E. (a)+(b)+(c)": 1289.5145499999999
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -1700397.2883199996,
+              "Posición Neta en Derivados de M. E. * (b)": 2388268.85429,
+              "Posición Global en M.E. (a)+(b)+(c)": 687871.5659699999
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -7388461.61689,
+              "- | -": 7374970.05474,
+              "Posición Global en M.E. (a)+(b)+(c)": -13491.562149999998
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4273549.41344,
+              "- | -": 4272432.08873,
+              "- | - #2": -38.74369,
+              "Posición Global en M.E. (a)+(b)+(c)": -1156.0683999999987
+            }
+          }
+        },
+        {
+          "date": "2022-02-28",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Febrero/B-2368-fe2022.XLS",
+          "source_file": "B-2368-fe2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -112369.15898000001,
+            "- | -": 99496.58464,
+            "Posición Global en M.E. (a)+(b)+(c)": -12872.57434
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -112369.15898000001,
+              "- | -": 99496.58464,
+              "Posición Global en M.E. (a)+(b)+(c)": -12872.57434
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -3260892.67898,
+              "Posición Neta en Derivados de M. E. * (b)": 3630875.04066,
+              "Posición Global en M.E. (a)+(b)+(c)": 369982.36168000003
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -6311984.687710001,
+              "- | -": 6508131.285549999,
+              "Posición Global en M.E. (a)+(b)+(c)": 196146.59783999997
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4643031.42712,
+              "- | -": 4692454.45688,
+              "- | - #2": -772.32217,
+              "Posición Global en M.E. (a)+(b)+(c)": 48650.707590000005
+            }
+          }
+        },
+        {
+          "date": "2022-03-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Marzo/B-2368-ma2022.XLS",
+          "source_file": "B-2368-ma2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 11077.999109999999,
+            "- | -": 48319.11879,
+            "Posición Global en M.E. (a)+(b)+(c)": 59397.1179
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 11077.999109999999,
+              "- | -": 48319.11879,
+              "Posición Global en M.E. (a)+(b)+(c)": 59397.1179
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -127450.3847500001,
+              "Posición Neta en Derivados de M. E. * (b)": 478553.23062,
+              "Posición Global en M.E. (a)+(b)+(c)": 351102.8458699999
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -7517115.57356,
+              "- | -": 7984144.80646,
+              "Posición Global en M.E. (a)+(b)+(c)": 467029.23290000006
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5147058.936900001,
+              "- | -": 5254248.93517,
+              "- | - #2": -4649.86906,
+              "Posición Global en M.E. (a)+(b)+(c)": 102540.12921
+            }
+          }
+        },
+        {
+          "date": "2022-04-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Abril/B-2368-ab2022.XLS",
+          "source_file": "B-2368-ab2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 344697.98257,
+            "- | -": -345933.12649,
+            "Posición Global en M.E. (a)+(b)+(c)": -1235.14392
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 344697.98257,
+              "- | -": -345933.12649,
+              "Posición Global en M.E. (a)+(b)+(c)": -1235.14392
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 653586.12735,
+              "Posición Neta en Derivados de M. E. * (b)": -167943.14166000002,
+              "Delta de las Posiciones Netas en Opciones sobre M. E. (c)": -46.942,
+              "Posición Global en M.E. (a)+(b)+(c)": 485596.04369
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -7291834.7051300015,
+              "- | -": 7243642.34454,
+              "Posición Global en M.E. (a)+(b)+(c)": -48192.360590000004
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3243776.2589600002,
+              "- | -": 3259461.6456099995,
+              "- | - #2": -7556.03262,
+              "Posición Global en M.E. (a)+(b)+(c)": 8129.35403
+            }
+          }
+        },
+        {
+          "date": "2022-05-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Mayo/B-2368-my2022.XLS",
+          "source_file": "B-2368-my2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 159903.08468,
+            "- | -": -168856.18203999999,
+            "Posición Global en M.E. (a)+(b)+(c)": -8953.097360000002
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 159903.08468,
+              "- | -": -168856.18203999999,
+              "Posición Global en M.E. (a)+(b)+(c)": -8953.097360000002
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 219985.44357,
+              "Posición Neta en Derivados de M. E. * (b)": 469143.32396000007,
+              "Posición Global en M.E. (a)+(b)+(c)": 689128.76753
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5727800.054270001,
+              "- | -": 5842514.80323,
+              "Posición Global en M.E. (a)+(b)+(c)": 114714.74896
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2764933.419380001,
+              "- | -": 2806053.97683,
+              "- | - #2": 4783.64185,
+              "Posición Global en M.E. (a)+(b)+(c)": 45904.1993
+            }
+          }
+        },
+        {
+          "date": "2022-06-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Junio/B-2368-jn2022.XLS",
+          "source_file": "B-2368-jn2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 128798.46459,
+            "- | -": -200397.25845,
+            "Posición Global en M.E. (a)+(b)+(c)": -71598.79386
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 128798.46459,
+              "- | -": -200397.25845,
+              "Posición Global en M.E. (a)+(b)+(c)": -71598.79386
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -543342.31836,
+              "Posición Neta en Derivados de M. E. * (b)": 914777.2190999999,
+              "Posición Global en M.E. (a)+(b)+(c)": 371434.90074
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -6180967.9866,
+              "- | -": 5940388.091650001,
+              "Posición Global en M.E. (a)+(b)+(c)": -240579.89495
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1773057.80172,
+              "- | -": 1748338.21367,
+              "- | - #2": -11659.211599999999,
+              "Posición Global en M.E. (a)+(b)+(c)": -36378.79965
+            }
+          }
+        },
+        {
+          "date": "2022-07-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Julio/B-2368-jl2022.XLS",
+          "source_file": "B-2368-jl2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 267054.79991999996,
+            "- | -": -256366.44687,
+            "Posición Global en M.E. (a)+(b)+(c)": 10688.35305
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 267054.79991999996,
+              "- | -": -256366.44687,
+              "Posición Global en M.E. (a)+(b)+(c)": 10688.35305
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 570701.0833200001,
+              "Posición Neta en Derivados de M. E. * (b)": -228870.50876000003,
+              "Posición Global en M.E. (a)+(b)+(c)": 341830.5745599999
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4952579.0554100005,
+              "- | -": 4615526.07631,
+              "Posición Global en M.E. (a)+(b)+(c)": -337052.9791
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1571061.2845200002,
+              "- | -": 1675280.93685,
+              "- | - #2": -22948.456280000002,
+              "Posición Global en M.E. (a)+(b)+(c)": 81271.19605
+            }
+          }
+        },
+        {
+          "date": "2022-08-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Agosto/B-2368-ag2022.XLS",
+          "source_file": "B-2368-ag2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 211256.73159,
+            "- | -": -213568.59972,
+            "Posición Global en M.E. (a)+(b)+(c)": -2311.86813
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 211256.73159,
+              "- | -": -213568.59972,
+              "Posición Global en M.E. (a)+(b)+(c)": -2311.86813
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 526454.57254,
+              "Posición Neta en Derivados de M. E. * (b)": -109111.1559,
+              "Posición Global en M.E. (a)+(b)+(c)": 417343.41664000007
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5007102.934399999,
+              "- | -": 5208665.91338,
+              "Posición Global en M.E. (a)+(b)+(c)": 201562.97898
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1766905.4862900001,
+              "- | -": 1796643.47472,
+              "- | - #2": -16393.31141,
+              "Posición Global en M.E. (a)+(b)+(c)": 13344.677019999997
+            }
+          }
+        },
+        {
+          "date": "2022-09-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Setiembre/B-2368-se2022.XLS",
+          "source_file": "B-2368-se2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 71421.92330000001,
+            "- | -": -65654.46807,
+            "Posición Global en M.E. (a)+(b)+(c)": 5767.4552300000005
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 71421.92330000001,
+              "- | -": -65654.46807,
+              "Posición Global en M.E. (a)+(b)+(c)": 5767.4552300000005
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 918628.99504,
+              "Posición Neta en Derivados de M. E. * (b)": -617694.6011800001,
+              "Posición Global en M.E. (a)+(b)+(c)": 300934.39385999995
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3928815.1506200004,
+              "- | -": 4151905.85912,
+              "Posición Global en M.E. (a)+(b)+(c)": 223090.70849999998
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1358185.9290699998,
+              "- | -": 1301734.4766099998,
+              "- | - #2": -24983.29287,
+              "Posición Global en M.E. (a)+(b)+(c)": -81434.74533
+            }
+          }
+        },
+        {
+          "date": "2022-10-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Octubre/B-2368-oc2022.XLS",
+          "source_file": "B-2368-oc2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 561837.5475,
+            "- | -": -582505.93817,
+            "Posición Global en M.E. (a)+(b)+(c)": -20668.390669999997
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 561837.5475,
+              "- | -": -582505.93817,
+              "Posición Global en M.E. (a)+(b)+(c)": -20668.390669999997
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -79818.59714,
+              "Posición Neta en Derivados de M. E. * (b)": 440395.16215000005,
+              "Posición Global en M.E. (a)+(b)+(c)": 360576.5650099999
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4200353.18664,
+              "- | -": 4474398.5622,
+              "Posición Global en M.E. (a)+(b)+(c)": 274045.3755600001
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1323511.0940299998,
+              "- | -": 1248399.2715000003,
+              "- | - #2": -10797.545880000001,
+              "Posición Global en M.E. (a)+(b)+(c)": -85909.36841
+            }
+          }
+        },
+        {
+          "date": "2022-11-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Noviembre/B-2368-no2022.XLS",
+          "source_file": "B-2368-no2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 144167.72878,
+            "- | -": -145764.23483,
+            "Posición Global en M.E. (a)+(b)+(c)": -1596.5060499999997
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 144167.72878,
+              "- | -": -145764.23483,
+              "Posición Global en M.E. (a)+(b)+(c)": -1596.5060499999997
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 1631241.2007799998,
+              "Posición Neta en Derivados de M. E. * (b)": -1318720.5495099998,
+              "Posición Global en M.E. (a)+(b)+(c)": 312520.65127000003
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5385934.30605,
+              "- | -": 5621645.02501,
+              "Posición Global en M.E. (a)+(b)+(c)": 235710.71896
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1775831.0433600002,
+              "- | -": 1758019.1455000003,
+              "- | - #2": -4877.968650000001,
+              "Posición Global en M.E. (a)+(b)+(c)": -22689.86651
+            }
+          }
+        },
+        {
+          "date": "2022-12-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2022/Diciembre/B-2368-di2022.XLS",
+          "source_file": "B-2368-di2022.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 51349.41289,
+            "- | -": -42615.994450000006,
+            "Posición Global en M.E. (a)+(b)+(c)": 8733.41844
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 51349.41289,
+              "- | -": -42615.994450000006,
+              "Posición Global en M.E. (a)+(b)+(c)": 8733.41844
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 580087.0651700001,
+              "Posición Neta en Derivados de M. E. * (b)": -530527.91544,
+              "Posición Global en M.E. (a)+(b)+(c)": 49559.14973
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -7467715.63316,
+              "- | -": 7760619.692840001,
+              "Posición Global en M.E. (a)+(b)+(c)": 292904.05968
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -993057.2914000001,
+              "- | -": 1091335.60864,
+              "- | - #2": -17181.561260000002,
+              "Posición Global en M.E. (a)+(b)+(c)": 81096.75598000003
+            }
+          }
+        },
+        {
+          "date": "2023-01-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Enero/B-2368-en2023.XLS",
+          "source_file": "B-2368-en2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 29922.1021,
+            "- | -": -3224.3652,
+            "Posición Global en M.E. (a)+(b)+(c)": 26697.736900000004
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 29922.1021,
+              "- | -": -3224.3652,
+              "Posición Global en M.E. (a)+(b)+(c)": 26697.736900000004
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 578139.6692100001,
+              "Posición Neta en Derivados de M. E. * (b)": -596641.1778099999,
+              "Posición Global en M.E. (a)+(b)+(c)": -18501.508599999997
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -7614761.91697,
+              "- | -": 7728171.0134,
+              "Posición Global en M.E. (a)+(b)+(c)": 113409.09642999999
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -485657.79150000005,
+              "- | -": 506270.28862999985,
+              "- | - #2": -30499.646350000003,
+              "Posición Global en M.E. (a)+(b)+(c)": -9887.149220000001
+            }
+          }
+        },
+        {
+          "date": "2023-02-28",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Febrero/B-2368-fe2023.XLS",
+          "source_file": "B-2368-fe2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 90201.1982,
+            "- | -": -75668.82101,
+            "Posición Global en M.E. (a)+(b)+(c)": 14532.37719
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 90201.1982,
+              "- | -": -75668.82101,
+              "Posición Global en M.E. (a)+(b)+(c)": 14532.37719
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -924051.7654500001,
+              "Posición Neta en Derivados de M. E. * (b)": 1089425.11474,
+              "Posición Global en M.E. (a)+(b)+(c)": 165373.34928999998
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -7297079.410060001,
+              "- | -": 7215183.26775,
+              "Posición Global en M.E. (a)+(b)+(c)": -81896.14231
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -753081.6966799999,
+              "- | -": 751979.8392899999,
+              "- | - #2": -697.43648,
+              "Posición Global en M.E. (a)+(b)+(c)": -1799.2938700000002
+            }
+          }
+        },
+        {
+          "date": "2023-03-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Marzo/B-2368-ma2023.XLS",
+          "source_file": "B-2368-ma2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -47608.244869999995,
+            "- | -": 41520.57495,
+            "Posición Global en M.E. (a)+(b)+(c)": -6087.66992
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -47608.244869999995,
+              "- | -": 41520.57495,
+              "Posición Global en M.E. (a)+(b)+(c)": -6087.66992
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 436451.93361,
+              "Posición Neta en Derivados de M. E. * (b)": -329398.403,
+              "Posición Global en M.E. (a)+(b)+(c)": 107053.53061
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -6082717.517150001,
+              "- | -": 6134569.372,
+              "Posición Global en M.E. (a)+(b)+(c)": 51851.85485
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -860113.8803700001,
+              "- | -": 882692.61945,
+              "- | - #2": -2035.5951,
+              "Posición Global en M.E. (a)+(b)+(c)": 20543.143980000004
+            }
+          }
+        },
+        {
+          "date": "2023-04-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Abril/B-2368-ab2023.XLS",
+          "source_file": "B-2368-ab2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 223063.70004,
+            "- | -": -232825.66666999998,
+            "Posición Global en M.E. (a)+(b)+(c)": -9761.96663
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 223063.70004,
+              "- | -": -232825.66666999998,
+              "Posición Global en M.E. (a)+(b)+(c)": -9761.96663
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -215233.18660000002,
+              "Posición Neta en Derivados de M. E. * (b)": 260413.6099,
+              "Posición Global en M.E. (a)+(b)+(c)": 45180.423299999995
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4470352.701559999,
+              "- | -": 4690672.26636,
+              "Posición Global en M.E. (a)+(b)+(c)": 220319.56480000002
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1023641.73396,
+              "- | -": 1060124.98194,
+              "- | - #2": -2388.04956,
+              "Posición Global en M.E. (a)+(b)+(c)": 34095.19841999999
+            }
+          }
+        },
+        {
+          "date": "2023-05-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Mayo/B-2368-my2023.XLS",
+          "source_file": "B-2368-my2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 340252.2026,
+            "- | -": -332983.85812,
+            "Posición Global en M.E. (a)+(b)+(c)": 7268.344480000001
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 340252.2026,
+              "- | -": -332983.85812,
+              "Posición Global en M.E. (a)+(b)+(c)": 7268.344480000001
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 1501127.77334,
+              "Posición Neta en Derivados de M. E. * (b)": -1147118.479,
+              "Posición Global en M.E. (a)+(b)+(c)": 354009.2943400001
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4702815.325910002,
+              "- | -": 5010635.84235,
+              "Posición Global en M.E. (a)+(b)+(c)": 307820.5164400001
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1483253.44966,
+              "- | -": 1548414.3516900002,
+              "- | - #2": -1167.18684,
+              "Posición Global en M.E. (a)+(b)+(c)": 63993.71518999999
+            }
+          }
+        },
+        {
+          "date": "2023-06-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Junio/B-2368-jn2023.XLS",
+          "source_file": "B-2368-jn2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 382285.27404000005,
+            "- | -": -376469.50791000004,
+            "Posición Global en M.E. (a)+(b)+(c)": 5815.76613
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 382285.27404000005,
+              "- | -": -376469.50791000004,
+              "Posición Global en M.E. (a)+(b)+(c)": 5815.76613
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 2816930.50147,
+              "Posición Neta en Derivados de M. E. * (b)": -2480025.0151,
+              "Posición Global en M.E. (a)+(b)+(c)": 336905.48637
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4313872.247540001,
+              "- | -": 4382770.3913,
+              "Posición Global en M.E. (a)+(b)+(c)": 68898.14375999999
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1577051.2764799998,
+              "- | -": 1610539.70491,
+              "- | - #2": -741.36461,
+              "Posición Global en M.E. (a)+(b)+(c)": 32747.06382
+            }
+          }
+        },
+        {
+          "date": "2023-07-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Julio/B-2368-jl2023.XLS",
+          "source_file": "B-2368-jl2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 166153.70682,
+            "- | -": -186594.12969,
+            "Posición Global en M.E. (a)+(b)+(c)": -20440.42287
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 166153.70682,
+              "- | -": -186594.12969,
+              "Posición Global en M.E. (a)+(b)+(c)": -20440.42287
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 1622594.3558099999,
+              "Posición Neta en Derivados de M. E. * (b)": -1597304.1304799998,
+              "Posición Global en M.E. (a)+(b)+(c)": 25290.225329999997
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3841790.59358,
+              "- | -": 4082606.6261600005,
+              "Posición Global en M.E. (a)+(b)+(c)": 240816.03258
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1934102.0240199997,
+              "- | -": 1957962.97857,
+              "- | - #2": -18.54945,
+              "Posición Global en M.E. (a)+(b)+(c)": 23842.4051
+            }
+          }
+        },
+        {
+          "date": "2023-08-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Agosto/B-2368-ag2023.XLS",
+          "source_file": "B-2368-ag2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 59899.428199999995,
+            "- | -": -56863.12793,
+            "Posición Global en M.E. (a)+(b)+(c)": 3036.3002699999997
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 59899.428199999995,
+              "- | -": -56863.12793,
+              "Posición Global en M.E. (a)+(b)+(c)": 3036.3002699999997
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 778810.94024,
+              "Posición Neta en Derivados de M. E. * (b)": -781431.8677000001,
+              "Posición Global en M.E. (a)+(b)+(c)": -2620.9274600000012
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4626244.5442200005,
+              "- | -": 4827037.648950001,
+              "Posición Global en M.E. (a)+(b)+(c)": 200793.10473
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1993383.0229,
+              "- | -": 2026709.79925,
+              "- | - #2": -356.97979,
+              "Posición Global en M.E. (a)+(b)+(c)": 32969.796559999995
+            }
+          }
+        },
+        {
+          "date": "2023-09-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Setiembre/B-2368-se2023.XLS",
+          "source_file": "B-2368-se2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -92125.14292,
+            "- | -": 87032.11745,
+            "Posición Global en M.E. (a)+(b)+(c)": -5093.02547
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -92125.14292,
+              "- | -": 87032.11745,
+              "Posición Global en M.E. (a)+(b)+(c)": -5093.02547
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 253583.8415,
+              "Posición Neta en Derivados de M. E. * (b)": -420914.8925,
+              "Posición Global en M.E. (a)+(b)+(c)": -167331.05099999998
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5376333.032080001,
+              "- | -": 5232060.86587,
+              "Posición Global en M.E. (a)+(b)+(c)": -144272.16621
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1893767.2505300003,
+              "- | -": 1882688.1721200002,
+              "- | - #2": -391.72282,
+              "Posición Global en M.E. (a)+(b)+(c)": -11470.801230000001
+            }
+          }
+        },
+        {
+          "date": "2023-10-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Octubre/B-2368-oc2023.XLS",
+          "source_file": "B-2368-oc2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 18060.348149999998,
+            "Posición Neta en Derivados de M. E. * (b) | -": -10644.431960000002,
+            "Posición Global en M.E. (a)+(b)+(c)": 7415.91619
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 18060.348149999998,
+              "Posición Neta en Derivados de M. E. * (b) | -": -10644.431960000002,
+              "Posición Global en M.E. (a)+(b)+(c)": 7415.91619
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 122563.50641999998,
+              "Posición Neta en Derivados de M. E. * (b)": 60588.291599999975,
+              "Posición Global en M.E. (a)+(b)+(c)": 183151.79802
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5440194.334220001,
+              "Posición Neta en Derivados de M. E. * (b) | -": 5275127.2677299995,
+              "Posición Global en M.E. (a)+(b)+(c)": -165067.06649
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1712907.28866,
+              "Posición Neta en Derivados de M. E. * (b) | -": 1670691.9213000003,
+              "- | -": -418.81456,
+              "Posición Global en M.E. (a)+(b)+(c)": -42634.18192000001
+            }
+          }
+        },
+        {
+          "date": "2023-11-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Noviembre/B-2368-no2023.XLS",
+          "source_file": "B-2368-no2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 158600.64616,
+            "- | -": -162245.02309,
+            "Posición Global en M.E. (a)+(b)+(c)": -3644.37693
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 158600.64616,
+              "- | -": -162245.02309,
+              "Posición Global en M.E. (a)+(b)+(c)": -3644.37693
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 903690.5716900001,
+              "Posición Neta en Derivados de M. E. * (b)": -1027944.9357000001,
+              "Posición Global en M.E. (a)+(b)+(c)": -124254.36401
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3828746.3904899997,
+              "- | -": 4167053.06238,
+              "Posición Global en M.E. (a)+(b)+(c)": 338306.67189
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2079252.6921800002,
+              "- | -": 2062375.2882800002,
+              "- | - #2": -8401.98733,
+              "Posición Global en M.E. (a)+(b)+(c)": -25279.391229999997
+            }
+          }
+        },
+        {
+          "date": "2023-12-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2023/Diciembre/B-2368-di2023.XLS",
+          "source_file": "B-2368-di2023.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -255347.77696000002,
+            "- | -": 279463.70667000004,
+            "Posición Global en M.E. (a)+(b)+(c)": 24115.92971
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -255347.77696000002,
+              "- | -": 279463.70667000004,
+              "Posición Global en M.E. (a)+(b)+(c)": 24115.92971
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 29179.753279999986,
+              "Posición Neta en Derivados de M. E. * (b)": 144290.12879,
+              "Posición Global en M.E. (a)+(b)+(c)": 173469.88207000005
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3801021.95305,
+              "- | -": 4174340.80674,
+              "Posición Global en M.E. (a)+(b)+(c)": 373318.8536900001
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2154101.07449,
+              "- | -": 2170888.2384099998,
+              "- | - #2": -10308.97551,
+              "Posición Global en M.E. (a)+(b)+(c)": 6478.188410000001
+            }
+          }
+        },
+        {
+          "date": "2024-01-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Enero/B-2368-en2024.XLS",
+          "source_file": "B-2368-en2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -89392.82595999999,
+            "- | -": 108789.79643,
+            "Posición Global en M.E. (a)+(b)+(c)": 19396.97047
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -89392.82595999999,
+              "- | -": 108789.79643,
+              "Posición Global en M.E. (a)+(b)+(c)": 19396.97047
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -1930909.90445,
+              "Posición Neta en Derivados de M. E. * (b)": 2023621.2315999998,
+              "Posición Global en M.E. (a)+(b)+(c)": 92711.32715000001
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5437055.67709,
+              "- | -": 5118874.08105,
+              "Posición Global en M.E. (a)+(b)+(c)": -318181.59604000003
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2094883.7256899995,
+              "- | -": 2120072.19422,
+              "- | - #2": -10743.02723,
+              "Posición Global en M.E. (a)+(b)+(c)": 14445.4413
+            }
+          }
+        },
+        {
+          "date": "2024-02-29",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Febrero/B-2368-fe2024.XLS",
+          "source_file": "B-2368-fe2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 20159.257530000003,
+            "- | -": -258.87237,
+            "Posición Global en M.E. (a)+(b)+(c)": 19900.38516
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 20159.257530000003,
+              "- | -": -258.87237,
+              "Posición Global en M.E. (a)+(b)+(c)": 19900.38516
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -2489253.1657200004,
+              "Posición Neta en Derivados de M. E. * (b)": 2378121.3663,
+              "Posición Global en M.E. (a)+(b)+(c)": -111131.79942000001
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4691229.357299999,
+              "- | -": 4338464.1865,
+              "Posición Global en M.E. (a)+(b)+(c)": -352765.17079999996
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2216806.91423,
+              "- | -": 2255416.8602400003,
+              "- | - #2": -9547.06307,
+              "Posición Global en M.E. (a)+(b)+(c)": 29062.882940000003
+            }
+          }
+        },
+        {
+          "date": "2024-03-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Marzo/B-2368-ma2024.XLS",
+          "source_file": "B-2368-ma2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 482848.71683,
+            "- | -": -486294.34294,
+            "Posición Global en M.E. (a)+(b)+(c)": -3445.6261099999997
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 482848.71683,
+              "- | -": -486294.34294,
+              "Posición Global en M.E. (a)+(b)+(c)": -3445.6261099999997
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -803116.3302900001,
+              "Posición Neta en Derivados de M. E. * (b)": 1362497.6017000002,
+              "Posición Global en M.E. (a)+(b)+(c)": 559381.2714099998
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4061956.87685,
+              "- | -": 3842343.05261,
+              "Posición Global en M.E. (a)+(b)+(c)": -219613.82424000002
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1824661.78542,
+              "- | -": 1868492.37072,
+              "- | - #2": -10595.92461,
+              "Posición Global en M.E. (a)+(b)+(c)": 33234.66069
+            }
+          }
+        },
+        {
+          "date": "2024-04-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Abril/B-2368-ab2024.XLS",
+          "source_file": "B-2368-ab2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 292482.0807,
+            "- | -": -285728.87145,
+            "Posición Global en M.E. (a)+(b)+(c)": 6753.20925
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 292482.0807,
+              "- | -": -285728.87145,
+              "Posición Global en M.E. (a)+(b)+(c)": 6753.20925
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -2733420.4125900003,
+              "Posición Neta en Derivados de M. E. * (b)": 3011188.7956000003,
+              "Posición Global en M.E. (a)+(b)+(c)": 277768.38301000005
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4530931.90187,
+              "- | -": 4730658.28424,
+              "Posición Global en M.E. (a)+(b)+(c)": 199726.38237
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1940799.97059,
+              "- | -": 1961651.65538,
+              "- | - #2": -4688.6483499999995,
+              "Posición Global en M.E. (a)+(b)+(c)": 16163.03644
+            }
+          }
+        },
+        {
+          "date": "2024-05-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Mayo/B-2368-my2024.XLS",
+          "source_file": "B-2368-my2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 101750.69490999999,
+            "- | -": -77141.73872,
+            "Posición Global en M.E. (a)+(b)+(c)": 24608.95619
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 101750.69490999999,
+              "- | -": -77141.73872,
+              "Posición Global en M.E. (a)+(b)+(c)": 24608.95619
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -3051929.5188500006,
+              "Posición Neta en Derivados de M. E. * (b)": 3107102.9484999995,
+              "Posición Global en M.E. (a)+(b)+(c)": 55173.42964999999
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4918272.20836,
+              "- | -": 5200333.1141099995,
+              "Posición Global en M.E. (a)+(b)+(c)": 282060.90575
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2430403.5822799997,
+              "- | -": 2499740.15623,
+              "- | - #2": -5069.31214,
+              "Posición Global en M.E. (a)+(b)+(c)": 64267.26180999999
+            }
+          }
+        },
+        {
+          "date": "2024-06-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Junio/B-2368-jn2024.XLS",
+          "source_file": "B-2368-jn2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -60697.10198,
+            "- | -": 78914.63821,
+            "Posición Global en M.E. (a)+(b)+(c)": 18217.53623
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -60697.10198,
+              "- | -": 78914.63821,
+              "Posición Global en M.E. (a)+(b)+(c)": 18217.53623
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -967377.9894900002,
+              "Posición Neta en Derivados de M. E. * (b)": 991316.4117,
+              "Posición Global en M.E. (a)+(b)+(c)": 23938.422209999997
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -5156662.963140001,
+              "- | -": 4904629.96602,
+              "Posición Global en M.E. (a)+(b)+(c)": -252032.99711999999
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2722633.97122,
+              "- | -": 2720916.5127,
+              "- | - #2": -5509.72391,
+              "Posición Global en M.E. (a)+(b)+(c)": -7227.182430000002
+            }
+          }
+        },
+        {
+          "date": "2024-07-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Julio/B-2368-jl2024.XLS",
+          "source_file": "B-2368-jl2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 256706.18141,
+            "- | -": -245264.26694000003,
+            "Posición Global en M.E. (a)+(b)+(c)": 11441.914470000002
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 256706.18141,
+              "- | -": -245264.26694000003,
+              "Posición Global en M.E. (a)+(b)+(c)": 11441.914470000002
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -118118.89771,
+              "Posición Neta en Derivados de M. E. * (b)": 542897.7906,
+              "Posición Global en M.E. (a)+(b)+(c)": 424778.89289
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4077001.7985499995,
+              "- | -": 4159018.46778,
+              "Posición Global en M.E. (a)+(b)+(c)": 82016.66923
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2015003.38718,
+              "- | -": 2052586.4306799995,
+              "- | - #2": -6333.06218,
+              "Posición Global en M.E. (a)+(b)+(c)": 31249.981320000003
+            }
+          }
+        },
+        {
+          "date": "2024-08-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Agosto/B-2368-ag2024.XLS",
+          "source_file": "B-2368-ag2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 5490.81769,
+            "- | -": 17334.447689999997,
+            "Posición Global en M.E. (a)+(b)+(c)": 22825.26538
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 5490.81769,
+              "- | -": 17334.447689999997,
+              "Posición Global en M.E. (a)+(b)+(c)": 22825.26538
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -1691471.4619599998,
+              "Posición Neta en Derivados de M. E. * (b)": 1755827.3179999997,
+              "Posición Global en M.E. (a)+(b)+(c)": 64355.856039999984
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3063701.3760900004,
+              "- | -": 3271047.00217,
+              "Posición Global en M.E. (a)+(b)+(c)": 207345.62608
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2676786.6671,
+              "- | -": 2697676.7443999997,
+              "- | - #2": -10514.50797,
+              "Posición Global en M.E. (a)+(b)+(c)": 10375.569330000002
+            }
+          }
+        },
+        {
+          "date": "2024-09-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Setiembre/B-2368-se2024.XLS",
+          "source_file": "B-2368-se2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 745886.8185999998,
+            "- | -": -730263.4526000001,
+            "Posición Global en M.E. (a)+(b)+(c)": 15623.366
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 745886.8185999998,
+              "- | -": -730263.4526000001,
+              "Posición Global en M.E. (a)+(b)+(c)": 15623.366
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 205778.04877000002,
+              "Posición Neta en Derivados de M. E. * (b)": -351311.4193,
+              "Posición Global en M.E. (a)+(b)+(c)": -145533.37053000004
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -4011708.32084,
+              "- | -": 4241774.24672,
+              "Posición Global en M.E. (a)+(b)+(c)": 230065.92588000005
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2047868.81529,
+              "- | -": 2138282.27363,
+              "- | - #2": -8695.702039999998,
+              "Posición Global en M.E. (a)+(b)+(c)": 81717.75629999998
+            }
+          }
+        },
+        {
+          "date": "2024-10-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Octubre/B-2368-oc2024.XLS",
+          "source_file": "B-2368-oc2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 468845.08859,
+            "- | -": -486492.68511,
+            "Posición Global en M.E. (a)+(b)+(c)": -17647.59652
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 468845.08859,
+              "- | -": -486492.68511,
+              "Posición Global en M.E. (a)+(b)+(c)": -17647.59652
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -2223236.4480499993,
+              "Posición Neta en Derivados de M. E. * (b)": 2610720.1491,
+              "Posición Global en M.E. (a)+(b)+(c)": 387483.7010499999
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -3012689.02729,
+              "- | -": 3340923.6291799997,
+              "Posición Global en M.E. (a)+(b)+(c)": 328234.60189
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1553763.19789,
+              "- | -": 1595799.6278700002,
+              "- | - #2": -9382.64987,
+              "Posición Global en M.E. (a)+(b)+(c)": 32653.78011
+            }
+          }
+        },
+        {
+          "date": "2024-11-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Noviembre/B-2368-no2024.XLS",
+          "source_file": "B-2368-no2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 500631.51827999996,
+            "- | -": -559179.2058199999,
+            "Posición Global en M.E. (a)+(b)+(c)": -58547.68754
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 500631.51827999996,
+              "- | -": -559179.2058199999,
+              "Posición Global en M.E. (a)+(b)+(c)": -58547.68754
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -781692.2204600002,
+              "Posición Neta en Derivados de M. E. * (b)": 903379.5425700002,
+              "Posición Global en M.E. (a)+(b)+(c)": 121687.32210999998
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1906593.1413600002,
+              "- | -": 2002884.19295,
+              "Posición Global en M.E. (a)+(b)+(c)": 96291.05158999999
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1690892.8034700002,
+              "- | -": 1744805.81752,
+              "- | - #2": -8080.43662,
+              "Posición Global en M.E. (a)+(b)+(c)": 45832.57742999999
+            }
+          }
+        },
+        {
+          "date": "2024-12-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2024/Diciembre/B-2368-di2024.XLS",
+          "source_file": "B-2368-di2024.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 346840.68511,
+            "- | -": -289570.34889,
+            "Posición Global en M.E. (a)+(b)+(c)": 57270.33622
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 346840.68511,
+              "- | -": -289570.34889,
+              "Posición Global en M.E. (a)+(b)+(c)": 57270.33622
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -150043.49099,
+              "Posición Neta en Derivados de M. E. * (b)": 281973.66794,
+              "Posición Global en M.E. (a)+(b)+(c)": 131930.17695
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2074985.21227,
+              "- | -": 2329266.45968,
+              "Posición Global en M.E. (a)+(b)+(c)": 254281.24741
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1519487.69055,
+              "- | -": 1602722.90074,
+              "- | - #2": -6089.11894,
+              "Posición Global en M.E. (a)+(b)+(c)": 77146.09125
+            }
+          }
+        },
+        {
+          "date": "2025-01-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Enero/B-2368-en2025.XLS",
+          "source_file": "B-2368-en2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 594192.07749,
+            "- | -": -601175.29976,
+            "Posición Global en M.E. (a)+(b)+(c)": -6983.22227
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 594192.07749,
+              "- | -": -601175.29976,
+              "Posición Global en M.E. (a)+(b)+(c)": -6983.22227
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -1608868.09757,
+              "Posición Neta en Derivados de M. E. * (b)": 1739694.30573,
+              "Posición Global en M.E. (a)+(b)+(c)": 130826.20816
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2462507.33542,
+              "- | -": 2340749.42104,
+              "Posición Global en M.E. (a)+(b)+(c)": -121757.91438
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -544651.09891,
+              "- | -": 621254.87485,
+              "- | - #2": -5987.33901,
+              "Posición Global en M.E. (a)+(b)+(c)": 70616.43693
+            }
+          }
+        },
+        {
+          "date": "2025-02-28",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Febrero/B-2368-fe2025.XLS",
+          "source_file": "B-2368-fe2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 638042.96116,
+            "- | -": -637012.31068,
+            "Posición Global en M.E. (a)+(b)+(c)": 1030.65048
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 638042.96116,
+              "- | -": -637012.31068,
+              "Posición Global en M.E. (a)+(b)+(c)": 1030.65048
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -1054663.61128,
+              "Posición Neta en Derivados de M. E. * (b)": 1132507.70943,
+              "Posición Global en M.E. (a)+(b)+(c)": 77844.09815
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2478556.3177,
+              "- | -": 2505229.49178,
+              "Posición Global en M.E. (a)+(b)+(c)": 26673.17408
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -401227.03952,
+              "- | -": 476855.18549,
+              "- | - #2": -11562.96344,
+              "Posición Global en M.E. (a)+(b)+(c)": 64065.18253
+            }
+          }
+        },
+        {
+          "date": "2025-03-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Marzo/B-2368-ma2025.XLS",
+          "source_file": "B-2368-ma2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 504484.89053,
+            "- | -": -513989.44687,
+            "Posición Global en M.E. (a)+(b)+(c)": -9504.55634
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 504484.89053,
+              "- | -": -513989.44687,
+              "Posición Global en M.E. (a)+(b)+(c)": -9504.55634
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -2108315.77411,
+              "Posición Neta en Derivados de M. E. * (b)": 2355500.7516,
+              "Posición Global en M.E. (a)+(b)+(c)": 247184.97749
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -2256110.90738,
+              "- | -": 1982266.72278,
+              "Posición Global en M.E. (a)+(b)+(c)": -273844.1846
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -163371.93847,
+              "- | -": 188317.22173,
+              "- | - #2": -44086.23874,
+              "Posición Global en M.E. (a)+(b)+(c)": -19140.95548
+            }
+          }
+        },
+        {
+          "date": "2025-04-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Abril/B-2368-ab2025.XLS",
+          "source_file": "B-2368-ab2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": -191232.20736,
+            "- | -": 224372.01858,
+            "Posición Global en M.E. (a)+(b)+(c)": 33139.81122
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": -191232.20736,
+              "- | -": 224372.01858,
+              "Posición Global en M.E. (a)+(b)+(c)": 33139.81122
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 128195.68821,
+              "Posición Neta en Derivados de M. E. * (b)": 50031.6877,
+              "Posición Global en M.E. (a)+(b)+(c)": 178227.37591
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -1331240.67027,
+              "- | -": 1569169.12742,
+              "Posición Global en M.E. (a)+(b)+(c)": 237928.45715
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 281288.7744,
+              "- | -": -139817.04938,
+              "- | - #2": -43603.85043,
+              "Posición Global en M.E. (a)+(b)+(c)": 97867.87459
+            }
+          }
+        },
+        {
+          "date": "2025-05-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Mayo/B-2368-my2025.XLS",
+          "source_file": "B-2368-my2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 560706.24942,
+            "- | -": -532773.18927,
+            "Posición Global en M.E. (a)+(b)+(c)": 27933.06015
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 560706.24942,
+              "- | -": -532773.18927,
+              "Posición Global en M.E. (a)+(b)+(c)": 27933.06015
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 1988535.06232,
+              "Posición Neta en Derivados de M. E. * (b)": -1727785.355,
+              "Posición Global en M.E. (a)+(b)+(c)": 260749.70732
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": 80548.00444,
+              "- | -": 184851.22353,
+              "Posición Global en M.E. (a)+(b)+(c)": 265399.22797
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 753246.52116,
+              "- | -": -485512.37802,
+              "- | - #2": -31895.92135,
+              "Posición Global en M.E. (a)+(b)+(c)": 235838.22179
+            }
+          }
+        },
+        {
+          "date": "2025-06-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Junio/B-2368-jn2025.XLS",
+          "source_file": "B-2368-jn2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 608862.55186,
+            "- | -": -566681.93288,
+            "Posición Global en M.E. (a)+(b)+(c)": 42180.61898
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 608862.55186,
+              "- | -": -566681.93288,
+              "Posición Global en M.E. (a)+(b)+(c)": 42180.61898
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 1810914.36753,
+              "Posición Neta en Derivados de M. E. * (b)": -1793994.4487,
+              "Posición Global en M.E. (a)+(b)+(c)": 16919.91883
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -750707.82953,
+              "- | -": 885825.53178,
+              "Posición Global en M.E. (a)+(b)+(c)": 135117.70225
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 831968.47246,
+              "- | -": -644222.03082,
+              "- | - #2": -27063.63692,
+              "Posición Global en M.E. (a)+(b)+(c)": 160682.80472
+            }
+          }
+        },
+        {
+          "date": "2025-07-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Julio/B-2368-jl2025.XLS",
+          "source_file": "B-2368-jl2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 313585.52345,
+            "- | -": -318518.81212,
+            "Posición Global en M.E. (a)+(b)+(c)": -4933.28867
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 313585.52345,
+              "- | -": -318518.81212,
+              "Posición Global en M.E. (a)+(b)+(c)": -4933.28867
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 1239455.76974,
+              "Posición Neta en Derivados de M. E. * (b)": -937348.7714,
+              "Posición Global en M.E. (a)+(b)+(c)": 302106.99834
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -452594.82954,
+              "- | -": 96929.28639,
+              "Posición Global en M.E. (a)+(b)+(c)": -355665.54315
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 676134.10697,
+              "- | -": -508854.02533,
+              "- | - #2": -25825.794,
+              "Posición Global en M.E. (a)+(b)+(c)": 141454.28764
+            }
+          }
+        },
+        {
+          "date": "2025-08-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Agosto/B-2368-ag2025.XLS",
+          "source_file": "B-2368-ag2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 413129.11012,
+            "- | -": -394824.1117,
+            "Posición Global en M.E. (a)+(b)+(c)": 18304.99842
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 413129.11012,
+              "- | -": -394824.1117,
+              "Posición Global en M.E. (a)+(b)+(c)": 18304.99842
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": -581505.115,
+              "Posición Neta en Derivados de M. E. * (b)": 867962.184,
+              "Posición Global en M.E. (a)+(b)+(c)": 286457.069
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -466269.92412,
+              "- | -": 363048.39326,
+              "Posición Global en M.E. (a)+(b)+(c)": -103221.53086
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 287464.3391,
+              "- | -": -59931.20021,
+              "- | - #2": -194.92722,
+              "Posición Global en M.E. (a)+(b)+(c)": 227338.21167
+            }
+          }
+        },
+        {
+          "date": "2025-09-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Setiembre/B-2368-se2025.XLS",
+          "source_file": "B-2368-se2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 449052.12488,
+            "- | -": -432945.98329,
+            "Posición Global en M.E. (a)+(b)+(c)": 16106.14159
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 449052.12488,
+              "- | -": -432945.98329,
+              "Posición Global en M.E. (a)+(b)+(c)": 16106.14159
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 393431.75664,
+              "Posición Neta en Derivados de M. E. * (b)": -74243.5625,
+              "Posición Global en M.E. (a)+(b)+(c)": 319188.19414
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -694157.37011,
+              "- | -": 809182.29367,
+              "Posición Global en M.E. (a)+(b)+(c)": 115024.92356
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -182964.33563,
+              "- | -": 436336.7548,
+              "- | - #2": -10152.46082,
+              "Posición Global en M.E. (a)+(b)+(c)": 243219.95835
+            }
+          }
+        },
+        {
+          "date": "2025-10-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Octubre/B-2368-oc2025.XLS",
+          "source_file": "B-2368-oc2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 487099.82468,
+            "- | -": -466536.62005,
+            "Posición Global en M.E. (a)+(b)+(c)": 20563.20463
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 487099.82468,
+              "- | -": -466536.62005,
+              "Posición Global en M.E. (a)+(b)+(c)": 20563.20463
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 1794336.34122,
+              "Posición Neta en Derivados de M. E. * (b)": -1230183.0251,
+              "Posición Global en M.E. (a)+(b)+(c)": 564153.31612
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -211139.76336,
+              "- | -": 145427.49201,
+              "Posición Global en M.E. (a)+(b)+(c)": -65712.27135
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -140477.5398,
+              "- | -": 364354.02854,
+              "- | - #2": -260.40701,
+              "Posición Global en M.E. (a)+(b)+(c)": 223616.08173
+            }
+          }
+        },
+        {
+          "date": "2025-11-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Noviembre/B-2368-no2025.XLS",
+          "source_file": "B-2368-no2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 602658.15002,
+            "- | -": -583135.14062,
+            "Posición Global en M.E. (a)+(b)+(c)": 19523.0094
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 602658.15002,
+              "- | -": -583135.14062,
+              "Posición Global en M.E. (a)+(b)+(c)": 19523.0094
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 2209099.73489,
+              "Posición Neta en Derivados de M. E. * (b)": -1561067.9927,
+              "Posición Global en M.E. (a)+(b)+(c)": 648031.74219
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -31530.31744,
+              "- | -": 275009.32477,
+              "Posición Global en M.E. (a)+(b)+(c)": 243479.00733
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 103006.35583,
+              "- | -": 148359.35477,
+              "- | - #2": 568.41533,
+              "Posición Global en M.E. (a)+(b)+(c)": 251934.12593
+            }
+          }
+        },
+        {
+          "date": "2025-12-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2025/Diciembre/B-2368-di2025.XLS",
+          "source_file": "B-2368-di2025.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 572375.42785,
+            "- | -": -568553.68454,
+            "Posición Global en M.E. (a)+(b)+(c)": 3821.74331
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 572375.42785,
+              "- | -": -568553.68454,
+              "Posición Global en M.E. (a)+(b)+(c)": 3821.74331
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 3705184.715,
+              "Posición Neta en Derivados de M. E. * (b)": -2978816.3936,
+              "Posición Global en M.E. (a)+(b)+(c)": 726368.3214
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -358751.11689,
+              "- | -": 187584.63523,
+              "Posición Global en M.E. (a)+(b)+(c)": -171166.48166
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 573676.71816,
+              "- | -": -310473.33456,
+              "- | - #2": -66.03278,
+              "Posición Global en M.E. (a)+(b)+(c)": 263137.35082
+            }
+          }
+        },
+        {
+          "date": "2026-01-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Enero/B-2368-en2026.XLS",
+          "source_file": "B-2368-en2026.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 289781.11298,
+            "- | -": -293748.89567,
+            "Posición Global en M.E. (a)+(b)+(c)": -3967.78269
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 289781.11298,
+              "- | -": -293748.89567,
+              "Posición Global en M.E. (a)+(b)+(c)": -3967.78269
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 1512479.81835,
+              "Posición Neta en Derivados de M. E. * (b)": -1463760.61374,
+              "Posición Global en M.E. (a)+(b)+(c)": 48719.20461
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -699421.91148,
+              "- | -": 431179.77156,
+              "Posición Global en M.E. (a)+(b)+(c)": -268242.13992
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": -455049.56787,
+              "- | -": 728078.16416,
+              "- | - #2": -47.54222,
+              "Posición Global en M.E. (a)+(b)+(c)": 272981.05407
+            }
+          }
+        },
+        {
+          "date": "2026-02-28",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Febrero/B-2368-fe2026.XLS",
+          "source_file": "B-2368-fe2026.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 567271.96721,
+            "- | -": -528561.52367,
+            "Posición Global en M.E. (a)+(b)+(c)": 38710.44354
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 567271.96721,
+              "- | -": -528561.52367,
+              "Posición Global en M.E. (a)+(b)+(c)": 38710.44354
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 171084.91644,
+              "Posición Neta en Derivados de M. E. * (b)": 359878.06908,
+              "Posición Global en M.E. (a)+(b)+(c)": 530962.98552
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -160434.48563,
+              "- | -": 539676.40847,
+              "Posición Global en M.E. (a)+(b)+(c)": 379241.92284
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 367993.38261,
+              "- | -": -38946.20144,
+              "- | - #2": -45.05692,
+              "Posición Global en M.E. (a)+(b)+(c)": 329002.12425
+            }
+          }
+        },
+        {
+          "date": "2026-03-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Marzo/B-2368-ma2026.XLS",
+          "source_file": "B-2368-ma2026.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 500812.07303,
+            "- | -": -483621.85455,
+            "Posición Global en M.E. (a)+(b)+(c)": 17190.21848
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 500812.07303,
+              "- | -": -483621.85455,
+              "Posición Global en M.E. (a)+(b)+(c)": 17190.21848
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 3845472.16735,
+              "Posición Neta en Derivados de M. E. * (b)": -3114495.28703,
+              "Posición Global en M.E. (a)+(b)+(c)": 730976.88032
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -429258.90907,
+              "- | -": 455010.3768,
+              "Posición Global en M.E. (a)+(b)+(c)": 25751.46773
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 2032960.31204,
+              "- | -": -1631298.44837,
+              "- | - #2": -9.62836,
+              "Posición Global en M.E. (a)+(b)+(c)": 401652.23531
+            }
+          }
+        },
+        {
+          "date": "2026-04-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Abril/B-2368-ab2026.XLS",
+          "source_file": "B-2368-ab2026.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 627431.20561,
+            "Posición Neta en Derivados de M. E. * (b) | -": -611201.88117,
+            "Posición Global en M.E. (a)+(b)+(c)": 16229.32444
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 627431.20561,
+              "Posición Neta en Derivados de M. E. * (b) | -": -611201.88117,
+              "Posición Global en M.E. (a)+(b)+(c)": 16229.32444
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 4420535.14889,
+              "Posición Neta en Derivados de M. E. * (b)": -3706913.50177,
+              "Posición Global en M.E. (a)+(b)+(c)": 713621.64712
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": 852412.18712,
+              "Posición Neta en Derivados de M. E. * (b) | -": -952670.56482,
+              "Posición Global en M.E. (a)+(b)+(c)": -100258.3777
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 2669796.94158,
+              "Posición Neta en Derivados de M. E. * (b) | -": -2290385.41567,
+              "Posición Global en M.E. (a)+(b)+(c)": 379411.52591
+            }
+          }
+        },
+        {
+          "date": "2026-05-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Mayo/B-2368-my2026.XLS",
+          "source_file": "B-2368-my2026.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 547309.20329,
+            "- | -": -529019.42305,
+            "Posición Global en M.E. (a)+(b)+(c)": 18289.78024
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 547309.20329,
+              "- | -": -529019.42305,
+              "Posición Global en M.E. (a)+(b)+(c)": 18289.78024
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 4843181.18347,
+              "Posición Neta en Derivados de M. E. * (b)": -4399451.32039,
+              "Posición Global en M.E. (a)+(b)+(c)": 443729.86308
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": 984855.07283,
+              "- | -": -610876.2947,
+              "Posición Global en M.E. (a)+(b)+(c)": 373978.77813
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 2971367.68927,
+              "- | -": -2549724.16515,
+              "- | - #2": -106.61609,
+              "Posición Global en M.E. (a)+(b)+(c)": 421536.90803
+            }
+          }
+        },
+        {
+          "date": "2026-06-30",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Junio/B-2368-jn2026.XLS",
+          "source_file": "B-2368-jn2026.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 544394.39829,
+            "- | -": -534167.46137,
+            "Posición Global en M.E. (a)+(b)+(c)": 10226.93692
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 544394.39829,
+              "- | -": -534167.46137,
+              "Posición Global en M.E. (a)+(b)+(c)": 10226.93692
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 2431155.71119,
+              "Posición Neta en Derivados de M. E. * (b)": -2776646.38386,
+              "Posición Global en M.E. (a)+(b)+(c)": -345490.67267
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -69972.95404,
+              "- | -": 390794.52302,
+              "Posición Global en M.E. (a)+(b)+(c)": 320821.56898
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 1680211.99666,
+              "- | -": -1168823.76163,
+              "- | - #2": -105.20924,
+              "Posición Global en M.E. (a)+(b)+(c)": 511283.02579
+            }
+          }
+        },
+        {
+          "date": "2026-07-31",
+          "source_url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Julio/B-2368-jl2026.XLS",
+          "source_file": "B-2368-jl2026.XLS",
+          "banbif_metrics": {
+            "Posición de Cambio de Balance en M. E. (a)": 544394.39829,
+            "- | -": -534167.46137,
+            "Posición Global en M.E. (a)+(b)+(c)": 10226.93692
+          },
+          "peer_metrics": {
+            "banbif": {
+              "Posición de Cambio de Balance en M. E. (a)": 544394.39829,
+              "- | -": -534167.46137,
+              "Posición Global en M.E. (a)+(b)+(c)": 10226.93692
+            },
+            "bcp": {},
+            "bbva": {
+              "Posición de Cambio de Balance en M. E. (a)": 2431155.71119,
+              "Posición Neta en Derivados de M. E. * (b)": -2776646.38386,
+              "Posición Global en M.E. (a)+(b)+(c)": -345490.67267
+            },
+            "scotiabank": {
+              "Posición de Cambio de Balance en M. E. (a)": -69972.95404,
+              "- | -": 390794.52302,
+              "Posición Global en M.E. (a)+(b)+(c)": 320821.56898
+            },
+            "interbank": {
+              "Posición de Cambio de Balance en M. E. (a)": 1680211.99666,
+              "- | -": -1168823.76163,
+              "- | - #2": -105.20924,
+              "Posición Global en M.E. (a)+(b)+(c)": 511283.02579
+            }
+          }
+        }
+      ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T07:52:22.023752+00:00",
+        "last_attempt": "2026-09-02T08:13:51.209912+00:00",
         "discovered_links": 67,
         "candidate_links": 75,
         "attempted_periods": 69,
-        "loaded": 0,
-        "latest": null,
-        "updated": 0,
+        "loaded": 67,
+        "latest": "2026-07-31",
+        "updated": 67,
         "unpublished_or_missing": 2,
-        "errors": 67,
-        "error_samples": [
-          {
-            "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Enero/B-2368-en2021.XLS",
-            "error": "No module named 'xlrd'"
-          },
-          {
-            "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Febrero/B-2368-fe2021.XLS",
-            "error": "No module named 'xlrd'"
-          },
-          {
-            "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Marzo/B-2368-ma2021.XLS",
-            "error": "No module named 'xlrd'"
-          },
-          {
-            "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Abril/B-2368-ab2021.XLS",
-            "error": "No module named 'xlrd'"
-          },
-          {
-            "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Mayo/B-2368-my2021.XLS",
-            "error": "No module named 'xlrd'"
-          },
-          {
-            "url": "https://intranet2.sbs.gob.pe/estadistica/financiera/2021/Junio/B-2368-jn2021.XLS",
-            "error": "No module named 'xlrd'"
-          }
-        ],
-        "status": "error"
+        "errors": 0,
+        "error_samples": [],
+        "status": "ok"
       }
     },
     "B-230811": {
@@ -158725,7 +160979,7 @@
       "frequency": "quarterly",
       "periods": [],
       "sync": {
-        "last_attempt": "2026-09-02T07:51:40.178823+00:00",
+        "last_attempt": "2026-09-02T08:13:06.026102+00:00",
         "discovered_links": 9,
         "candidate_links": 29,
         "attempted_periods": 23,
@@ -158771,7 +161025,7 @@
       "frequency": "monthly",
       "periods": [],
       "sync": {
-        "last_attempt": "2026-09-02T07:51:49.446234+00:00",
+        "last_attempt": "2026-09-02T08:13:17.953378+00:00",
         "discovered_links": 7,
         "candidate_links": 36,
         "attempted_periods": 33,
