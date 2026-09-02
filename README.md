@@ -181,3 +181,27 @@ Cuando un reporte regulatorio tiene rezago, la tarjeta muestra el periodo SBS re
 - Si ECharts/CDN falla, la tabla continúa funcionando.
 - Se muestra un error visible si una sección no puede renderizar.
 - `setupDate` valida que existan periodos.
+
+
+## v3.8 — sincronización SBS corregida
+
+El run del workflow permitió identificar cuatro fallas independientes:
+
+1. El repo tenía `requirements.txt` con `xlrd`, pero el workflow publicado no ejecutaba `pip install -r requirements.txt`.
+   Por eso fallaban C-1203, B-3302 y B-2368 con `No module named 'xlrd'`.
+
+2. Algunos B-230811 son OOXML con un relationship target absoluto (`/xl/worksheets/...`).
+   El parser anterior lo convertía en `xl//xl/worksheets/...`. Se normalizan ahora todas las rutas OOXML.
+
+3. El parser genérico exigía al menos tres números en la misma fila del banco.
+   RCL y RFNE pueden tener una sola métrica; ahora una fila con una única cifra válida se procesa.
+
+4. Si la página SBS exponía exactamente tres enlaces, el código no activaba el fallback de URLs mensuales.
+   Esto dejó B-2401 y B-2340 con solo tres meses. Ahora se combinan SIEMPRE enlaces descubiertos + URLs canónicas.
+
+Adicionalmente:
+- se soportan `Setiembre` y `Septiembre`;
+- se amplía el backfill a 2021 para series con histórico disponible;
+- 404 de meses aún no publicados se registran como `miss`, no como error del parser;
+- al final del workflow se imprime una tabla `SBS SOURCE HEALTH`;
+- `hub.json` guarda `meta.source_health` y `meta.sync_version = 3.8`.
