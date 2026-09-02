@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BanBif Regulatory & Financial Intelligence Hub v3.8
+BanBif Regulatory & Financial Intelligence Hub v3.9
 SBS synchronizer.
 
 Key fixes:
@@ -56,7 +56,11 @@ REPORT_START = {
 }
 
 ALIASES = {
-    "banbif": ["BANCO INTERAMERICANO DE FINANZAS", "INTERAMERICANO DE FINANZAS", "BANBIF"],
+    "banbif": [
+        "BANCO INTERAMERICANO DE FINANZAS", "BANCO INTERAMERICANO",
+        "INTERAMERICANO DE FINANZAS", "INTERAMERICANO", "BANBIF", "BIF",
+        "B. INTERAMERICANO", "20101036813"
+    ],
     "bcp": ["BANCO DE CREDITO DEL PERU", "BANCO DE CRÉDITO DEL PERÚ"],
     "bbva": ["BANCO BBVA PERU", "BANCO BBVA PERÚ", "BBVA PERU", "BBVA PERÚ"],
     "scotiabank": ["SCOTIABANK PERU", "SCOTIABANK PERÚ"],
@@ -204,15 +208,128 @@ def workbook_xls(raw):
         out[sname] = {"data": d, "max_row": s.nrows, "max_col": s.ncols}
     return out
 
-def workbook(raw):
-    if raw[:2] == b"PK":
-        return workbook_xlsx(raw)
-    if raw[:8] == bytes.fromhex("D0CF11E0A1B11AE1"):
-        return workbook_xls(raw)
+
+def parse_number_text(value):
+    if value is None: return None
+    s=clean(value).replace("\xa0"," ").strip()
+    if not s: return None
+    if s.endswith("%"): s=s[:-1].strip()
+    s=re.sub(r"^(S/|US\$|\$)\s*","",s,flags=re.I)
+    s=re.sub(r"\s+","",s)
+    if s in ("-","—","ND","N.D.","N/A"): return None
+    neg=s.startswith("(") and s.endswith(")")
+    if neg: s=s[1:-1]
+    if re.fullmatch(r"[-+]?\d{1,3}(,\d{3})+(\.\d+)?",s): s=s.replace(",","")
+    elif re.fullmatch(r"[-+]?\d+,\d+",s) and "." not in s: s=s.replace(",",".")
+    else: s=s.replace(",","")
     try:
-        return workbook_xlsx(raw)
-    except Exception:
-        return workbook_xls(raw)
+        v=float(s); return -v if neg else v
+    except: return None
+
+def workbook_spreadsheetml(raw):
+    text=raw.decode("utf-8-sig","ignore")
+    root=ET.fromstring(text)
+    uri="urn:schemas-microsoft-com:office:spreadsheet"
+    ns={"ss":uri}; idx=f"{{{uri}}}Index"; typk=f"{{{uri}}}Type"
+    out={}
+    for wi,ws in enumerate(root.findall(".//ss:Worksheet",ns),1):
+        name=ws.attrib.get(f"{{{uri}}}Name",f"Sheet{wi}")
+        table=ws.find("ss:Table",ns)
+        if table is None: continue
+        d={}; rr=0; mr=mc=0
+        for row in table.findall("ss:Row",ns):
+            rr=int(row.attrib.get(idx,rr+1)); cc=0
+            for cell in row.findall("ss:Cell",ns):
+                cc=int(cell.attrib.get(idx,cc+1))
+                data=cell.find("ss:Data",ns)
+                if data is None: continue
+                txt="".join(data.itertext()).strip(); typ=data.attrib.get(typk,"String")
+                if typ in ("Number","Currency"):
+                    try: val=float(txt)
+                    except: val=parse_number_text(txt)
+                else:
+                    n=parse_number_text(txt)
+                    val=n if n is not None and re.fullmatch(r"[\s()+\-.,%0-9S/$]+",txt or "") else txt
+                d[(rr,cc)]=val; mr=max(mr,rr); mc=max(mc,cc)
+        out[name]={"data":d,"max_row":mr,"max_col":mc}
+    if not out: raise ValueError("SpreadsheetML sin hojas legibles")
+    return out
+
+class ExcelHTMLParser(HTMLParser):
+    def __init__(self):
+        super().__init__(); self.tables=[]; self.table=None; self.row=None; self.cell=False; self.buf=[]; self.attrs={}
+    def handle_starttag(self,tag,attrs):
+        tag=tag.lower()
+        if tag=="table": self.table=[]
+        elif tag=="tr" and self.table is not None: self.row=[]
+        elif tag in ("td","th") and self.row is not None: self.cell=True; self.buf=[]; self.attrs=dict(attrs)
+        elif tag=="br" and self.cell: self.buf.append(" ")
+    def handle_data(self,data):
+        if self.cell: self.buf.append(data)
+    def handle_endtag(self,tag):
+        tag=tag.lower()
+        if tag in ("td","th") and self.cell and self.row is not None:
+            self.row.append(("".join(self.buf).strip(),self.attrs)); self.cell=False
+        elif tag=="tr" and self.row is not None and self.table is not None:
+            if self.row: self.table.append(self.row)
+            self.row=None
+        elif tag=="table" and self.table is not None:
+            if self.table: self.tables.append(self.table)
+            self.table=None
+
+def workbook_html(raw):
+    try: text=raw.decode("utf-8")
+    except: text=raw.decode("latin-1","ignore")
+    p=ExcelHTMLParser(); p.feed(text)
+    if not p.tables: raise ValueError("HTML sin tablas")
+    out={}
+    for ti,table in enumerate(p.tables,1):
+        d={}; occ=set(); mr=mc=0
+        for rr,row in enumerate(table,1):
+            cc=1
+            for txt,attrs in row:
+                while (rr,cc) in occ: cc+=1
+                rs=int(attrs.get("rowspan","1") or 1); cs=int(attrs.get("colspan","1") or 1)
+                n=parse_number_text(txt)
+                val=n if n is not None and re.fullmatch(r"[\s()+\-.,%0-9S/$]+",txt or "") else clean(txt)
+                d[(rr,cc)]=val
+                for r2 in range(rr,rr+rs):
+                    for c2 in range(cc,cc+cs): occ.add((r2,c2))
+                mr=max(mr,rr+rs-1); mc=max(mc,cc+cs-1); cc+=cs
+        out[f"Table{ti}"]={"data":d,"max_row":mr,"max_col":mc}
+    return out
+
+def workbook_delimited(raw):
+    text=raw.decode("utf-8-sig","ignore"); lines=[x for x in text.splitlines() if x.strip()]
+    if not lines: raise ValueError("Texto vacío")
+    scores={d:sum(x.count(d) for x in lines[:10]) for d in ("\t",";",",")}
+    delim=max(scores,key=scores.get); d={}; mc=0
+    for r,line in enumerate(lines,1):
+        cells=line.split(delim); mc=max(mc,len(cells))
+        for c,txt in enumerate(cells,1):
+            txt=txt.strip().strip('"'); n=parse_number_text(txt)
+            d[(r,c)]=n if n is not None and re.fullmatch(r"[\s()+\-.,%0-9S/$]+",txt or "") else clean(txt)
+    return {"Text1":{"data":d,"max_row":len(lines),"max_col":mc}}
+
+def file_signature(raw):
+    head=raw[:200].lstrip(); low=head.lower()
+    if raw[:2]==b"PK": return "OOXML/ZIP"
+    if raw[:8]==bytes.fromhex("D0CF11E0A1B11AE1"): return "BIFF/OLE"
+    if b"urn:schemas-microsoft-com:office:spreadsheet" in raw[:8000] or (head.startswith(b"<?xml") and b"<Workbook" in raw[:8000]): return "XML/SpreadsheetML"
+    if low.startswith(b"<html") or b"<table" in raw[:8000].lower(): return "HTML"
+    return "TEXT/UNKNOWN"
+
+def workbook(raw):
+    sig=file_signature(raw)
+    if sig=="OOXML/ZIP": return workbook_xlsx(raw)
+    if sig=="BIFF/OLE": return workbook_xls(raw)
+    if sig=="XML/SpreadsheetML": return workbook_spreadsheetml(raw)
+    if sig=="HTML": return workbook_html(raw)
+    errs=[]
+    for fn in (workbook_xlsx,workbook_xls,workbook_spreadsheetml,workbook_html,workbook_delimited):
+        try: return fn(raw)
+        except Exception as e: errs.append(f"{fn.__name__}: {e}")
+    raise ValueError(f"Formato XLS no reconocido ({sig}). "+" | ".join(errs[:3]))
 
 def xdate(x):
     return (datetime(1899, 12, 30) + timedelta(days=float(x))).strftime("%Y-%m-%d")
@@ -357,15 +474,21 @@ def extract_b2201(raw, url):
         raise ValueError("No se encontró BanBif en B-2201")
     return p
 
-def find_entity_coords(sh, aliases):
-    aa = [norm(x) for x in aliases]
-    hits = []
-    for sn, s in sh.items():
-        for (r, c), v in s["data"].items():
-            if isinstance(v, str):
-                nv = norm(v)
-                if any(a in nv for a in aa):
-                    hits.append((sn, r, c))
+def is_entity_match(value,aliases):
+    if not isinstance(value,str): return False
+    nv=norm(value)
+    aa=[norm(x) for x in aliases]
+    if any(a and (a==nv or a in nv) for a in aa): return True
+    if "INTERAMERICANO" in nv and ("FINANZAS" in nv or "BANCO" in nv or len(nv)<30): return True
+    if nv in {"BIF","BANBIF","B. INTERAMERICANO","B INTERAMERICANO"}: return True
+    if "20101036813" in nv: return True
+    return False
+
+def find_entity_coords(sh,aliases):
+    hits=[]
+    for sn,s in sh.items():
+        for (r,c),v in s["data"].items():
+            if is_entity_match(v,aliases): hits.append((sn,r,c))
     return hits
 
 def label_left(dd, r, c, limit=30):
@@ -400,67 +523,58 @@ def put(d, key, v):
         i += 1
     d[key] = float(v)
 
-def extract_metrics(sh, aliases):
-    """
-    Generic SBS table parser.
+def best_header(dd,r,c):
+    up=label_up(dd,r,c,30); left=label_left(dd,r,c,40); parts=[]
+    if left: parts.append(left)
+    if up and norm(up) not in {norm(x) for x in parts}: parts.append(up)
+    return " | ".join(parts) if parts else None
 
-    Important change vs v3.5:
-    A bank row can legitimately contain only ONE numeric metric (e.g. RCL/RFNE).
-    The old parser required >=3 horizontal numbers, then fell into an empty
-    vertical path and produced "BanBif encontrado sin métricas extraíbles".
-    """
-    out = {}
-    hits = find_entity_coords(sh, aliases)
-    alias_norm = [norm(x) for x in aliases]
+def numeric_cells_in_row(s,row):
+    dd=s["data"]
+    return [(c,dd.get((row,c))) for c in range(1,s["max_col"]+1) if isinstance(dd.get((row,c)),(int,float))]
 
-    for sn, er, ec in hits:
-        s = sh[sn]
-        dd = s["data"]
-
-        # 1) Bank names as rows: accept one or more numeric values anywhere on that row.
-        hnums = [(c, dd.get((er, c))) for c in range(1, s["max_col"] + 1)
-                 if c != ec and isinstance(dd.get((er, c)), (int, float))]
-        if hnums:
-            for c, v in hnums:
-                lab = label_up(dd, er, c, 25) or label_left(dd, er, c, 30) or f"Columna {c}"
-                put(out, lab, v)
-            # A real bank row is the strongest signal; don't pollute it with nearby banks.
-            continue
-
-        # 2) Bank names as column headers / blocks: search down the same and nearby columns.
-        candidates = []
-        c0, c1 = max(1, ec - 2), min(s["max_col"], ec + 8)
-        for r in range(er + 1, min(s["max_row"], er + 220) + 1):
-            # Stop when we reach another bank label in roughly the same entity column.
-            row_strings = [norm(dd.get((r, c))) for c in range(c0, c1 + 1) if isinstance(dd.get((r, c)), str)]
-            if r > er + 2 and any(any(a in x for a in alias_norm) for x in row_strings):
-                break
-            for c in range(c0, c1 + 1):
-                v = dd.get((r, c))
-                if isinstance(v, (int, float)):
-                    candidates.append((r, c, v))
-
-        for r, c, v in candidates:
-            lab = label_left(dd, r, c, 35)
-            head = label_up(dd, r, c, 15)
-            if lab:
-                key = f"{lab} | {head}" if head and norm(head) not in alias_norm and norm(head) != norm(lab) else lab
-            else:
-                key = head or f"Fila {r} / Columna {c}"
-            put(out, key, v)
-
-        # 3) Last-resort compact block around the bank hit for merged-cell layouts.
-        if not out:
-            for r in range(max(1, er - 3), min(s["max_row"], er + 8) + 1):
-                for c in range(1, s["max_col"] + 1):
-                    v = dd.get((r, c))
-                    if not isinstance(v, (int, float)):
-                        continue
-                    lab = label_up(dd, r, c, 12) or label_left(dd, r, c, 25)
-                    if lab:
-                        put(out, lab, v)
-
+def extract_metrics(sh,aliases):
+    out={}
+    for sn,er,ec in find_entity_coords(sh,aliases):
+        s=sh[sn]; dd=s["data"]
+        candidates=[]
+        for rr in range(max(1,er-2),min(s["max_row"],er+2)+1):
+            nums=numeric_cells_in_row(s,rr)
+            if nums: candidates.append((len(nums),-abs(rr-er),rr,nums))
+        if candidates:
+            _,_,rr,nums=max(candidates)
+            for c,v in nums:
+                if c==ec and abs(v)>1e8: continue
+                put(out,label_up(dd,rr,c,40) or label_left(dd,rr,c,50) or f"Columna {c}",v)
+            if out: continue
+        vertical=[]
+        for r in range(er+1,min(s["max_row"],er+260)+1):
+            for c in range(max(1,ec-3),min(s["max_col"],ec+8)+1):
+                v=dd.get((r,c))
+                if isinstance(v,(int,float)): vertical.append((r,c,v))
+        for r,c,v in vertical: put(out,best_header(dd,r,c) or f"Fila {r} / Columna {c}",v)
+        if out: continue
+        local=[]
+        for r in range(max(1,er-4),min(s["max_row"],er+12)+1):
+            for c in range(max(1,ec-6),min(s["max_col"],ec+25)+1):
+                v=dd.get((r,c))
+                if isinstance(v,(int,float)): local.append((abs(r-er)+abs(c-ec),r,c,v))
+        for _,r,c,v in sorted(local)[:50]: put(out,best_header(dd,r,c) or f"Fila {r} / Columna {c}",v)
     return out
+
+def workbook_diagnostic(sh,raw=None):
+    parts=[]
+    if raw is not None: parts.append(f"format={file_signature(raw)}")
+    parts.append("sheets="+",".join(f"{n}:{s['max_row']}x{s['max_col']}" for n,s in list(sh.items())[:8]))
+    samples=[]
+    for sn,s in sh.items():
+        for (r,c),v in s["data"].items():
+            if isinstance(v,str) and any(k in norm(v) for k in ("INTERAM","BANBIF","BIF","20101036813")):
+                samples.append(f"{sn}!R{r}C{c}={clean(v)[:80]}")
+                if len(samples)>=8: break
+        if len(samples)>=8: break
+    if samples: parts.append("entity_samples="+" || ".join(samples))
+    return "; ".join(parts)
 
 def canonicalize_metrics(code, metrics):
     """
@@ -492,20 +606,13 @@ def canonicalize_metrics(code, metrics):
                     metrics["Ratio de Financiación Neta Estable"] = metrics[total_key]
     return metrics
 
-def extract_generic(raw, url, code):
-    sh = workbook(raw)
-    peers = {}
-    for s, aliases in ALIASES.items():
-        peers[s] = canonicalize_metrics(code, extract_metrics(sh, aliases))
-    p = {
-        "date": url_date(url),
-        "source_url": url,
-        "source_file": url.rsplit("/", 1)[-1],
-        "banbif_metrics": peers.get("banbif", {}),
-        "peer_metrics": peers,
-    }
+def extract_generic(raw,url,code):
+    sh=workbook(raw); peers={}
+    for slug_,aliases in ALIASES.items():
+        peers[slug_]=canonicalize_metrics(code,extract_metrics(sh,aliases))
+    p={"date":url_date(url),"source_url":url,"source_file":url.rsplit("/",1)[-1],"banbif_metrics":peers.get("banbif",{}),"peer_metrics":peers}
     if not p["banbif_metrics"]:
-        raise ValueError("BanBif encontrado sin métricas extraíbles")
+        raise ValueError("BanBif sin métricas extraíbles; "+workbook_diagnostic(sh,raw))
     return p
 
 def update_report(db, code, title, page, freq):
@@ -618,7 +725,7 @@ def main():
 
     db["meta"]["generated_at"] = datetime.now(timezone.utc).isoformat()
     db["meta"]["latest_financial"] = db["financial"]["periods"][-1]["date"] if db["financial"]["periods"] else None
-    db["meta"]["sync_version"] = "3.8"
+    db["meta"]["sync_version"] = "3.9"
     db["meta"]["source_health"] = {
         code: {
             "status": s["status"],

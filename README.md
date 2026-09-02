@@ -205,3 +205,12 @@ Adicionalmente:
 - 404 de meses aún no publicados se registran como `miss`, no como error del parser;
 - al final del workflow se imprime una tabla `SBS SOURCE HEALTH`;
 - `hub.json` guarda `meta.source_health` y `meta.sync_version = 3.8`.
+
+
+## v3.9 — parser universal para XLS SBS
+
+El run de v3.8 confirma que `xlrd` ya funciona: B-2201, B-2401 y B-2340 cargan. Los reportes restantes fallan sistemáticamente por estructura/formato.
+
+v3.9 agrega soporte para BIFF8, OOXML, Excel 2003 XML/SpreadsheetML, HTML disfrazado de XLS y texto delimitado. También amplía la detección de BanBif a `Banco Interamericano`, `Interamericano`, `BanBif`, `BIF`, `B. Interamericano` y RUC `20101036813`.
+
+Si todavía queda un formato excepcional, el error del workflow mostrará formato físico, dimensiones de hojas y celdas cercanas con `INTERAM/BANBIF/BIF`, para que el siguiente ajuste sea determinístico.
