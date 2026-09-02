@@ -2,7 +2,7 @@
   "meta": {
     "title": "BanBif Regulatory & Financial Intelligence Hub",
     "bank": "Banco Interamericano de Finanzas (BanBif)",
-    "generated_at": "2026-09-02T06:24:28.732456+00:00",
+    "generated_at": "2026-09-02T06:32:10.505985+00:00",
     "frequency": "monthly",
     "financial_source": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2201",
     "financial_start_year": 2021,
@@ -18,10 +18,10 @@
     "sync_repo": "Walterchb/data-sbs",
     "sync_workflow": "sync-hub.yml",
     "financial_sync": {
-      "last_attempt": "2026-09-02T06:22:41.168555+00:00",
+      "last_attempt": "2026-09-02T06:30:47.463081+00:00",
       "discovered": 67,
       "loaded": 67,
-      "updated": 62,
+      "updated": 3,
       "errors": 0,
       "error_samples": []
     },
@@ -99773,7 +99773,7 @@
       "periods": [],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T06:23:01.534695+00:00",
+        "last_attempt": "2026-09-02T06:31:07.564814+00:00",
         "discovered": 31,
         "loaded": 0,
         "updated": 0,
@@ -114317,10 +114317,10 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T06:23:20.598475+00:00",
+        "last_attempt": "2026-09-02T06:31:14.811811+00:00",
         "discovered": 31,
         "loaded": 31,
-        "updated": 31,
+        "updated": 3,
         "errors": 0,
         "error_samples": []
       }
@@ -114333,7 +114333,7 @@
       "periods": [],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T06:23:41.889001+00:00",
+        "last_attempt": "2026-09-02T06:31:35.363399+00:00",
         "discovered": 30,
         "loaded": 0,
         "updated": 0,
@@ -121241,10 +121241,10 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T06:23:57.917267+00:00",
+        "last_attempt": "2026-09-02T06:31:39.685599+00:00",
         "discovered": 30,
         "loaded": 30,
-        "updated": 30,
+        "updated": 3,
         "errors": 0,
         "error_samples": []
       }
@@ -121257,7 +121257,7 @@
       "periods": [],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-02T06:24:28.732406+00:00",
+        "last_attempt": "2026-09-02T06:32:10.505930+00:00",
         "discovered": 31,
         "loaded": 0,
         "updated": 0,
@@ -121294,7 +121294,7 @@
       "frequency": "quarterly",
       "periods": [],
       "sync": {
-        "last_attempt": "2026-09-02T06:24:04.260216+00:00",
+        "last_attempt": "2026-09-02T06:31:46.445730+00:00",
         "discovered": 9,
         "loaded": 0,
         "updated": 0,
@@ -121331,7 +121331,7 @@
       "frequency": "monthly",
       "periods": [],
       "sync": {
-        "last_attempt": "2026-09-02T06:24:07.621076+00:00",
+        "last_attempt": "2026-09-02T06:31:50.847737+00:00",
         "discovered": 7,
         "loaded": 0,
         "updated": 0,
