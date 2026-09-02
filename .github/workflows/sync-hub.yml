@@ -8,6 +8,7 @@ on:
     branches: [ main ]
     paths:
       - "scripts/sync_hub.py"
+      - "requirements.txt"
       - ".github/workflows/sync-hub.yml"
 
 permissions:
@@ -20,17 +21,40 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 55
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - name: Configurar Python
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python - <<'PY'
+          import xlrd
+          print("xlrd OK:", xlrd.__version__)
+          PY
 
       - name: Sincronizar SBS
         run: python scripts/sync_hub.py
+
+      - name: Mostrar salud de fuentes
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open("data/hub.json",encoding="utf-8"))
+          print("\nFUENTE      ESTADO   PERIODOS  ULTIMO       ERRORES")
+          print("-"*55)
+          for code,x in d.get("meta",{}).get("source_health",{}).items():
+              print(f"{code:10} {x.get('status','-'):8} {x.get('loaded',0):8}  {str(x.get('latest') or '-'):10}  {x.get('errors',0):7}")
+          PY
 
       - name: Guardar cambios
         run: |
