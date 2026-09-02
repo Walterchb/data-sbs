@@ -14,7 +14,7 @@
       "Los módulos regulatorios no estiman datos faltantes.",
       "El primer GitHub Action completa la serie mensual disponible en SBS."
     ],
-    "version": "3.4",
+    "version": "3.5",
     "sync_repo": "Walterchb/data-sbs",
     "sync_workflow": "sync-hub.yml"
   },
@@ -9682,6 +9682,84 @@
         "unit": "%",
         "source": "PCR",
         "note": "dic-2025."
+      }
+    ],
+    "evidence": [
+      {
+        "group": "Solvencia",
+        "title": "Solvencia mejora, pero sigue por debajo del sistema",
+        "source": "PCR / Moody's",
+        "as_of": "Dic-2025",
+        "text": "RCG 16.4% (Moody's 16.39%) y Tier 1 / APR 11.5% (Moody's 11.54%). Ambas clasificadoras destacan la mejora por capitalización, pero comparan el capital con niveles mayores del sistema.",
+        "metric_ids": [
+          "rcg",
+          "tier1_apr",
+          "leverage"
+        ]
+      },
+      {
+        "group": "Calidad de activos",
+        "title": "Menor mora, con refinanciados como punto de seguimiento",
+        "source": "PCR / Moody's",
+        "as_of": "Dic-2025",
+        "text": "La mora bajó a 3.5% y la cartera problema se ubicó alrededor de 4.9%; PCR señala que mayores refinanciamientos compensaron parte de la mejora de mora.",
+        "metric_ids": [
+          "overdue_ratio",
+          "refi_ratio",
+          "car_ratio",
+          "real_delinquency"
+        ]
+      },
+      {
+        "group": "Cobertura",
+        "title": "Cobertura de cartera problema por encima de 100%",
+        "source": "PCR / Moody's",
+        "as_of": "Dic-2025",
+        "text": "PCR reporta cobertura de atrasos de 171.4% y cobertura CAR de 123.0%; Moody's reporta 122.95% para cartera problema y US$55.4 MM de provisiones voluntarias.",
+        "metric_ids": [
+          "coverage_overdue",
+          "coverage_car",
+          "provisions_direct"
+        ]
+      },
+      {
+        "group": "Liquidez y fondeo",
+        "title": "Liquidez holgada con concentración de depositantes a monitorear",
+        "source": "PCR / Moody's",
+        "as_of": "Dic-2025",
+        "text": "Liquidez MN 39.0%, ME 46.5%, RCL total 144.3% y RFNE 108.6%. A la vez, Top 20 depositantes fue 22.3%, indicador que ambas clasificadoras monitorean.",
+        "metric_ids": [
+          "liq_mn",
+          "liq_me",
+          "rcl_total",
+          "rfne",
+          "top20_depositors"
+        ]
+      },
+      {
+        "group": "Rentabilidad",
+        "title": "Resultados mejoran, aunque la rentabilidad sigue debajo del sistema",
+        "source": "PCR / Moody's",
+        "as_of": "Dic-2025",
+        "text": "ROE alrededor de 13.4% y ROA 1.2%; la mejora provino de menor costo financiero y menor gasto en provisiones, pero las clasificadoras aún comparan desfavorablemente frente a banca múltiple.",
+        "metric_ids": [
+          "roe",
+          "roa",
+          "net_fin_margin",
+          "net_margin"
+        ]
+      },
+      {
+        "group": "Riesgo de mercado",
+        "title": "Exposición cambiaria baja; VPR es el foco relativo",
+        "source": "PCR",
+        "as_of": "Dic-2025",
+        "text": "Posición global ME / patrimonio efectivo 0.1%, GER 1.1% y VPR 11.0%. PCR indica que GER y VPR están bajo límites sugeridos, aunque el VPR se ubica alto frente al sector.",
+        "metric_ids": [
+          "fx_global_pe",
+          "ger",
+          "vpr"
+        ]
       }
     ]
   }

@@ -136,3 +136,13 @@ Vistas:
 - **Watchlist**: indicadores del informe que no pueden reconstruirse directamente desde B-2201, como concentración Top 20, provisiones voluntarias o garantías.
 
 La capa de referencias queda en `data/hub.json` bajo `ratings` y no se elimina cuando el workflow actualiza SBS.
+
+
+## v3.5 — Intelligence cockpit
+
+- Se corrige una decisión de arquitectura de v3.4: la referencia de clasificadoras vive ahora en `data/ratings_reference.json`, separada de `data/hub.json`. Así una mejora visual nunca vuelve a borrar data sincronizada SBS.
+- El ZIP de reemplazo de v3.5 **no incluye `data/hub.json`**.
+- `scripts/sync_hub.py` incorpora fallback a las rutas XLS mensuales canónicas de SBS cuando la página de estadísticas no expone enlaces en HTML.
+- Se corrige el cálculo de provisiones de cartera: B-2201 contiene varias filas llamadas `Provisiones`; para cobertura se usa la de mayor magnitud, que corresponde a cartera de créditos, evitando tomar la provisión de inversiones.
+- El módulo Clasificadoras se rediseñó como un observatorio visual: Panel, Histórico 5Y y Evidencia. No usa una tabla plana.
+- Las métricas sin fuente regulatoria cargada muestran `Ref. dic-25 / Pendiente <código SBS>` explícitamente en lugar de celdas vacías.

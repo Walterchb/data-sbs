@@ -1,0 +1,717 @@
+{
+  "as_of": "2025-12-31",
+  "documents": {
+    "PCR": {
+      "title": "PCR - Auditados Dic2025",
+      "committee_date": "2026-05-29",
+      "financial_strength": "PEA+",
+      "outlook": "Estable",
+      "note": "Informe con EEFF auditados al 31/12/2025."
+    },
+    "Moodys": {
+      "title": "Moody's Local - Auditados Dic2025",
+      "publication_date": "2026-03-27",
+      "entity_rating": "A",
+      "issuer_rating": "AA.pe",
+      "outlook": "Estable",
+      "note": "Informe de clasificación con fecha de comité 16/03/2026."
+    }
+  },
+  "metric_catalog": [
+    {
+      "id": "overdue_ratio",
+      "group": "Calidad de activos",
+      "label": "Cartera atrasada / créditos directos",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "overdue_ratio",
+      "annual": {
+        "2021": 2.9,
+        "2022": 3.4,
+        "2023": 3.5,
+        "2024": 3.8,
+        "2025": 3.5
+      },
+      "bm_2025": 3.3
+    },
+    {
+      "id": "refi_ratio",
+      "group": "Calidad de activos",
+      "label": "Refinanciada y reestructurada / créditos directos",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "refi_ratio",
+      "annual": {
+        "2021": 2.1,
+        "2022": 1.6,
+        "2023": 1.4,
+        "2024": 1.1,
+        "2025": 1.4
+      },
+      "bm_2025": 1.8
+    },
+    {
+      "id": "car_ratio",
+      "group": "Calidad de activos",
+      "label": "Cartera de alto riesgo / créditos directos",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-2201",
+      "calc": "car_ratio",
+      "annual": {
+        "2021": 5.0,
+        "2022": 5.0,
+        "2023": 4.9,
+        "2024": 4.9,
+        "2025": 4.9
+      },
+      "bm_2025": 5.1,
+      "moodys_2025": 4.86
+    },
+    {
+      "id": "heavy_ratio",
+      "group": "Calidad de activos",
+      "label": "Cartera pesada",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "B-2401",
+      "calc": "report_heavy",
+      "annual": {
+        "2021": 5.7,
+        "2022": 6.0,
+        "2023": 6.0,
+        "2024": 5.9,
+        "2025": 5.8
+      },
+      "bm_2025": 5.3
+    },
+    {
+      "id": "real_delinquency",
+      "group": "Calidad de activos",
+      "label": "Mora real (incluye castigos)",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR / Moody's",
+      "sbs_source": "Reporte / castigos",
+      "calc": "report_only",
+      "annual": {
+        "2021": 6.9,
+        "2022": 5.7,
+        "2023": 6.3,
+        "2024": 6.4,
+        "2025": 6.0
+      },
+      "moodys_2025": 5.97,
+      "bm_2025": 6.99
+    },
+    {
+      "id": "coverage_overdue",
+      "group": "Cobertura",
+      "label": "Provisiones / cartera atrasada",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "coverage_overdue",
+      "annual": {
+        "2021": 213.7,
+        "2022": 182.6,
+        "2023": 161.4,
+        "2024": 151.2,
+        "2025": 171.4
+      },
+      "bm_2025": 171.0
+    },
+    {
+      "id": "coverage_car",
+      "group": "Cobertura",
+      "label": "Provisiones / cartera de alto riesgo",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-2201",
+      "calc": "coverage_car",
+      "annual": {
+        "2021": 125.6,
+        "2022": 125.6,
+        "2023": 115.2,
+        "2024": 117.4,
+        "2025": 123.0
+      },
+      "moodys_2025": 122.95,
+      "bm_2025": 110.0
+    },
+    {
+      "id": "provisions_direct",
+      "group": "Cobertura",
+      "label": "Provisiones / créditos directos",
+      "unit": "%",
+      "direction": "context",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "provisions_direct",
+      "annual": {
+        "2021": 6.3,
+        "2022": 6.3,
+        "2023": 5.7,
+        "2024": 5.8,
+        "2025": 6.0
+      },
+      "bm_2025": 5.6
+    },
+    {
+      "id": "liq_mn",
+      "group": "Liquidez y fondeo",
+      "label": "Ratio de Liquidez MN",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-2340",
+      "calc": "liq_mn",
+      "annual": {
+        "2021": 30.3,
+        "2022": 27.5,
+        "2023": 32.9,
+        "2024": 35.2,
+        "2025": 39.0
+      },
+      "bm_2025": 27.9
+    },
+    {
+      "id": "liq_me",
+      "group": "Liquidez y fondeo",
+      "label": "Ratio de Liquidez ME",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-2340",
+      "calc": "liq_me",
+      "annual": {
+        "2021": 49.1,
+        "2022": 44.6,
+        "2023": 45.0,
+        "2024": 49.4,
+        "2025": 46.5
+      },
+      "bm_2025": 57.2
+    },
+    {
+      "id": "available_public",
+      "group": "Liquidez y fondeo",
+      "label": "Fondos disponibles / obligaciones con público",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "available_public",
+      "annual": {
+        "2021": 30.8,
+        "2022": 26.5,
+        "2023": 20.4,
+        "2024": 24.6,
+        "2025": 33.5
+      },
+      "bm_2025": 26.8
+    },
+    {
+      "id": "rcl_total",
+      "group": "Liquidez y fondeo",
+      "label": "RCL Total",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-230811",
+      "calc": "rcl_total",
+      "annual": {
+        "2025": 144.3
+      },
+      "bm_2025": 147.7,
+      "regulatory_min": 100.0
+    },
+    {
+      "id": "rfne",
+      "group": "Liquidez y fondeo",
+      "label": "Ratio de Financiación Neta Estable",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR",
+      "sbs_source": "R-0010",
+      "calc": "rfne",
+      "annual": {
+        "2025": 108.6
+      },
+      "regulatory_min": 90.0
+    },
+    {
+      "id": "top20_depositors",
+      "group": "Liquidez y fondeo",
+      "label": "Concentración Top 20 depositantes",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR / Moody's",
+      "sbs_source": "Reporte clasificadora",
+      "calc": "report_only",
+      "annual": {
+        "2022": 29.13,
+        "2024": 20.72,
+        "2025": 22.3
+      }
+    },
+    {
+      "id": "top10_depositors",
+      "group": "Liquidez y fondeo",
+      "label": "Concentración Top 10 depositantes",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "Reporte clasificadora",
+      "calc": "report_only",
+      "annual": {
+        "2025": 15.2
+      }
+    },
+    {
+      "id": "rcg",
+      "group": "Solvencia",
+      "label": "Ratio de Capital Global",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-3302",
+      "calc": "rcg",
+      "annual": {
+        "2021": 13.7,
+        "2022": 14.0,
+        "2023": 14.7,
+        "2024": 14.9,
+        "2025": 16.4
+      },
+      "moodys_2025": 16.39,
+      "bm_2025": 17.8,
+      "internal_tolerance": 14.0,
+      "regulatory_min": 10.0
+    },
+    {
+      "id": "tier1_apr",
+      "group": "Solvencia",
+      "label": "Capital Nivel 1 / APR",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-3302",
+      "calc": "tier1",
+      "annual": {
+        "2021": 8.9,
+        "2022": 9.2,
+        "2023": 9.7,
+        "2024": 10.2,
+        "2025": 11.5
+      },
+      "moodys_2025": 11.54,
+      "bm_2025": 14.0
+    },
+    {
+      "id": "leverage",
+      "group": "Solvencia",
+      "label": "Endeudamiento patrimonial",
+      "unit": "x",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "leverage",
+      "annual": {
+        "2021": 12.7,
+        "2022": 11.1,
+        "2023": 11.1,
+        "2024": 10.4,
+        "2025": 9.5
+      },
+      "bm_2025": 6.2
+    },
+    {
+      "id": "liab_cap_res",
+      "group": "Solvencia",
+      "label": "Pasivo total / capital + reservas",
+      "unit": "x",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "liab_cap_res",
+      "annual": {
+        "2021": 14.8,
+        "2022": 13.1,
+        "2023": 12.9,
+        "2024": 12.2,
+        "2025": 11.7
+      },
+      "bm_2025": 7.5
+    },
+    {
+      "id": "tier1_pe",
+      "group": "Solvencia",
+      "label": "TIER 1 / patrimonio efectivo",
+      "unit": "%",
+      "direction": "higher",
+      "source": "Moody's",
+      "sbs_source": "Reporte clasificadora",
+      "calc": "report_only",
+      "annual": {
+        "2024": 67.93,
+        "2025": 70.38
+      },
+      "bm_2025": 78.63,
+      "medium_banks_2025": 85.66
+    },
+    {
+      "id": "roe",
+      "group": "Rentabilidad",
+      "label": "ROE",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-2401 / derivado",
+      "calc": "roe",
+      "annual": {
+        "2021": 12.0,
+        "2022": 12.0,
+        "2023": 10.8,
+        "2024": 11.0,
+        "2025": 13.4
+      },
+      "moodys_2025": 13.42,
+      "bm_2025": 19.0
+    },
+    {
+      "id": "roa",
+      "group": "Rentabilidad",
+      "label": "ROA",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-2401 / derivado",
+      "calc": "roa",
+      "annual": {
+        "2021": 0.8,
+        "2022": 0.9,
+        "2023": 0.9,
+        "2024": 0.9,
+        "2025": 1.2
+      },
+      "moodys_2025": 1.23,
+      "bm_2025": 2.5
+    },
+    {
+      "id": "net_fin_margin",
+      "group": "Rentabilidad",
+      "label": "Margen financiero neto / ingresos financieros 12M",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "net_fin_margin",
+      "annual": {
+        "2021": 42.4,
+        "2022": 44.1,
+        "2023": 34.0,
+        "2024": 32.8,
+        "2025": 44.1
+      },
+      "bm_2025": 61.7
+    },
+    {
+      "id": "operating_margin",
+      "group": "Rentabilidad",
+      "label": "Margen operativo neto",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "operating_margin",
+      "annual": {
+        "2021": 18.4,
+        "2022": 20.8,
+        "2023": 15.4,
+        "2024": 16.4,
+        "2025": 23.2
+      },
+      "bm_2025": 34.3
+    },
+    {
+      "id": "net_margin",
+      "group": "Rentabilidad",
+      "label": "Margen neto",
+      "unit": "%",
+      "direction": "higher",
+      "source": "PCR / Moody's",
+      "sbs_source": "B-2201",
+      "calc": "net_margin",
+      "annual": {
+        "2021": 13.7,
+        "2022": 13.5,
+        "2023": 10.2,
+        "2024": 10.4,
+        "2025": 14.8
+      },
+      "moodys_2025": 16.92,
+      "bm_2025": 23.4
+    },
+    {
+      "id": "admin_eff",
+      "group": "Eficiencia",
+      "label": "Gastos administración / ingresos + servicios financieros",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "admin_eff",
+      "annual": {
+        "2021": 25.8,
+        "2022": 23.4,
+        "2023": 18.9,
+        "2024": 18.5,
+        "2025": 21.5
+      },
+      "bm_2025": 28.6
+    },
+    {
+      "id": "admin_gross_margin",
+      "group": "Eficiencia",
+      "label": "Gastos administración / margen financiero bruto",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "B-2201",
+      "calc": "admin_gross_margin",
+      "annual": {
+        "2021": 45.0,
+        "2022": 49.3,
+        "2023": 49.5,
+        "2024": 44.4,
+        "2025": 43.5
+      },
+      "bm_2025": 45.1
+    },
+    {
+      "id": "opex_income",
+      "group": "Eficiencia",
+      "label": "Gastos operación / ingresos + servicios financieros",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "B-2401 / reporte",
+      "calc": "report_only",
+      "annual": {
+        "2021": 59.5,
+        "2022": 69.4,
+        "2023": 76.7,
+        "2024": 70.8,
+        "2025": 66.0
+      },
+      "bm_2025": 53.7
+    },
+    {
+      "id": "fx_global_pe",
+      "group": "Riesgo de mercado",
+      "label": "Posición global ME / patrimonio efectivo",
+      "unit": "%",
+      "direction": "lower_abs",
+      "source": "PCR",
+      "sbs_source": "B-2368",
+      "calc": "fx_global_pe",
+      "annual": {
+        "2021": 3.1,
+        "2022": 0.4,
+        "2023": 1.0,
+        "2024": 2.1,
+        "2025": 0.1
+      },
+      "regulatory_limit": 10.0
+    },
+    {
+      "id": "ger",
+      "group": "Riesgo de mercado",
+      "label": "Ganancia en Riesgo (GER) / patrimonio efectivo",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "Anexo SBS / reporte",
+      "calc": "report_only",
+      "annual": {
+        "2025": 1.1
+      },
+      "regulatory_limit": 5.0
+    },
+    {
+      "id": "vpr",
+      "group": "Riesgo de mercado",
+      "label": "Valor Patrimonial en Riesgo (VPR) / patrimonio efectivo",
+      "unit": "%",
+      "direction": "lower",
+      "source": "PCR",
+      "sbs_source": "Anexo SBS / reporte",
+      "calc": "report_only",
+      "annual": {
+        "2025": 11.0
+      },
+      "regulatory_limit": 20.0
+    }
+  ],
+  "report_only_watchlist": [
+    {
+      "group": "Cobertura",
+      "label": "Provisiones voluntarias",
+      "value": 55.4,
+      "unit": "US$ MM",
+      "source": "Moody's",
+      "note": "Dato del informe; no se deriva de B-2201."
+    },
+    {
+      "group": "Cobertura",
+      "label": "Créditos respaldados por garantías",
+      "value": 75.83,
+      "unit": "%",
+      "source": "Moody's",
+      "note": "Garantías preferidas: 32.85%."
+    },
+    {
+      "group": "Liquidez y fondeo",
+      "label": "Brecha acumulada global / patrimonio efectivo",
+      "value": 76.52,
+      "unit": "%",
+      "source": "Moody's",
+      "note": "Brecha global positiva al cierre de 2025."
+    },
+    {
+      "group": "Mercado",
+      "label": "Market share créditos directos",
+      "value": 3.9,
+      "unit": "%",
+      "source": "PCR",
+      "note": "5.º lugar; dic-2025."
+    },
+    {
+      "group": "Mercado",
+      "label": "Market share depósitos",
+      "value": 4.0,
+      "unit": "%",
+      "source": "PCR",
+      "note": "5.º lugar; dic-2025."
+    },
+    {
+      "group": "Mercado",
+      "label": "Market share factoring",
+      "value": 10.3,
+      "unit": "%",
+      "source": "PCR",
+      "note": "dic-2025."
+    },
+    {
+      "group": "Mercado",
+      "label": "Market share comercio exterior",
+      "value": 9.4,
+      "unit": "%",
+      "source": "PCR",
+      "note": "dic-2025."
+    },
+    {
+      "group": "Mercado",
+      "label": "Market share leasing",
+      "value": 6.5,
+      "unit": "%",
+      "source": "PCR",
+      "note": "dic-2025."
+    },
+    {
+      "group": "Mercado",
+      "label": "Market share hipotecarios",
+      "value": 5.0,
+      "unit": "%",
+      "source": "PCR",
+      "note": "dic-2025."
+    }
+  ],
+  "evidence": [
+    {
+      "group": "Solvencia",
+      "title": "Solvencia mejora, pero sigue por debajo del sistema",
+      "source": "PCR / Moody's",
+      "as_of": "Dic-2025",
+      "text": "RCG 16.4% (Moody's 16.39%) y Tier 1 / APR 11.5% (Moody's 11.54%). Ambas clasificadoras destacan la mejora por capitalización, pero comparan el capital con niveles mayores del sistema.",
+      "metric_ids": [
+        "rcg",
+        "tier1_apr",
+        "leverage"
+      ]
+    },
+    {
+      "group": "Calidad de activos",
+      "title": "Menor mora, con refinanciados como punto de seguimiento",
+      "source": "PCR / Moody's",
+      "as_of": "Dic-2025",
+      "text": "La mora bajó a 3.5% y la cartera problema se ubicó alrededor de 4.9%; PCR señala que mayores refinanciamientos compensaron parte de la mejora de mora.",
+      "metric_ids": [
+        "overdue_ratio",
+        "refi_ratio",
+        "car_ratio",
+        "real_delinquency"
+      ]
+    },
+    {
+      "group": "Cobertura",
+      "title": "Cobertura de cartera problema por encima de 100%",
+      "source": "PCR / Moody's",
+      "as_of": "Dic-2025",
+      "text": "PCR reporta cobertura de atrasos de 171.4% y cobertura CAR de 123.0%; Moody's reporta 122.95% para cartera problema y US$55.4 MM de provisiones voluntarias.",
+      "metric_ids": [
+        "coverage_overdue",
+        "coverage_car",
+        "provisions_direct"
+      ]
+    },
+    {
+      "group": "Liquidez y fondeo",
+      "title": "Liquidez holgada con concentración de depositantes a monitorear",
+      "source": "PCR / Moody's",
+      "as_of": "Dic-2025",
+      "text": "Liquidez MN 39.0%, ME 46.5%, RCL total 144.3% y RFNE 108.6%. A la vez, Top 20 depositantes fue 22.3%, indicador que ambas clasificadoras monitorean.",
+      "metric_ids": [
+        "liq_mn",
+        "liq_me",
+        "rcl_total",
+        "rfne",
+        "top20_depositors"
+      ]
+    },
+    {
+      "group": "Rentabilidad",
+      "title": "Resultados mejoran, aunque la rentabilidad sigue debajo del sistema",
+      "source": "PCR / Moody's",
+      "as_of": "Dic-2025",
+      "text": "ROE alrededor de 13.4% y ROA 1.2%; la mejora provino de menor costo financiero y menor gasto en provisiones, pero las clasificadoras aún comparan desfavorablemente frente a banca múltiple.",
+      "metric_ids": [
+        "roe",
+        "roa",
+        "net_fin_margin",
+        "net_margin"
+      ]
+    },
+    {
+      "group": "Riesgo de mercado",
+      "title": "Exposición cambiaria baja; VPR es el foco relativo",
+      "source": "PCR",
+      "as_of": "Dic-2025",
+      "text": "Posición global ME / patrimonio efectivo 0.1%, GER 1.1% y VPR 11.0%. PCR indica que GER y VPR están bajo límites sugeridos, aunque el VPR se ubica alto frente al sector.",
+      "metric_ids": [
+        "fx_global_pe",
+        "ger",
+        "vpr"
+      ]
+    }
+  ]
+}

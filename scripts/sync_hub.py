@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BanBif Regulatory & Financial Intelligence Hub v3
+BanBif Regulatory & Financial Intelligence Hub v3.5
 SBS synchronizer.
 
 Fixes in v3:
@@ -47,6 +47,8 @@ ALIASES={
 "interbank":["INTERBANK"]
 }
 MONTHS={"en":1,"fe":2,"ma":3,"ab":4,"my":5,"jn":6,"jl":7,"ag":8,"se":9,"oc":10,"no":11,"di":12}
+MONTH_CODES={v:k for k,v in MONTHS.items()}
+MONTH_FOLDERS={1:"Enero",2:"Febrero",3:"Marzo",4:"Abril",5:"Mayo",6:"Junio",7:"Julio",8:"Agosto",9:"Septiembre",10:"Octubre",11:"Noviembre",12:"Diciembre"}
 
 class Links(HTMLParser):
  def __init__(self):super().__init__();self.links=[]
@@ -60,7 +62,10 @@ def fetch(url,tries=4):
  for i in range(tries):
   try:
    with urlopen(Request(url,headers={"User-Agent":UA,"Accept":"*/*"}),timeout=TIMEOUT) as r:return r.read()
-  except (URLError,HTTPError,TimeoutError) as e:err=e;time.sleep(1.25*(i+1))
+  except HTTPError as e:
+   if e.code in (404,403):raise
+   err=e;time.sleep(1.25*(i+1))
+  except (URLError,TimeoutError) as e:err=e;time.sleep(1.25*(i+1))
  raise err
 
 def norm(s):
@@ -137,6 +142,18 @@ def discover(page,start_year):
   if d and int(d[:4])>=start_year:out.append(u)
  return list(dict.fromkeys(out))
 
+def candidate_urls(code,start_year,freq="monthly"):
+ now=datetime.now()
+ out=[]
+ for y in range(start_year,now.year+1):
+  end=now.month if y==now.year else 12
+  months=range(1,end+1)
+  if freq=="quarterly":months=[m for m in months if m in (3,6,9,12)]
+  for m in months:
+   suf=MONTH_CODES[m];folder=MONTH_FOLDERS[m]
+   out.append(f"https://intranet2.sbs.gob.pe/estadistica/financiera/{y}/{folder}/{code}-{suf}{y}.XLS")
+ return out
+
 def slug(name):
  n=norm(name)
  if "INTERAMERICANO" in n:return"banbif"
@@ -151,6 +168,10 @@ def fval(rows,label):
  for r in rows:
   if norm(r["label"])==t:return r["total"]
  return None
+
+def credit_provisions(rows):
+ vals=[abs(float(r["total"])) for r in rows if norm(r.get("label"))=="PROVISIONES" and isinstance(r.get("total"),(int,float))]
+ return max(vals) if vals else 0
 
 def extract_b2201(raw,url):
  sh=workbook(raw);s1=sh.get("1") or list(sh.values())[0];d=s1["data"];date=url_date(url)
@@ -181,7 +202,7 @@ def extract_b2201(raw,url):
     arr.append({"row":r,"label":lab,"indent":min(4,max(0,len(rawlab)-len(rawlab.lstrip()))//2),"mn":dd.get((r,bc)) if isinstance(dd.get((r,bc)),(int,float)) else None,"me":dd.get((r,bc+1)) if isinstance(dd.get((r,bc+1)),(int,float)) else None,"total":float(tot)})
    entity[key]=arr
   b=entity["balance"];inc=entity["income"];g=(fval(b,"Vigentes")or 0)+(fval(b,"Refinanciados y Reestructurados")or 0)+(fval(b,"Atrasados")or 0)
-  p["peers"].append({"name":name,"slug":entity["slug"],"total_assets":fval(b,"TOTAL ACTIVO"),"gross_credits":g,"public_deposits":fval(b,"OBLIGACIONES CON EL PÚBLICO"),"equity":fval(b,"PATRIMONIO"),"overdue":fval(b,"Atrasados"),"refinanced":fval(b,"Refinanciados y Reestructurados"),"provisions":abs(fval(b,"Provisiones")or 0),"net_income":fval(inc,"RESULTADO NETO DEL EJERCICIO"),"financial_income":fval(inc,"INGRESOS FINANCIEROS"),"admin_expenses":fval(inc,"GASTOS ADMINISTRATIVOS")})
+  p["peers"].append({"name":name,"slug":entity["slug"],"total_assets":fval(b,"TOTAL ACTIVO"),"gross_credits":g,"public_deposits":fval(b,"OBLIGACIONES CON EL PÚBLICO"),"equity":fval(b,"PATRIMONIO"),"overdue":fval(b,"Atrasados"),"refinanced":fval(b,"Refinanciados y Reestructurados"),"provisions":credit_provisions(b),"net_income":fval(inc,"RESULTADO NETO DEL EJERCICIO"),"financial_income":fval(inc,"INGRESOS FINANCIEROS"),"admin_expenses":fval(inc,"GASTOS ADMINISTRATIVOS")})
   if entity["slug"]=="banbif":p["banbif"]={"balance":entity["balance"],"income":entity["income"]}
  if not p["banbif"]:raise ValueError("No se encontró BanBif en B-2201")
  return p
@@ -248,7 +269,12 @@ def extract_generic(raw,url):
 def update_report(db,code,title,page,freq):
  r=db["reports"].setdefault(code,{"title":title,"short":title,"source":page,"periods":[]})
  start=FIN_START_YEAR if code=="B-2201" else REG_START_YEAR
- links=discover(page,start);known={p.get("source_url") for p in (db["financial"]["periods"] if code=="B-2201" else r.get("periods",[]))}
+ try:links=discover(page,start)
+ except Exception as e:
+  print("WARN discover",code,e);links=[]
+ # SBS pages do not always expose XLS hrefs in static HTML. Build the canonical public XLS paths as fallback.
+ if len(links)<3:links=candidate_urls(code,start,freq)
+ known={p.get("source_url") for p in (db["financial"]["periods"] if code=="B-2201" else r.get("periods",[]))}
  target=[u for u in links if u not in known]
  for u in links[-3:]:
   if u not in target:target.append(u)
