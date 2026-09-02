@@ -45,6 +45,7 @@
   </section>
 
   <div id="moduleStrip" class="reg-strip"></div>
+  <div id="appError" class="app-error" hidden><i class="fa-solid fa-triangle-exclamation"></i><span></span></div>
   <section id="kpiGrid" class="kpi-grid"></section>
 
   <section id="analysisCharts" class="chart-row">
@@ -80,8 +81,8 @@
     <div class="ratings-hero">
       <div class="ratings-hero-copy">
         <span class="eyebrow"><i class="fa-solid fa-shield-halved"></i> SBS · RATIOS PARA CLASIFICACIÓN</span>
-        <h2>Contrasta cualquier informe contra la SBS</h2>
-        <p>Esta vista no contiene cifras de PCR, Moody's ni ninguna clasificadora. Todos los valores mostrados provienen de reportes SBS o de cálculos directos sobre información SBS.</p>
+        <h2>Contrasta cualquier informe directamente contra la SBS</h2>
+        <p>El módulo no incorpora cifras de PCR, Moody's ni otras clasificadoras. Cada valor proviene de la SBS o de un cálculo directo realizado sobre datos SBS.</p>
       </div>
       <div id="ratingsSourceStrip" class="ratings-agency-strip"></div>
     </div>
@@ -111,7 +112,7 @@
             <button type="button" class="tab" data-data-view="annual" title="Evolutivo anual, mismo mes">5 AÑOS</button>
             <button type="button" class="tab" data-data-view="monthly" title="Evolutivo mensual">12 MESES</button>
           </div>
-          <button type="button" id="btnImpact" class="soft data-tool" title="Ordenar por impacto (desactiva temporalmente la jerarquía fija)" aria-label="Ordenar por impacto"><i class="fa-solid fa-arrow-down-wide-short"></i></button>
+          <button type="button" id="btnImpact" class="soft data-tool" title="Ordenar por impacto" aria-label="Ordenar por impacto"><i class="fa-solid fa-arrow-down-wide-short"></i></button>
           <button type="button" id="btnBars" class="soft data-tool" title="Barras de proporción" aria-label="Barras de proporción"><i class="fa-solid fa-bars-progress"></i></button>
         </div>
       </div>
@@ -176,25 +177,31 @@ const RATING_METRICS=[
  {id:"tier1",group:"Solvencia",label:"Capital Nivel 1 / APR",unit:"%",direction:"higher",source:"B-3302",calc:"tier1"},
  {id:"leverage",group:"Solvencia",label:"Pasivo total / patrimonio",unit:"x",direction:"lower",source:"B-2201",calc:"leverage"},
  {id:"liab_cap_res",group:"Solvencia",label:"Pasivo total / capital + reservas",unit:"x",direction:"lower",source:"B-2201",calc:"liab_cap_res"},
+
  {id:"overdue_ratio",group:"Calidad de activos",label:"Cartera atrasada / créditos directos",unit:"%",direction:"lower",source:"B-2201",calc:"overdue_ratio"},
  {id:"refi_ratio",group:"Calidad de activos",label:"Refinanciada y reestructurada / créditos directos",unit:"%",direction:"lower",source:"B-2201",calc:"refi_ratio"},
  {id:"car_ratio",group:"Calidad de activos",label:"Cartera de alto riesgo / créditos directos",unit:"%",direction:"lower",source:"B-2201",calc:"car_ratio"},
  {id:"heavy_ratio",group:"Calidad de activos",label:"Cartera pesada",unit:"%",direction:"lower",source:"B-2401",calc:"heavy_ratio"},
+
  {id:"coverage_overdue",group:"Cobertura",label:"Provisiones / cartera atrasada",unit:"%",direction:"higher",source:"B-2201",calc:"coverage_overdue"},
  {id:"coverage_car",group:"Cobertura",label:"Provisiones / cartera de alto riesgo",unit:"%",direction:"higher",source:"B-2201",calc:"coverage_car"},
  {id:"provisions_direct",group:"Cobertura",label:"Provisiones / créditos directos",unit:"%",direction:"context",source:"B-2201",calc:"provisions_direct"},
+
  {id:"liq_mn",group:"Liquidez y fondeo",label:"Ratio de Liquidez MN",unit:"%",direction:"higher",source:"B-2340",calc:"liq_mn"},
  {id:"liq_me",group:"Liquidez y fondeo",label:"Ratio de Liquidez ME",unit:"%",direction:"higher",source:"B-2340",calc:"liq_me"},
  {id:"available_public",group:"Liquidez y fondeo",label:"Disponible / obligaciones con el público",unit:"%",direction:"higher",source:"B-2201",calc:"available_public"},
  {id:"rcl_total",group:"Liquidez y fondeo",label:"Ratio de Cobertura de Liquidez",unit:"%",direction:"higher",source:"B-230811",calc:"rcl_total"},
  {id:"rfne",group:"Liquidez y fondeo",label:"Ratio de Financiación Neta Estable",unit:"%",direction:"higher",source:"R-0010",calc:"rfne"},
+
  {id:"roe",group:"Rentabilidad",label:"ROE",unit:"%",direction:"higher",source:"B-2401",calc:"roe"},
  {id:"roa",group:"Rentabilidad",label:"ROA",unit:"%",direction:"higher",source:"B-2401",calc:"roa"},
  {id:"net_fin_margin",group:"Rentabilidad",label:"Margen financiero neto / ingresos financieros",unit:"%",direction:"higher",source:"B-2201",calc:"net_fin_margin"},
  {id:"operating_margin",group:"Rentabilidad",label:"Margen operacional neto",unit:"%",direction:"higher",source:"B-2201",calc:"operating_margin"},
  {id:"net_margin",group:"Rentabilidad",label:"Margen neto",unit:"%",direction:"higher",source:"B-2201",calc:"net_margin"},
+
  {id:"admin_eff",group:"Eficiencia",label:"Gastos administrativos / ingresos financieros + servicios",unit:"%",direction:"lower",source:"B-2201",calc:"admin_eff"},
  {id:"admin_gross_margin",group:"Eficiencia",label:"Gastos administrativos / margen financiero bruto",unit:"%",direction:"lower",source:"B-2201",calc:"admin_gross_margin"},
+
  {id:"fx_global_pe",group:"Riesgo de mercado",label:"Posición global ME / patrimonio efectivo",unit:"%",direction:"lower_abs",source:"B-2368",calc:"fx_global_pe"}
 ];
 
@@ -219,46 +226,122 @@ function bankSummary(p,s){return p?.peers?.find(x=>x.slug===s)||null}
 function marketShare(p,s,key){if(!p)return null;let total=p.peers.reduce((z,x)=>z+(x[key]||0),0),v=bankSummary(p,s)?.[key];return total&&v!=null?v/total*100:null}
 function module(){return MODULES[currentModule]}
 function reportObj(){return DB?.reports?.[module().code]||null}
-function reportPeriod(){let w=document.getElementById("datePicker").value;return reportObj()?.periods?.find(p=>ym(p.date)===w)||null}
-function reportComp(){let p=reportPeriod(),back=document.getElementById("compareSelect").value==="yoy"?12:1;if(!p)return null;let[y,m]=ym(p.date).split("-").map(Number),idx=y*12+m-back,ty=Math.floor((idx-1)/12),tm=((idx-1)%12)+1,t=`${ty}-${String(tm).padStart(2,"0")}`;return reportObj()?.periods?.find(x=>ym(x.date)===t)||null}
+function reportPeriod(){
+ let report=reportObj(),wanted=document.getElementById("datePicker").value;
+ if(!report?.periods?.length)return null;
+ return report.periods.find(p=>ym(p.date)===wanted)
+   || report.periods.filter(p=>ym(p.date)<=wanted).at(-1)
+   || report.periods.at(-1)
+}
+function reportComp(){
+ let p=reportPeriod(),back=document.getElementById("compareSelect").value==="yoy"?12:1;if(!p)return null;
+ let[y,m]=ym(p.date).split("-").map(Number),idx=y*12+m-back,ty=Math.floor((idx-1)/12),tm=((idx-1)%12)+1,target=`${ty}-${String(tm).padStart(2,"0")}`;
+ let ps=reportObj()?.periods||[];
+ return ps.find(x=>ym(x.date)===target)||ps.filter(x=>ym(x.date)<=target).at(-1)||null
+}
 function metricEntries(p){return Object.entries(p?.banbif_metrics||{}).map(([label,value])=>({label,value})).filter(x=>typeof x.value==="number"&&isFinite(x.value))}
 function moduleAvailable(){return module().kind==="ratings"?true:module().kind==="report"?!!reportPeriod():!!currentFinancial()}
 function showToast(message,type="info"){let stack=document.getElementById("toastStack"),icon=type==="ok"?"fa-circle-check":type==="warn"?"fa-triangle-exclamation":type==="err"?"fa-circle-xmark":"fa-circle-info",n=document.createElement("div");n.className=`toast ${type}`;n.innerHTML=`<i class="fa-solid ${icon}"></i><span>${message}</span>`;stack.appendChild(n);requestAnimationFrame(()=>n.classList.add("show"));setTimeout(()=>{n.classList.remove("show");setTimeout(()=>n.remove(),220)},2800)}
 function setStatus(type,text){let s=document.getElementById("vStatus");s.className="status "+type;s.querySelector("span:last-child").textContent=text}
 function colors(){let c=getComputedStyle(document.documentElement);return{ink:c.getPropertyValue("--ink").trim(),muted:c.getPropertyValue("--muted").trim(),grid:c.getPropertyValue("--grid").trim(),navy:c.getPropertyValue("--navy3").trim(),green:c.getPropertyValue("--green").trim(),red:c.getPropertyValue("--red").trim(),cyan:c.getPropertyValue("--cyan").trim()}}
-function ech(id,opt){let el=document.getElementById(id);if(!el)return;let c=charts[id]||echarts.init(el);charts[id]=c;c.setOption(opt,true);c.resize()}
+function ech(id,opt){
+ let el=document.getElementById(id);if(!el)return;
+ if(!window.echarts){
+   el.innerHTML='<div class="chart-fallback"><i class="fa-solid fa-chart-line"></i><span>El gráfico no pudo cargarse. Los datos y tablas siguen disponibles.</span></div>';
+   return
+ }
+ let c=charts[id]||window.echarts.init(el);charts[id]=c;c.setOption(opt,true);c.resize()
+}
 function chartNumber(v,unit){if(v==null||!isFinite(v))return"—";let x=Number(v),o={minimumFractionDigits:2,maximumFractionDigits:2};if(unit==="S/ MM")return x.toLocaleString("es-PE",o);if(unit==="%")return x.toLocaleString("es-PE",o)+"%";return x.toLocaleString("es-PE",o)}
 function statementGroup(r,st){if(st==="income")return"Estado de Resultados";let n=r.row||0;if(n<=65)return"Activo";if(n>=76&&n<=124)return"Pasivo";if(n>=126&&n<=134)return"Patrimonio";return"Contingentes / Otros"}
 function short(s,n=14){return s.length>n?s.slice(0,n):s}
 function inferUnit(label){let x=N(label);return x.includes("RATIO")||x.includes("%")||x.includes("ROE")||x.includes("ROA")?"%":"S/ MM"}
 
+
+function showAppError(message,detail=""){
+ let box=document.getElementById("appError");if(!box)return;
+ box.hidden=false;box.querySelector("span").textContent=message+(detail?` · ${detail}`:"");
+ setStatus("err","Error de interfaz")
+}
+function clearAppError(){let box=document.getElementById("appError");if(box)box.hidden=true}
+function safeCall(label,fn){
+ try{return fn()}catch(e){console.error(`[${label}]`,e);showAppError(`No se pudo cargar ${label}`,e?.message||String(e));return null}
+}
+window.addEventListener("error",e=>showAppError("Error de interfaz",e?.message||""));
+window.addEventListener("unhandledrejection",e=>showAppError("Error de datos",e?.reason?.message||String(e?.reason||"")))
+
 function setup(){
- let ms=document.getElementById("moduleSelect");ms.innerHTML=Object.entries(MODULES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join("");
- document.getElementById("moduleStrip").innerHTML=Object.entries(MODULES).map(([k,v])=>`<button class="pair-btn ${k==="overview"?"active":""}" data-module="${k}"><i class="fa-solid ${v.icon}"></i>${v.label}</button>`).join("");
- ms.onchange=()=>selectModule(ms.value);document.querySelectorAll("[data-module]").forEach(b=>b.onclick=()=>selectModule(b.dataset.module));
- document.getElementById("compareSelect").onchange=renderAll;
+ let ms=document.getElementById("moduleSelect");
+ ms.innerHTML=Object.entries(MODULES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join("");
+ document.getElementById("moduleStrip").innerHTML=Object.entries(MODULES).map(([k,v])=>`<button type="button" class="pair-btn ${k==="overview"?"active":""}" data-module="${k}"><i class="fa-solid ${v.icon}"></i>${v.label}</button>`).join("");
+
+ ms.addEventListener("change",()=>selectModule(ms.value));
+ document.getElementById("moduleStrip").addEventListener("click",e=>{let b=e.target.closest("[data-module]");if(b)selectModule(b.dataset.module)});
+ document.getElementById("compareSelect").addEventListener("change",renderAll);
+
  const searchBox=document.getElementById("searchBox"),rowFilter=document.getElementById("rowFilter"),viewTabs=document.getElementById("dataViewTabs");
- searchBox.addEventListener("input",renderDataPanel);rowFilter.addEventListener("change",renderDataPanel);
- viewTabs.addEventListener("click",e=>{const b=e.target.closest("[data-data-view]");if(!b)return;dataView=b.dataset.dataView;viewTabs.querySelectorAll("[data-data-view]").forEach(x=>{x.classList.toggle("active",x===b);x.setAttribute("aria-pressed",x===b?"true":"false")});renderDataPanel()});
- document.querySelectorAll("[data-rating-view]").forEach(b=>b.addEventListener("click",()=>{ratingView=b.dataset.ratingView;document.querySelectorAll("[data-rating-view]").forEach(x=>x.classList.toggle("active",x===b));renderRatingsLens()}));
- document.getElementById("btnImpact").addEventListener("click",()=>{detailSort=detailSort==="impact"?"hierarchy":"impact";document.getElementById("btnImpact").classList.toggle("dark",detailSort==="impact");renderDataPanel()});
- document.getElementById("btnBars").addEventListener("click",()=>{showBars=!showBars;document.getElementById("btnBars").classList.toggle("dark",showBars);renderDataPanel()});
- document.getElementById("btnDownload").onclick=e=>{e.preventDefault();downloadCSV()};
- document.getElementById("btnCopy").onclick=copySummary;
- document.getElementById("btnTheme").onclick=toggleTheme;
- document.getElementById("btnRefresh").onclick=openSync;
- document.getElementById("btnZoomReset").onclick=()=>Object.values(charts).forEach(c=>c?.dispatchAction?.({type:"dataZoom",start:0,end:100}));
- document.querySelectorAll("[data-range]").forEach(b=>b.onclick=()=>{RANGE=+b.dataset.range;document.querySelectorAll("[data-range]").forEach(x=>x.classList.toggle("active",x===b));renderCharts();renderStats()});
- document.getElementById("syncClose").onclick=()=>closeSync();
- document.getElementById("syncCheck").onclick=()=>checkRemoteData(true);
+ searchBox.addEventListener("input",renderDataPanel);
+ rowFilter.addEventListener("change",renderDataPanel);
+ viewTabs.addEventListener("click",e=>{
+   let b=e.target.closest("[data-data-view]");if(!b)return;
+   dataView=b.dataset.dataView;
+   viewTabs.querySelectorAll("[data-data-view]").forEach(x=>x.classList.toggle("active",x===b));
+   renderDataPanel()
+ });
+
+ document.getElementById("ratingsLensPanel").addEventListener("click",e=>{
+   let rv=e.target.closest("[data-rating-view]");
+   if(rv){ratingView=rv.dataset.ratingView;document.querySelectorAll("[data-rating-view]").forEach(x=>x.classList.toggle("active",x===rv));renderRatingsLens();return}
+   let rp=e.target.closest("[data-pillar]");
+   if(rp){ratingPillar=rp.dataset.pillar;renderRatingsLens()}
+ });
+
+ document.getElementById("btnImpact").addEventListener("click",()=>{
+   detailSort=detailSort==="impact"?"hierarchy":"impact";
+   document.getElementById("btnImpact").classList.toggle("dark",detailSort==="impact");
+   renderDataPanel()
+ });
+ document.getElementById("btnBars").addEventListener("click",()=>{
+   showBars=!showBars;document.getElementById("btnBars").classList.toggle("dark",showBars);renderDataPanel()
+ });
+
+ document.getElementById("btnDownload").addEventListener("click",e=>{e.preventDefault();downloadCSV()});
+ document.getElementById("btnCopy").addEventListener("click",copySummary);
+ document.getElementById("btnTheme").addEventListener("click",toggleTheme);
+ document.getElementById("btnRefresh").addEventListener("click",openSync);
+ document.getElementById("btnZoomReset").addEventListener("click",()=>Object.values(charts).forEach(c=>c?.dispatchAction?.({type:"dataZoom",start:0,end:100})));
+
+ document.getElementById("rangeTabs").addEventListener("click",e=>{
+   let b=e.target.closest("[data-range]");if(!b)return;
+   RANGE=+b.dataset.range;document.querySelectorAll("[data-range]").forEach(x=>x.classList.toggle("active",x===b));
+   safeCall("gráficos",renderCharts);safeCall("estadísticas",renderStats)
+ });
+
+ document.getElementById("syncClose").addEventListener("click",closeSync);
+ document.getElementById("syncCheck").addEventListener("click",()=>checkRemoteData(true));
  document.getElementById("syncActionsLink").href=`https://github.com/${REPO}/actions/workflows/${WORKFLOW}`;
+
  let saved=localStorage.getItem("bifHubTheme");if(saved)document.documentElement.dataset.theme=saved;updateThemeIcon()
 }
 function selectModule(k){currentModule=k;document.getElementById("moduleSelect").value=k;document.querySelectorAll("[data-module]").forEach(x=>x.classList.toggle("active",x.dataset.module===k));renderAll()}
-function setupDate(){let ps=fperiods(),i=document.getElementById("datePicker");i.min=ym(ps[0].date);i.max=ym(ps.at(-1).date);i.value=ym(ps.at(-1).date);i.onchange=renderAll;document.getElementById("dateToday").onclick=()=>{i.value=ym(ps.at(-1).date);renderAll()};document.getElementById("datePrev").onclick=()=>stepDate(-1);document.getElementById("dateNext").onclick=()=>stepDate(1)}
+function setupDate(){
+ let ps=fperiods(),i=document.getElementById("datePicker");
+ if(!ps.length){
+   i.value="";i.disabled=true;showAppError("No hay periodos financieros en hub.json");return
+ }
+ i.disabled=false;i.min=ym(ps[0].date);i.max=ym(ps.at(-1).date);i.value=ym(ps.at(-1).date);
+ i.addEventListener("change",renderAll);
+ document.getElementById("dateToday").addEventListener("click",()=>{i.value=ym(ps.at(-1).date);renderAll()});
+ document.getElementById("datePrev").addEventListener("click",()=>stepDate(-1));
+ document.getElementById("dateNext").addEventListener("click",()=>stepDate(1))
+}
 function stepDate(dir){let ms=fperiods().map(p=>ym(p.date)),i=ms.indexOf(document.getElementById("datePicker").value);if(i<0)i=ms.length-1;i=Math.max(0,Math.min(ms.length-1,i+dir));document.getElementById("datePicker").value=ms[i];renderAll()}
-function toggleTheme(){let d=document.documentElement,t=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=t;localStorage.setItem("bifHubTheme",t);updateThemeIcon();renderCharts()}
+function toggleTheme(){
+ let d=document.documentElement,t=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=t;localStorage.setItem("bifHubTheme",t);updateThemeIcon();
+ if(currentModule!=="ratings")safeCall("gráficos",renderCharts)
+}
 function updateThemeIcon(){document.getElementById("themeIcon").className="fa-solid "+(document.documentElement.dataset.theme==="dark"?"fa-sun":"fa-moon")}
+
 
 
 function creditProvisions(p){
@@ -269,15 +352,20 @@ function creditProvisions(p){
 function ratingCatalog(){return RATING_METRICS}
 function ratingMetric(id){return RATING_METRICS.find(x=>x.id===id)||null}
 function reportPeriodAt(code,periodKey){
- let report=DB?.reports?.[code];if(!report)return null;
- let exact=report.periods?.find(x=>ym(x.date)===periodKey);if(exact)return exact;
- return report.periods?.filter(x=>ym(x.date)<=periodKey).at(-1)||null
+ let report=DB?.reports?.[code];if(!report?.periods?.length)return null;
+ return report.periods.find(x=>ym(x.date)===periodKey)
+   || report.periods.filter(x=>ym(x.date)<=periodKey).at(-1)
+   || null
 }
 function reportMetricAt(code,patterns,periodKey){
  let p=reportPeriodAt(code,periodKey);if(!p)return null;
  let es=metricEntries(p);
  for(let pat of patterns){let rx=new RegExp(pat,"i"),hit=es.find(e=>rx.test(N(e.label)));if(hit)return hit.value}
  return null
+}
+function ratingSourcePeriod(metric,periodKey){
+ if(metric.source==="B-2201")return findFinancial(periodKey)?.date||null;
+ return reportPeriodAt(metric.source,periodKey)?.date||null
 }
 function ratingValueAt(metric,periodKey){
  let p=findFinancial(periodKey);if(!p)return null;
@@ -347,27 +435,107 @@ function renderKpis(){
   kpiCard("UTILIDAD","Resultado neto YTD",val(a,"income","RESULTADO NETO DEL EJERCICIO"),val(b,"income","RESULTADO NETO DEL EJERCICIO"))
  ].join("")}
  else if(k==="ratings"){
+   let ids=["rcg","tier1","car_ratio","coverage_car","roe","liq_mn"];
+   html=ids.map((id,i)=>{let m=ratingMetric(id),v=ratingCurrent(m),prior=ratingPrior(m,12);return kpiCard(short(N(m.label),12),m.label,v,prior,["","accent","green","purple","amber",""][i],m.unit,m.direction==="lower"||m.direction==="lower_abs")}).join("")
+ }
+ else if(k==="balance"){html=[
+  kpiCard("ACTIVO","Total activo",val(a,"balance","TOTAL ACTIVO"),val(b,"balance","TOTAL ACTIVO")),
+  kpiCard("DISP.","Disponible",val(a,"balance","DISPONIBLE"),val(b,"balance","DISPONIBLE"),"accent"),
+  kpiCard("INV.","Inversiones netas",val(a,"balance","INVERSIONES NETAS DE PROVISIONES"),val(b,"balance","INVERSIONES NETAS DE PROVISIONES"),"green"),
+  kpiCard("CRÉD.NET","Créditos netos",val(a,"balance","CRÉDITOS NETOS DE PROVISIONES Y DE INGRESOS NO DEVENGADOS"),val(b,"balance","CRÉDITOS NETOS DE PROVISIONES Y DE INGRESOS NO DEVENGADOS"),"purple"),
+  kpiCard("PÚBLICO","Obligaciones con público",val(a,"balance","OBLIGACIONES CON EL PÚBLICO"),val(b,"balance","OBLIGACIONES CON EL PÚBLICO"),"amber"),
+  kpiCard("OTR.PAS","Otros pasivos",val(a,"balance","OTROS PASIVOS"),val(b,"balance","OTROS PASIVOS"))
+ ].join("")}
+ else if(k==="credit"){html=[
+  kpiCard("BRUTA","Créditos brutos",gross(a),gross(b)),kpiCard("PRÉSTAMOS","Préstamos",val(a,"balance","Préstamos"),val(b,"balance","Préstamos"),"accent"),
+  kpiCard("REFI","Refinanciados",val(a,"balance","Refinanciados y Reestructurados"),val(b,"balance","Refinanciados y Reestructurados"),"green"),
+  kpiCard("VENC.","Vencidos",val(a,"balance","Vencidos"),val(b,"balance","Vencidos"),"purple","S/ MM",true),
+  kpiCard("JUD.","Cobranza judicial",val(a,"balance","Cobranza Judicial"),val(b,"balance","Cobranza Judicial"),"amber","S/ MM",true),
+  kpiCard("PROV.","Provisiones",creditProvisions(a),creditProvisions(b))
+ ].join("")}
+ else if(k==="pnl"){let y=previousPeriod(a,12);html=[
+  kpiCard("ING.FIN","Ingresos financieros",val(a,"income","INGRESOS FINANCIEROS"),val(y,"income","INGRESOS FINANCIEROS")),
+  kpiCard("GTO.FIN","Gastos financieros",val(a,"income","GASTOS FINANCIEROS"),val(y,"income","GASTOS FINANCIEROS"),"accent","S/ MM",true),
+  kpiCard("MARGEN","Margen financiero neto",val(a,"income","MARGEN FINANCIERO NETO"),val(y,"income","MARGEN FINANCIERO NETO"),"green"),
+  kpiCard("G.ADM","Gastos administrativos",val(a,"income","GASTOS ADMINISTRATIVOS"),val(y,"income","GASTOS ADMINISTRATIVOS"),"purple","S/ MM",true),
+  kpiCard("OTROS","Otros ingresos y gastos",val(a,"income","OTROS INGRESOS Y GASTOS"),val(y,"income","OTROS INGRESOS Y GASTOS"),"amber"),
+  kpiCard("NETO","Resultado neto",val(a,"income","RESULTADO NETO DEL EJERCICIO"),val(y,"income","RESULTADO NETO DEL EJERCICIO"))
+ ].join("")}
+ else if(k==="peers"){let ba=bankSummary(a,"banbif"),bb=bankSummary(b,"banbif");html=[
+  kpiCard("SH.CRÉD","Market share créditos",marketShare(a,"banbif","gross_credits"),marketShare(b,"banbif","gross_credits"),"","%"),
+  kpiCard("SH.DEP","Market share depósitos",marketShare(a,"banbif","public_deposits"),marketShare(b,"banbif","public_deposits"),"accent","%"),
+  kpiCard("ACTIVO","Activo BanBif",ba?.total_assets,bb?.total_assets,"green"),kpiCard("CRÉDITOS","Créditos BanBif",ba?.gross_credits,bb?.gross_credits,"purple"),
+  kpiCard("DEPÓSITOS","Depósitos BanBif",ba?.public_deposits,bb?.public_deposits,"amber"),kpiCard("RESULT.","Resultado neto",ba?.net_income,bb?.net_income)
+ ].join("")}
+ else{
+   let rp=reportPeriod(),rc=reportComp(),e=metricEntries(rp),cm=new Map(metricEntries(rc).map(x=>[N(x.label),x.value]));
+   if(!e.length)html=emptyKpis();else{let top=pickReportMetrics(module().code,e).slice(0,6);while(top.length<6)top.push({label:"Indicador",value:null});html=top.map((x,i)=>kpiCard(short(N(x.label),12),x.label,x.value,cm.get(N(x.label)),["","accent","green","purple","amber",""][i],inferUnit(x.label))).join("")}
+ }
+ document.getElementById("kpiGrid").innerHTML=html
+}
+function setupTrendMetric(){
+ let s=document.getElementById("trendMetric"),old=s.value,k=module().kind,o=[];
+ if(k==="financial"||k==="balance")o=[["total_assets","Total activo"],["gross_credits","Créditos brutos"],["public_deposits","Obligaciones con público"],["equity","Patrimonio"],["available","Disponible"]];
+ else if(k==="credit")o=[["gross_credits","Créditos brutos"],["loans","Préstamos"],["mortgages","Hipotecarios"],["foreign_trade","Comercio Exterior"],["overdue","Atrasados"],["refinanced","Refinanciados"]];
+ else if(k==="pnl")o=[["financial_income","Ingresos financieros"],["net_margin","Margen financiero neto"],["admin_expenses","Gastos administrativos"],["net_income","Resultado neto"],["fx","Diferencia de cambio"]];
+ else if(k==="peers")o=[["share_credits","Market share créditos"],["share_deposits","Market share depósitos"],["gross_credits","Créditos BanBif"],["public_deposits","Depósitos BanBif"]];
+ else if(k==="ratings")o=ratingCatalog().map(m=>[m.id,m.label]);
+ else{
+   let all=new Map();for(let p of(reportObj()?.periods||[]))for(let e of metricEntries(p))all.set(e.label,e.label);
+   o=[...all.keys()].slice(0,100).map(x=>[x,x]);if(!o.length)o=[["sync","Sincronizar reporte"]]
+ }
+ s.innerHTML=o.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join("");
+ if([...s.options].some(x=>x.value===old))s.value=old;
+ s.onchange=()=>{safeCall("gráficos",renderCharts);safeCall("estadísticas",renderStats)}
+}
+function financialMetric(p,key){let b=bankSummary(p,"banbif");return key==="total_assets"?b?.total_assets:key==="gross_credits"?b?.gross_credits:key==="public_deposits"?b?.public_deposits:key==="equity"?b?.equity:key==="available"?val(p,"balance","DISPONIBLE"):key==="loans"?val(p,"balance","Préstamos"):key==="mortgages"?val(p,"balance","Hipotecarios para Vivienda"):key==="foreign_trade"?val(p,"balance","Comercio Exterior"):key==="overdue"?val(p,"balance","Atrasados"):key==="refinanced"?val(p,"balance","Refinanciados y Reestructurados"):key==="financial_income"?val(p,"income","INGRESOS FINANCIEROS"):key==="net_margin"?val(p,"income","MARGEN FINANCIERO NETO"):key==="admin_expenses"?val(p,"income","GASTOS ADMINISTRATIVOS"):key==="net_income"?val(p,"income","RESULTADO NETO DEL EJERCICIO"):key==="fx"?val(p,"income","Diferencia de Cambio"):key==="share_credits"?marketShare(p,"banbif","gross_credits"):key==="share_deposits"?marketShare(p,"banbif","public_deposits"):null}
+function trendSeries(){
+ let key=document.getElementById("trendMetric").value,k=module().kind;
+ if(k==="ratings"){
+   let m=ratingMetric(key),ps=RANGE===12?monthlyPeriods():RANGE===24?fperiods().slice(-24).map(p=>({key:ym(p.date)})):RANGE===36?fperiods().slice(-36).map(p=>({key:ym(p.date)})):fperiods().map(p=>({key:ym(p.date)}));
+   return{dates:ps.map(x=>x.key+"-01"),values:ps.map(x=>ratingValueAt(m,x.key)),label:m?.label||key,unit:m?.unit||"%"}
+ }
+ if(k!=="report"){
+   let p=[...fperiods()];if(RANGE)p=p.slice(-RANGE);
+   return{dates:p.map(x=>x.date),values:p.map(x=>financialMetric(x,key)),label:document.getElementById("trendMetric").selectedOptions[0]?.textContent||key,unit:key.startsWith("share_")?"%":"S/ MM"}
+ }
+ let p=[...(reportObj()?.periods||[])];if(RANGE)p=p.slice(-RANGE);
+ return{dates:p.map(x=>x.date),values:p.map(x=>x.banbif_metrics?.[key]??null),label:key,unit:inferUnit(key)}
+}
+function renderCharts(){
+ let c=colors(),s=trendSeries(),vals=s.values.map(v=>s.unit==="S/ MM"&&v!=null?v/1000:v),chg=vals.map((v,i)=>i&&v!=null&&vals[i-1]!=null?v-vals[i-1]:null),labels=s.dates.map(x=>ym(x));
+ document.getElementById("historySource").textContent=`${s.label} · ${s.dates.length} periodos`;document.getElementById("changeSource").textContent=`MoM · ${s.unit}`;
+ document.getElementById("trendLegend").innerHTML=`<span class="legend-pill"><i class="legend-dot"></i>${s.label}<strong>${chartNumber(vals.at(-1),s.unit)}</strong></span>`;
+ let axis={color:c.muted,fontSize:10,formatter:v=>chartNumber(v,s.unit).replace("%","")},common={textStyle:{fontFamily:"Manrope",color:c.ink},grid:{left:52,right:16,top:18,bottom:42},tooltip:{trigger:"axis",confine:true,formatter:ps=>{let p=ps?.[0];return p?`<b>${p.axisValue}</b><br>${p.marker}${p.seriesName}: ${chartNumber(p.value,s.unit)}`:""},backgroundColor:getComputedStyle(document.documentElement).getPropertyValue("--tooltip-bg").trim(),borderColor:getComputedStyle(document.documentElement).getPropertyValue("--tooltip-border").trim(),textStyle:{color:"#fff"}},xAxis:{type:"category",data:labels,axisLabel:{color:c.muted,fontSize:10,hideOverlap:true},axisLine:{lineStyle:{color:c.grid}},axisTick:{show:false}},yAxis:{type:"value",axisLabel:axis,splitLine:{lineStyle:{color:c.grid}}},dataZoom:[{type:"inside"},{type:"slider",height:15,bottom:5,borderColor:c.grid,fillerColor:"rgba(11,54,84,.12)",labelFormatter:v=>chartNumber(v,s.unit)}]};
+ ech("trendChart",{...common,series:[{name:s.label,type:"line",data:vals,smooth:.18,showSymbol:false,lineStyle:{width:2,color:c.navy},areaStyle:{color:"rgba(0,163,181,.07)"},itemStyle:{color:c.navy}}]});
+ ech("changeChart",{...common,tooltip:{...common.tooltip,formatter:ps=>{let p=ps?.[0];return p?`<b>${p.axisValue}</b><br>${p.marker}Variación: ${chartNumber(p.value,s.unit)}`:""}},series:[{name:"Variación",type:"bar",data:chg.map(x=>({value:x,itemStyle:{color:x==null?c.grid:x>=0?c.green:c.red}})),barMaxWidth:18,label:{show:false}}]})
+}
+function renderStats(){let s=trendSeries(),v=s.values.filter(x=>x!=null&&isFinite(x)),a=s.values.at(-1),m=s.values.at(-2),y=s.values.length>12?s.values.at(-13):null,disp=x=>s.unit==="S/ MM"?fmtMM(x,1):num(x,1)+(s.unit==="%"?"%":"");let arr=[["Actual",disp(a),"Último dato"],["MoM",fmtPct(pct(a,m),1),"vs anterior"],["YoY",fmtPct(pct(a,y),1),"vs mismo mes"],["Promedio",disp(v.length?v.reduce((z,x)=>z+x,0)/v.length:null),RANGE?`${RANGE} periodos`:"serie"],["Máximo",disp(v.length?Math.max(...v):null),"rango visible"],["Mínimo",disp(v.length?Math.min(...v):null),"rango visible"]];document.getElementById("statsPair").textContent=s.label;document.getElementById("statsPanel").innerHTML=arr.map(x=>`<div class="stat-box"><div class="slabel">${x[0]}</div><strong>${x[1]}</strong><small>${x[2]}</small></div>`).join("")}
+function renderRadar(){
+ let a=currentFinancial(),b=compFinancial(),k=module().kind,it=[];
+ if(!moduleAvailable())it=[["warn","Sin dato del módulo","La fuente SBS todavía no tiene un periodo utilizable para la fecha seleccionada."]];
+ else if(k==="ratings"){
    let watch=["rcg","car_ratio","coverage_car","liq_mn","roe","leverage"].map(ratingMetric).filter(Boolean);
    it=watch.map(m=>{let v=ratingCurrent(m),prior=ratingPrior(m,12),st=ratingStatusFromTrend(m,v,prior);return[st.cls,m.label,`${fmtRating(v,m.unit)} · 12M previo: ${fmtRating(prior,m.unit)} · ${m.source}`]})
  }
- else if(k==="financial"||k==="balance"||k==="credit"||k==="peers"){let r=risk(a),ld=gross(a)/(val(a,"balance","OBLIGACIONES CON EL PÚBLICO")||1)*100;it=[[r.npl<4?"good":"warn","Mora",`${num(r.npl,1)}% · cobertura ${num(r.cov,1)}%.`],[ld<110?"good":"warn","Loan / depósitos",`${num(ld,1)}%.`],["","Participación créditos",`${num(marketShare(a,"banbif","gross_credits"),1)}% del sistema B-2201.`],[pct(gross(a),gross(b))>=0?"good":"warn","Crecimiento cartera",`${fmtPct(pct(gross(a),gross(b)),1)} frente al comparativo.`]]}
- else if(k==="pnl"){let y=previousPeriod(a,12);it=[["","Resultado neto",`${fmtPct(pct(val(a,"income","RESULTADO NETO DEL EJERCICIO"),val(y,"income","RESULTADO NETO DEL EJERCICIO")),1)} YoY.`],["","Otros ingresos/gastos",`S/ ${fmtMM(val(a,"income","OTROS INGRESOS Y GASTOS"),1)} MM YTD.`],["","Diferencia de cambio",`S/ ${fmtMM(val(a,"income","Diferencia de Cambio"),1)} MM YTD.`],["warn","Comparabilidad","Resultados SBS son YTD; usa mismo mes del año anterior."]]}
- else it=pickReportMetrics(module().code,metricEntries(reportPeriod())).slice(0,4).map(x=>["",short(x.label,24),`${x.label}: ${inferUnit(x.label)==="S/ MM"?fmtMM(x.value,1)+" S/ MM":num(x.value,1)+"%"}.`]);
- document.getElementById("radarSub").textContent=module().code+" · drivers";document.getElementById("radarPanel").innerHTML=it.map(x=>`<div class="radar-item ${x[0]}"><b>${x[1]}</b><p>${x[2]}</p></div>`).join("")
+ else if(k==="financial"||k==="balance"||k==="credit"||k==="peers"){let r=risk(a),ld=gross(a)/(val(a,"balance","OBLIGACIONES CON EL PÚBLICO")||1)*100;it=[[r.npl<4?"good":"warn","Mora",`${num(r.npl,2)}% · cobertura ${num(r.cov,2)}%.`],[ld<110?"good":"warn","Loan / depósitos",`${num(ld,2)}%.`],["","Participación créditos",`${num(marketShare(a,"banbif","gross_credits"),2)}% del sistema B-2201.`],[pct(gross(a),gross(b))>=0?"good":"warn","Crecimiento cartera",`${fmtPct(pct(gross(a),gross(b)),2)} frente al comparativo.`]]}
+ else if(k==="pnl"){let y=previousPeriod(a,12);it=[["","Resultado neto",`${fmtPct(pct(val(a,"income","RESULTADO NETO DEL EJERCICIO"),val(y,"income","RESULTADO NETO DEL EJERCICIO")),2)} YoY.`],["","Otros ingresos/gastos",`S/ ${fmtMM(val(a,"income","OTROS INGRESOS Y GASTOS"),2)} MM YTD.`],["","Diferencia de cambio",`S/ ${fmtMM(val(a,"income","Diferencia de Cambio"),2)} MM YTD.`],["warn","Comparabilidad","Resultados SBS son YTD; compara el mismo mes del año anterior."]]}
+ else it=pickReportMetrics(module().code,metricEntries(reportPeriod())).slice(0,4).map(x=>["",short(x.label,24),`${x.label}: ${inferUnit(x.label)==="S/ MM"?fmtMM(x.value,2)+" S/ MM":num(x.value,2)+"%"}.`]);
+ document.getElementById("radarSub").textContent=module().code+" · drivers";
+ document.getElementById("radarPanel").innerHTML=it.map(x=>`<div class="radar-item ${x[0]}"><b>${x[1]}</b><p>${x[2]}</p></div>`).join("")
 }
 function renderPeers(){
  let a=currentFinancial(),out=[],k=module().kind;document.getElementById("peerSub").textContent="Banca múltiple";
- if(k==="ratings"){
-   let ms=[ratingMetric("car_ratio"),ratingMetric("coverage_car"),ratingMetric("rcg"),ratingMetric("tier1_apr"),ratingMetric("roe"),ratingMetric("roa")];
-   document.getElementById("peerSub").textContent="BanBif vs Banca Múltiple · dic-2025";
-   document.getElementById("peerCount").innerHTML=`<i class="fa-solid fa-scale-balanced"></i>${ms.filter(m=>m?.bm_2025!=null).length} indicadores`;
-   document.getElementById("peerTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th>Indicador</th><th style="text-align:right">BanBif</th><th style="text-align:right">BM</th></tr></thead><tbody>${ms.filter(Boolean).map(m=>`<tr><td>${m.label}</td><td class="num">${fmtRating(m.annual?.["2025"],m.unit)}</td><td class="num">${fmtRating(m.bm_2025,m.unit)}</td></tr>`).join("")}</tbody></table></div>`;
-   return
+ if(k==="report"){
+   let rp=reportPeriod(),metric=pickReportMetrics(module().code,metricEntries(rp))[0]?.label;
+   if(rp&&metric)for(let[s,m]of Object.entries(rp.peer_metrics||{})){let v=m?.[metric];if(typeof v==="number")out.push({slug:s,name:s.toUpperCase(),value:v})}
+ }else{
+   let key=currentModule==="peers"?"gross_credits":"total_assets";
+   out=(a?.peers||[]).filter(x=>MAJOR.includes(x.slug)).map(x=>({slug:x.slug,name:x.name,value:x[key]}))
  }
- if(k==="report"){let rp=reportPeriod(),metric=pickReportMetrics(module().code,metricEntries(rp))[0]?.label;if(rp&&metric)for(let[s,m]of Object.entries(rp.peer_metrics||{})){let v=m?.[metric];if(typeof v==="number")out.push({slug:s,name:s.toUpperCase(),value:v})}}
- else{let key=currentModule==="peers"?"gross_credits":"total_assets";out=(a?.peers||[]).filter(x=>MAJOR.includes(x.slug)).map(x=>({slug:x.slug,name:x.name,value:x[key]}))}
- out.sort((x,y)=>(y.value||0)-(x.value||0));document.getElementById("peerCount").innerHTML=`<i class="fa-solid fa-building-columns"></i>${out.length} bancos`;
- document.getElementById("peerTable").innerHTML=!out.length?`<div class="empty-state"><div><i class="fa-solid fa-arrows-rotate"></i>Sin peers en este reporte. Sincroniza para cargarlo.</div></div>`:`<div class="table-wrap"><table><thead><tr><th>#</th><th>Banco</th><th style="text-align:right">Valor</th></tr></thead><tbody>${out.map((x,i)=>`<tr><td><span class="peer-rank">${i+1}</span></td><td class="code">${x.slug==="banbif"?"BanBif":x.name}</td><td class="num">${k==="report"?num(x.value,1):fmtMM(x.value,1)}</td></tr>`).join("")}</tbody></table></div>`
+ out.sort((x,y)=>(y.value||0)-(x.value||0));
+ document.getElementById("peerCount").innerHTML=`<i class="fa-solid fa-building-columns"></i>${out.length} bancos`;
+ document.getElementById("peerTable").innerHTML=!out.length?`<div class="empty-state"><div><i class="fa-solid fa-arrows-rotate"></i>Sin peers para este módulo/periodo.</div></div>`:`<div class="table-wrap"><table><thead><tr><th>#</th><th>Banco</th><th style="text-align:right">Valor</th></tr></thead><tbody>${out.map((x,i)=>`<tr><td><span class="peer-rank">${i+1}</span></td><td class="code">${x.slug==="banbif"?"BanBif":x.name}</td><td class="num">${k==="report"?num(x.value,2):fmtMM(x.value,2)}</td></tr>`).join("")}</tbody></table></div>`
 }
 function dataRows(){
  let k=module().kind,q=N(document.getElementById("searchBox").value),filter=document.getElementById("rowFilter").value,out=[];
@@ -375,54 +543,39 @@ function dataRows(){
    out=ratingCatalog().map((m,i)=>({group:m.group,rubric:m.group,isRubric:false,label:m.label,indent:1,row:i,st:"rating",mn:null,me:null,total:ratingCurrent(m),comp:ratingPrior(m,document.getElementById("compareSelect").value==="yoy"?12:1),unit:m.unit}))
  }else if(k==="report"){
    let a=reportPeriod(),b=reportComp(),bm=new Map(metricEntries(b).map(x=>[N(x.label),x.value]));
-   out=metricEntries(a).map((e,i)=>({group:module().label,rubric:module().label,label:e.label,indent:0,row:i,st:"report",mn:null,me:null,total:e.value,comp:bm.get(N(e.label))??null,unit:inferUnit(e.label)}))
+   out=metricEntries(a).map((e,i)=>({group:module().label,rubric:module().label,isRubric:i===0,label:e.label,indent:0,row:i,st:"report",mn:null,me:null,total:e.value,comp:bm.get(N(e.label))??null,unit:inferUnit(e.label)}))
  }else if(k==="peers"){
    let a=currentFinancial(),b=compFinancial();
-   out=(a?.peers||[]).map((x,i)=>{let xb=bankSummary(b,x.slug);return{group:"Banca múltiple",rubric:"Banca múltiple",label:x.name,indent:0,row:i,st:"peer",mn:null,me:null,total:x.gross_credits,comp:xb?.gross_credits??null,unit:"S/ MM"}})
+   out=(a?.peers||[]).map((x,i)=>{let xb=bankSummary(b,x.slug);return{group:"Banca múltiple",rubric:"Banca múltiple",isRubric:false,label:x.name,indent:0,row:i,st:"peer",mn:null,me:null,total:x.gross_credits,comp:xb?.gross_credits??null,unit:"S/ MM"}})
  }else{
    let a=currentFinancial(),stList=k==="pnl"?["income"]:k==="overview"?["balance","income"]:["balance"];
    for(let st of stList){
-     let b=st==="income"?previousPeriod(a,12):compFinancial(),bm=new Map(rows(b,st).map(r=>[N(r.label),r]));
+     let b=st==="income"?previousPeriod(a,12):compFinancial(),bm=new Map(rows(b,st).map(r=>[`${r.row}|${N(r.label)}`,r]));
      let rubric=null,currentGroup=null;
      for(let r of rows(a,st)){
        let group=statementGroup(r,st);
        if(group!==currentGroup){currentGroup=group;rubric=null}
        if((r.indent||0)===0)rubric=r.label;
-       let rb=bm.get(N(r.label));
-       out.push({
-         group,
-         rubric:(r.indent||0)===0?r.label:(rubric||group),
-         isRubric:(r.indent||0)===0,
-         label:r.label,
-         indent:r.indent||0,
-         row:r.row||0,
-         st,
-         mn:r.mn,me:r.me,total:r.total,
-         comp:rb?.total??null,
-         unit:"S/ MM"
-       })
+       let rb=bm.get(`${r.row}|${N(r.label)}`)||rows(b,st).find(x=>N(x.label)===N(r.label));
+       out.push({group,rubric:(r.indent||0)===0?r.label:(rubric||group),isRubric:(r.indent||0)===0,label:r.label,indent:r.indent||0,row:r.row||0,st,mn:r.mn,me:r.me,total:r.total,comp:rb?.total??null,unit:"S/ MM"})
      }
    }
  }
  out=out.map(x=>({...x,delta:x.comp==null?null:x.total-x.comp,varPct:pct(x.total,x.comp)}));
-
  if(q){
-   // Search matches account, section or rubric, but keeps the parent rubric in the
-   // SAME account column so identical lines (e.g. Fondos Interbancarios) remain distinguishable.
-   let matched=out.filter(x=>N(x.label).includes(q)||N(x.group).includes(q)||N(x.rubric||"").includes(q));
-   let keepKeys=new Set();
+   let matched=out.filter(x=>N(x.label).includes(q)||N(x.group).includes(q)||N(x.rubric||"").includes(q)),keep=new Set();
    for(let x of matched){
-     keepKeys.add(`${x.st}|${x.row}`);
-     if(!x.isRubric && x.rubric){
-       let parent=out.find(p=>p.st===x.st && p.group===x.group && p.isRubric && N(p.label)===N(x.rubric));
-       if(parent)keepKeys.add(`${parent.st}|${parent.row}`);
+     keep.add(`${x.st}|${x.row}`);
+     if(!x.isRubric&&x.rubric){
+       let parent=out.find(p=>p.st===x.st&&p.group===x.group&&p.isRubric&&N(p.label)===N(x.rubric));
+       if(parent)keep.add(`${parent.st}|${parent.row}`)
      }
    }
-   out=out.filter(x=>keepKeys.has(`${x.st}|${x.row}`))
+   out=out.filter(x=>keep.has(`${x.st}|${x.row}`))
  }
  if(filter==="main")out=out.filter(x=>x.indent===0);
  if(filter==="changes")out=out.filter(x=>x.delta!=null&&Math.abs(x.delta)>0.0001);
- if(detailSort==="impact" && !q)out.sort((a,b)=>Math.abs(b.delta||0)-Math.abs(a.delta||0));
+ if(detailSort==="impact"&&!q)out.sort((a,b)=>Math.abs(b.delta||0)-Math.abs(a.delta||0));
  else out.sort((a,b)=>a.st.localeCompare(b.st)||a.row-b.row);
  return out
 }
@@ -432,21 +585,10 @@ function findHistoricalFinancial(periodKey){
  return fperiods().find(p=>ym(p.date)===periodKey)||null
 }
 function rowValueForPeriod(baseRow,periodKey,field="total"){
- if(baseRow.st==="rating"){
-   let m=ratingCatalog().find(x=>x.label===baseRow.label);
-   return m?ratingValueAt(m,periodKey):null
- }
- if(baseRow.st==="report"){
-   let rp=reportObj()?.periods?.find(p=>ym(p.date)===periodKey);
-   return rp?.banbif_metrics?.[baseRow.label]??null
- }
- if(baseRow.st==="peer"){
-   let p=findHistoricalFinancial(periodKey);
-   let slug=(p?.peers||[]).find(x=>N(x.name)===N(baseRow.label))?.slug;
-   return slug?bankSummary(p,slug)?.gross_credits??null:null
- }
- let p=findHistoricalFinancial(periodKey);
- return val(p,baseRow.st,baseRow.label,field)
+ if(baseRow.st==="rating"){let m=ratingCatalog().find(x=>x.label===baseRow.label);return m?ratingValueAt(m,periodKey):null}
+ if(baseRow.st==="report"){let rp=(DB?.reports?.[module().code]?.periods||[]).find(p=>ym(p.date)===periodKey);return rp?.banbif_metrics?.[baseRow.label]??null}
+ if(baseRow.st==="peer"){let p=findHistoricalFinancial(periodKey),slug=(p?.peers||[]).find(x=>N(x.name)===N(baseRow.label))?.slug;return slug?bankSummary(p,slug)?.gross_credits??null:null}
+ let p=findHistoricalFinancial(periodKey);return val(p,baseRow.st,baseRow.label,field)
 }
 function annualPeriods(){
  let selected=document.getElementById("datePicker").value,[year,month]=selected.split("-").map(Number),out=[];
@@ -465,134 +607,139 @@ function monthlyPeriods(){
  return out
 }
 
+
 function ratingPillarOrder(){return ["Solvencia","Calidad de activos","Cobertura","Liquidez y fondeo","Rentabilidad","Eficiencia","Riesgo de mercado"]}
 function ratingPillarIcon(g){return ({"Solvencia":"fa-shield-halved","Calidad de activos":"fa-heart-pulse","Cobertura":"fa-umbrella","Liquidez y fondeo":"fa-droplet","Rentabilidad":"fa-chart-line","Eficiencia":"fa-gauge-high","Riesgo de mercado":"fa-wave-square"})[g]||"fa-circle-nodes"}
 function trendGlyph(curr,prev,direction="context"){
  if(curr==null||prev==null)return`<span class="rating-trend neutral">—</span>`;
  if(Math.abs(curr-prev)<1e-9)return`<span class="rating-trend neutral">●</span>`;
- let up=curr>prev,beneficial=direction==="higher"?up:direction==="lower"?!up:direction==="lower_abs"?Math.abs(curr)<Math.abs(prev):null;
- let cls=beneficial===null?(up?"up":"down"):(beneficial?"good":"bad");
+ let up=curr>prev,beneficial=direction==="higher"?up:direction==="lower"?!up:direction==="lower_abs"?Math.abs(curr)<Math.abs(prev):null,cls=beneficial===null?(up?"up":"down"):(beneficial?"good":"bad");
  return`<span class="rating-trend ${cls}" title="${up?"Aumentó":"Cayó"}">${up?"▲":"▼"}</span>`
 }
 function ratingSeries(m,view){let ps=view==="annual"?annualPeriods():monthlyPeriods();return ps.map(p=>({label:p.label,key:p.key,value:ratingValueAt(m,p.key)}))}
-function ratingSparkline(m){let s=ratingSeries(m,"monthly").filter(x=>x.value!=null);if(s.length<2)return"";let vs=s.map(x=>x.value),mn=Math.min(...vs),mx=Math.max(...vs),span=mx-mn||1,pts=s.map((x,i)=>`${(i/(s.length-1))*100},${30-((x.value-mn)/span)*24}`).join(" ");return `<svg class="metric-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" vector-effect="non-scaling-stroke"/></svg>`}
+function ratingSparkline(m){
+ let s=ratingSeries(m,"monthly").filter(x=>x.value!=null);if(s.length<2)return"";
+ let vs=s.map(x=>x.value),mn=Math.min(...vs),mx=Math.max(...vs),span=mx-mn||1,pts=s.map((x,i)=>`${(i/(s.length-1))*100},${30-((x.value-mn)/span)*24}`).join(" ");
+ return `<svg class="metric-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" vector-effect="non-scaling-stroke"/></svg>`
+}
 function metricCard(m){
- let current=ratingCurrent(m),prior=ratingPrior(m,document.getElementById("compareSelect").value==="yoy"?12:1),st=ratingStatusFromTrend(m,current,prior),delta=current!=null&&prior!=null?current-prior:null;
+ let selected=document.getElementById("datePicker").value,current=ratingCurrent(m),prior=ratingPrior(m,document.getElementById("compareSelect").value==="yoy"?12:1),st=ratingStatusFromTrend(m,current,prior),delta=current!=null&&prior!=null?current-prior:null,srcDate=ratingSourcePeriod(m,selected);
  return `<article class="intel-card ${st.cls}">
    <div class="intel-card-top"><div><span class="intel-source">${m.source}</span><h3>${m.label}</h3></div><span class="intel-status ${st.cls}"><i class="fa-solid ${st.icon}"></i>${st.label}</span></div>
-   <div class="intel-value-row"><strong>${fmtRating(current,m.unit)}</strong><span class="${current==null?"pending-badge":"live-badge"}"><i class="fa-solid ${current==null?"fa-clock":"fa-bolt"}"></i>${current==null?"Pendiente SBS":"SBS "+document.getElementById("datePicker").value}</span></div>
-   <div class="intel-context">
-      <span><small>Comparativo</small><b>${fmtRating(prior,m.unit)}</b></span>
-      <span><small>Variación</small><b class="${delta>0?"pos":delta<0?"neg":""}">${delta==null?"—":(delta>0?"+":"")+fmtRating(delta,m.unit)}</b></span>
-      <span><small>Fuente</small><b>${m.source}</b></span>
-   </div>
+   <div class="intel-value-row"><strong>${fmtRating(current,m.unit)}</strong><span class="${current==null?"pending-badge":"live-badge"}"><i class="fa-solid ${current==null?"fa-clock":"fa-bolt"}"></i>${current==null?"Pendiente SBS":"SBS "+prettyMonth(ym(srcDate))}</span></div>
+   <div class="intel-context"><span><small>Comparativo</small><b>${fmtRating(prior,m.unit)}</b></span><span><small>Variación</small><b class="${delta>0?"pos":delta<0?"neg":""}">${delta==null?"—":(delta>0?"+":"")+fmtRating(delta,m.unit)}</b></span><span><small>Fuente</small><b>${m.source}</b></span></div>
    ${ratingSparkline(m)}
  </article>`
 }
-function ratingHistoryCard(m,view){let pts=ratingSeries(m,view);return `<article class="history-intel-card"><div class="history-intel-head"><div><span>${m.group}</span><h3>${m.label}</h3></div><span class="intel-source">${m.source}</span></div><div class="history-timeline">${pts.map((x,i)=>`<div class="history-point"><span>${x.label}</span><b>${fmtRating(x.value,m.unit)}</b>${trendGlyph(x.value,i?pts[i-1].value:null,"context")}</div>`).join("")}</div></article>`}
+function ratingHistoryCard(m,view){
+ let pts=ratingSeries(m,view);
+ return `<article class="history-intel-card"><div class="history-intel-head"><div><span>${m.group}</span><h3>${m.label}</h3></div><span class="intel-source">${m.source}</span></div><div class="history-timeline">${pts.map((x,i)=>`<div class="history-point"><span>${x.label}</span><b>${fmtRating(x.value,m.unit)}</b>${trendGlyph(x.value,i?pts[i-1].value:null,"context")}</div>`).join("")}</div></article>`
+}
 function renderRatingsLens(){
  let panel=document.getElementById("ratingsLensPanel"),isRatings=currentModule==="ratings";panel.hidden=!isRatings;if(!isRatings)return;
- let catalog=ratingCatalog(),order=ratingPillarOrder(),groups=order.filter(g=>catalog.some(m=>m.group===g));
- let required=["B-2201","B-2401","B-3302","B-2340","B-230811","R-0010","B-2368"];
+ let catalog=ratingCatalog(),order=ratingPillarOrder(),groups=order.filter(g=>catalog.some(m=>m.group===g)),required=["B-2201","B-2401","B-3302","B-2340","B-230811","R-0010","B-2368"];
  document.getElementById("ratingsSourceStrip").innerHTML=required.map(code=>{let periods=code==="B-2201"?fperiods():(DB.reports?.[code]?.periods||[]),last=periods.at(-1)?.date;return `<div class="agency-card source-health-card ${last?"ok":"warn"}"><span>${code}</span><b>${last?prettyMonth(ym(last)):"—"}</b><small>${last?"SBS cargada":"Pendiente sincronización"}</small></div>`}).join("");
  document.getElementById("ratingsPillars").innerHTML=`<button type="button" class="pillar-chip ${ratingPillar==="all"?"active":""}" data-pillar="all">Todo</button>`+groups.map(g=>`<button type="button" class="pillar-chip ${ratingPillar===g?"active":""}" data-pillar="${g}"><i class="fa-solid ${ratingPillarIcon(g)}"></i>${g}</button>`).join("");
- document.querySelectorAll("[data-pillar]").forEach(b=>b.addEventListener("click",()=>{ratingPillar=b.dataset.pillar;renderRatingsLens()}));
  let loaded=required.filter(code=>code==="B-2201"?fperiods().length:(DB.reports?.[code]?.periods||[]).length).length;
- document.getElementById("ratingsSourceNotice").innerHTML=`<i class="fa-solid ${loaded===required.length?"fa-circle-check":"fa-circle-exclamation"}"></i><span><b>${loaded}/${required.length} fuentes SBS con data.</b> No se usan cifras de informes de clasificadoras. Si un indicador está vacío, falta sincronizar su fuente SBS o no existe para ese periodo.</span>`;
+ document.getElementById("ratingsSourceNotice").innerHTML=`<i class="fa-solid ${loaded===required.length?"fa-circle-check":"fa-circle-exclamation"}"></i><span><b>${loaded}/${required.length} fuentes SBS con data.</b> Ningún valor proviene de una clasificadora. Si falta una fuente, el indicador queda pendiente.</span>`;
  let filtered=ratingPillar==="all"?catalog:catalog.filter(m=>m.group===ratingPillar),canvas=document.getElementById("ratingsCanvas");
  if(ratingView==="annual"||ratingView==="monthly"){
-   canvas.innerHTML=groups.filter(g=>ratingPillar==="all"||ratingPillar===g).map(g=>`<section class="intel-section"><div class="intel-section-head"><span class="intel-section-icon"><i class="fa-solid ${ratingPillarIcon(g)}"></i></span><div><h3>${g}</h3><p>${ratingView==="annual"?"Mismo mes durante los últimos 5 años.":"Evolución mensual de los últimos 12 meses."}</p></div></div><div class="history-card-grid">${filtered.filter(m=>m.group===g).map(m=>ratingHistoryCard(m,ratingView)).join("")}</div></section>`).join("");return
+   canvas.innerHTML=groups.filter(g=>ratingPillar==="all"||ratingPillar===g).map(g=>`<section class="intel-section"><div class="intel-section-head"><span class="intel-section-icon"><i class="fa-solid ${ratingPillarIcon(g)}"></i></span><div><h3>${g}</h3><p>${ratingView==="annual"?"Mismo mes durante los últimos 5 años.":"Evolución de los últimos 12 meses."}</p></div></div><div class="history-card-grid">${filtered.filter(m=>m.group===g).map(m=>ratingHistoryCard(m,ratingView)).join("")}</div></section>`).join("");return
  }
- canvas.innerHTML=groups.filter(g=>ratingPillar==="all"||ratingPillar===g).map(g=>`<section class="intel-section"><div class="intel-section-head"><span class="intel-section-icon"><i class="fa-solid ${ratingPillarIcon(g)}"></i></span><div><h3>${g}</h3><p>${g==="Solvencia"?"Capital, capacidad de absorción y apalancamiento.":g==="Calidad de activos"?"Mora, refinanciados y deterioro de cartera.":g==="Cobertura"?"Cobertura de provisiones sobre cartera problema.":g==="Liquidez y fondeo"?"Liquidez regulatoria y estabilidad del fondeo.":g==="Rentabilidad"?"Retornos y capacidad de generación de resultados.":g==="Eficiencia"?"Relación entre gastos e ingresos.":"Exposición cambiaria frente al patrimonio."}</p></div></div><div class="intel-card-grid">${filtered.filter(m=>m.group===g).map(metricCard).join("")}</div></section>`).join("")
+ canvas.innerHTML=groups.filter(g=>ratingPillar==="all"||ratingPillar===g).map(g=>`<section class="intel-section"><div class="intel-section-head"><span class="intel-section-icon"><i class="fa-solid ${ratingPillarIcon(g)}"></i></span><div><h3>${g}</h3><p>${g==="Solvencia"?"Capital, capacidad de absorción y apalancamiento.":g==="Calidad de activos"?"Mora, refinanciados y deterioro de cartera.":g==="Cobertura"?"Cobertura de provisiones sobre cartera problema.":g==="Liquidez y fondeo"?"Liquidez regulatoria y estabilidad del fondeo.":g==="Rentabilidad"?"Retornos y generación de resultados.":g==="Eficiencia"?"Relación entre gastos e ingresos.":"Exposición cambiaria frente al patrimonio."}</p></div></div><div class="intel-card-grid">${filtered.filter(m=>m.group===g).map(metricCard).join("")}</div></section>`).join("")
 }
-function renderDataPanel(){
- let arr=dataRows(),groups=[...new Set(arr.map(x=>x.group))],max=Math.max(1,...arr.map(x=>Math.abs(x.total||0))),period=document.getElementById("datePicker").value;
- let viewText=dataView==="snapshot"?"Vista actual":dataView==="annual"?"Evolutivo 5 años · mismo mes":"Evolutivo 12 meses";
- document.getElementById("detailSub").textContent=`${module().code} · ${period} · ${arr.length} filas · ${viewText}`;
 
+function hierarchyOverlay(){
+ return `<div class="hierarchy-overlay is-hidden" aria-hidden="true"><div class="hierarchy-section"></div><div class="hierarchy-rubric"></div></div>`
+}
+function bindHierarchySticky(){
+ let wrap=document.querySelector(".data-desktop .hierarchy-scroll");if(!wrap)return;
+ let overlay=wrap.querySelector(".hierarchy-overlay"),sectionEl=overlay?.querySelector(".hierarchy-section"),rubricEl=overlay?.querySelector(".hierarchy-rubric");
+ if(!overlay||detailSort==="impact"){if(overlay)overlay.classList.add("is-hidden");return}
+ let sections=[...wrap.querySelectorAll("tr.group-row[data-section]")],rubrics=[...wrap.querySelectorAll("tr[data-rubric]")];
+ let update=()=>{
+   let top=wrap.scrollTop,head=36,groupH=29,section=null,rubric=null;
+   for(let r of sections)if(r.offsetTop<=top+head+2)section=r.dataset.section;else break;
+   if(section)for(let r of rubrics)if(r.dataset.section===section&&r.offsetTop<=top+head+groupH+2)rubric=r.dataset.rubric;
+   sectionEl.textContent=section||"";rubricEl.textContent=rubric||"";
+   overlay.classList.toggle("is-hidden",top<8||!section)
+ };
+ wrap.addEventListener("scroll",update,{passive:true});requestAnimationFrame(update)
+}
+
+function renderDataPanel(){
+ let arr=dataRows(),period=document.getElementById("datePicker").value,viewText=dataView==="snapshot"?"Vista actual":dataView==="annual"?"Evolutivo 5 años · mismo mes":"Evolutivo 12 meses";
+ document.getElementById("detailSub").textContent=`${module().code} · ${period} · ${arr.length} filas · ${viewText}`;
  if(!arr.length){
-   let e=`<div class="empty-state"><div><i class="fa-solid fa-database"></i>No hay datos para este módulo/periodo. Ejecuta la sincronización.</div></div>`;
+   let e=`<div class="empty-state"><div><i class="fa-solid fa-database"></i>No hay datos utilizables para este módulo/periodo.</div></div>`;
    document.getElementById("dataDesktop").innerHTML=e;document.getElementById("dataMobile").innerHTML=e;return
  }
-
  let grouped=new Map();for(let x of arr){if(!grouped.has(x.group))grouped.set(x.group,[]);grouped.get(x.group).push(x)}
+ let max=Math.max(1,...arr.map(x=>Math.abs(x.total||0)));
 
  if(dataView==="snapshot"){
    let body="",last=null;
    for(let x of arr){
-     if(detailSort!=="impact"&&x.group!==last){body+=`<tr class="group-row"><td colspan="8">${x.group}</td></tr>`;last=x.group}
-     let bar=showBars?Math.min(100,Math.abs(x.total||0)/max*100):0,cls=x.indent===0?(detailSort==="impact"?"major-row impact-row":"major-row rubric-row-v34"):"detail-row-v34";
-     body+=`<tr class="${cls}">
-       <td class="indent-${Math.min(3,x.indent)}">${x.label}${document.getElementById("searchBox").value&&x.indent>0?`<small class="inline-parent">${x.rubric}</small>`:""}</td>
-       <td class="num">${dataFmt(x.mn,x.unit)}</td>
-       <td class="num">${dataFmt(x.me,x.unit)}</td>
-       <td class="num cell-bar" style="--bar:${bar.toFixed(1)}%"><span>${dataFmt(x.total,x.unit)}</span></td>
-       <td class="num">${dataFmt(x.comp,x.unit)}</td>
-       <td class="num ${x.delta>0?"pos":x.delta<0?"neg":""}">${dataFmt(x.delta,x.unit)}</td>
-       <td class="num ${x.varPct>0?"pos":x.varPct<0?"neg":""}">${fmtPct(x.varPct,2)}</td>
-       <td>${x.st==="income"?"P&L":x.st==="balance"?"Balance":x.st==="peer"?"Peer":x.st==="rating"?"Ratings":module().code}</td>
-     </tr>`
+     if(detailSort!=="impact"&&x.group!==last){body+=`<tr class="group-row" data-section="${x.group}"><td colspan="8">${x.group}</td></tr>`;last=x.group}
+     let bar=showBars?Math.min(100,Math.abs(x.total||0)/max*100):0,cls=x.indent===0?"major-row rubric-row-v37":"detail-row-v37",attrs=x.indent===0?` data-section="${x.group}" data-rubric="${x.label}"`:"";
+     body+=`<tr class="${cls}"${attrs}><td class="indent-${Math.min(3,x.indent)}">${x.label}${document.getElementById("searchBox").value&&x.indent>0?`<small class="inline-parent">${x.rubric}</small>`:""}</td><td class="num">${dataFmt(x.mn,x.unit)}</td><td class="num">${dataFmt(x.me,x.unit)}</td><td class="num cell-bar" style="--bar:${bar.toFixed(1)}%"><span>${dataFmt(x.total,x.unit)}</span></td><td class="num">${dataFmt(x.comp,x.unit)}</td><td class="num ${x.delta>0?"pos":x.delta<0?"neg":""}">${dataFmt(x.delta,x.unit)}</td><td class="num ${x.varPct>0?"pos":x.varPct<0?"neg":""}">${fmtPct(x.varPct,2)}</td><td>${x.st==="income"?"P&L":x.st==="balance"?"Balance":x.st==="peer"?"Peer":x.st==="rating"?"SBS Ratio":module().code}</td></tr>`
    }
-   document.getElementById("dataDesktop").innerHTML=`<div class="data-matrix-wrap"><table class="data-matrix snapshot-matrix"><thead><tr><th>Cuenta / indicador</th><th>MN</th><th>ME</th><th>Total</th><th>Comparativo</th><th>Δ</th><th>Δ %</th><th>Fuente</th></tr></thead><tbody>${body}</tbody></table></div>`;
-
-   let mobile="";
-   for(let[g,rs]of grouped){
-     mobile+=`<div class="data-group-card"><div class="data-group-title"><span>${g}</span><span>${rs.length}</span></div>`;
-     for(let x of rs){
-       let cls=x.indent===0?"mobile-rubric rubric-mobile-v34":"mobile-child child-mobile-v34";
-       mobile+=`<div class="data-line ${cls} indent-mobile-${Math.min(3,x.indent)}">
-         <div class="data-line-name">${x.label}${document.getElementById("searchBox").value&&x.indent>0?`<small class="inline-parent">${x.rubric}</small>`:""}</div>
-         <div class="data-line-grid">
-           <div class="data-mini"><span>MN</span><b>${dataFmt(x.mn,x.unit)}</b></div>
-           <div class="data-mini"><span>ME</span><b>${dataFmt(x.me,x.unit)}</b></div>
-           <div class="data-mini"><span>Total</span><b>${dataFmt(x.total,x.unit)}</b></div>
-           <div class="data-mini"><span>Var.</span><b class="${x.varPct>0?"pos":x.varPct<0?"neg":""}">${fmtPct(x.varPct,2)}</b></div>
-         </div>
-       </div>`
-     }mobile+="</div>"
+   document.getElementById("dataDesktop").innerHTML=`<div class="data-matrix-wrap hierarchy-scroll">${hierarchyOverlay()}<table class="data-matrix snapshot-matrix"><thead><tr><th>Cuenta / indicador</th><th>MN</th><th>ME</th><th>Total</th><th>Comparativo</th><th>Δ</th><th>Δ %</th><th>Fuente</th></tr></thead><tbody>${body}</tbody></table></div>`;
+ }else{
+   let periods=dataView==="annual"?annualPeriods():monthlyPeriods(),body="",last=null;
+   for(let x of arr){
+     if(detailSort!=="impact"&&x.group!==last){body+=`<tr class="group-row" data-section="${x.group}"><td colspan="${periods.length+1}">${x.group}</td></tr>`;last=x.group}
+     let cls=x.indent===0?"major-row rubric-row-v37":"detail-row-v37",attrs=x.indent===0?` data-section="${x.group}" data-rubric="${x.label}"`:"";
+     body+=`<tr class="${cls}"${attrs}><td class="indent-${Math.min(3,x.indent)}">${x.label}${document.getElementById("searchBox").value&&x.indent>0?`<small class="inline-parent">${x.rubric}</small>`:""}</td>`;
+     for(let i=0;i<periods.length;i++){let p=periods[i],v=rowValueForPeriod(x,p.key,"total"),prev=i?rowValueForPeriod(x,periods[i-1].key,"total"):null;body+=`<td class="num history-cell"><span>${dataFmt(v,x.unit)}</span>${trendGlyph(v,prev,"context")}</td>`}
+     body+=`</tr>`
    }
-   document.getElementById("dataMobile").innerHTML=mobile;
-   return
+   document.getElementById("dataDesktop").innerHTML=`<div class="data-matrix-wrap history-wrap hierarchy-scroll">${hierarchyOverlay()}<table class="data-matrix history-matrix"><thead><tr><th>Cuenta / indicador</th>${periods.map(p=>`<th>${p.label}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`
  }
-
- let periods=dataView==="annual"?annualPeriods():monthlyPeriods();
- let body="",last=null;
- for(let x of arr){
-   if(x.group!==last){body+=`<tr class="group-row"><td colspan="${periods.length+1}">${x.group}</td></tr>`;last=x.group}
-   let cls=x.indent===0?(detailSort==="impact"?"major-row impact-row":"major-row rubric-row-v34"):"detail-row-v34";
-   body+=`<tr class="${cls}"><td class="indent-${Math.min(3,x.indent)}">${x.label}</td>`;
-   for(let i=0;i<periods.length;i++){
-     let p=periods[i],v=rowValueForPeriod(x,p.key,"total"),prev=i?rowValueForPeriod(x,periods[i-1].key,"total"):null;
-     body+=`<td class="num history-cell"><span>${dataFmt(v,x.unit)}</span>${trendGlyph(v,prev,"context")}</td>`
-   }
-   body+=`</tr>`
- }
- document.getElementById("dataDesktop").innerHTML=`<div class="data-matrix-wrap history-wrap"><table class="data-matrix history-matrix"><thead><tr><th>Cuenta / indicador</th>${periods.map(p=>`<th>${p.label}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`;
 
  let mobile="";
  for(let[g,rs]of grouped){
-   mobile+=`<div class="data-group-card"><div class="data-group-title"><span>${g}</span><span>${dataView==="annual"?"5Y":"12M"}</span></div>`;
+   mobile+=`<div class="data-group-card"><div class="data-group-title"><span>${g}</span><span>${rs.length}</span></div>`;
    for(let x of rs){
-     let values=periods.map(p=>({label:p.label,value:rowValueForPeriod(x,p.key,"total")})).filter(v=>v.value!=null);
-     let latest=values.at(-1)?.value??null,first=values[0]?.value??null,change=pct(latest,first);
-     mobile+=`<div class="data-line ${x.indent===0?"mobile-rubric":"mobile-child"} indent-mobile-${Math.min(3,x.indent)}">
-       <div class="data-line-name">${x.label}</div>
-       <div class="mobile-history-summary"><span>${values.length?values[0].label:"—"} → ${values.length?values.at(-1).label:"—"}</span><b class="${change>0?"pos":change<0?"neg":""}">${fmtPct(change,2)}</b></div>
-       <div class="mobile-history-scroll">${periods.map((p,i)=>{let v=rowValueForPeriod(x,p.key,"total"),prev=i?rowValueForPeriod(x,periods[i-1].key,"total"):null;return `<div class="history-mini"><span>${p.label}</span><b>${dataFmt(v,x.unit)} ${trendGlyph(v,prev,"context")}</b></div>`}).join("")}</div>
-     </div>`
-   }mobile+="</div>"
+     if(dataView==="snapshot"){
+       mobile+=`<div class="data-line ${x.indent===0?"mobile-rubric":"mobile-child"} indent-mobile-${Math.min(3,x.indent)}"><div class="data-line-name">${x.label}</div><div class="data-line-grid"><div class="data-mini"><span>MN</span><b>${dataFmt(x.mn,x.unit)}</b></div><div class="data-mini"><span>ME</span><b>${dataFmt(x.me,x.unit)}</b></div><div class="data-mini"><span>Total</span><b>${dataFmt(x.total,x.unit)}</b></div><div class="data-mini"><span>Var.</span><b class="${x.varPct>0?"pos":x.varPct<0?"neg":""}">${fmtPct(x.varPct,2)}</b></div></div></div>`
+     }else{
+       let periods=dataView==="annual"?annualPeriods():monthlyPeriods(),values=periods.map(p=>({label:p.label,value:rowValueForPeriod(x,p.key,"total")})).filter(v=>v.value!=null),latest=values.at(-1)?.value??null,first=values[0]?.value??null,change=pct(latest,first);
+       mobile+=`<div class="data-line ${x.indent===0?"mobile-rubric":"mobile-child"} indent-mobile-${Math.min(3,x.indent)}"><div class="data-line-name">${x.label}</div><div class="mobile-history-summary"><span>${values.length?values[0].label:"—"} → ${values.length?values.at(-1).label:"—"}</span><b class="${change>0?"pos":change<0?"neg":""}">${fmtPct(change,2)}</b></div><div class="mobile-history-scroll">${periods.map((p,i)=>{let v=rowValueForPeriod(x,p.key,"total"),prev=i?rowValueForPeriod(x,periods[i-1].key,"total"):null;return `<div class="history-mini"><span>${p.label}</span><b>${dataFmt(v,x.unit)} ${trendGlyph(v,prev,"context")}</b></div>`}).join("")}</div></div>`
+     }
+   }
+   mobile+="</div>"
  }
- document.getElementById("dataMobile").innerHTML=mobile
+ document.getElementById("dataMobile").innerHTML=mobile;
+ if(window.matchMedia?.("(min-width:761px)")?.matches!==false)requestAnimationFrame(bindHierarchySticky)
 }
 function renderSources(){
  let cards=[{code:"B-2201",title:"Balance y P&L",periods:fperiods(),source:DB.meta.financial_source,sync:DB.meta.financial_sync},...Object.entries(DB.reports||{}).map(([code,r])=>({code,title:r.short||r.title,periods:r.periods||[],source:r.source,sync:r.sync,frequency:r.frequency}))];
  document.getElementById("sourceGrid").innerHTML=cards.map(x=>{let last=x.periods.at(-1)?.date,err=x.sync?.errors||0,state=last?(err?"warn":"pos"):"neg",txt=last?`${x.periods.length} periodos${err?` · ${err} error(es)`:""}`:"Pendiente de sync";return`<a class="source-card" href="${x.source}" target="_blank"><b>${x.code} · ${x.title}</b><span>${last?`Último: ${ym(last)}`:"Sin data local"}${x.frequency?` · ${x.frequency}`:""}</span><span class="source-state ${state}">${txt} ↗</span></a>`}).join("")
 }
-function applyModuleLayout(){let r=currentModule==="ratings";document.getElementById("analysisCharts").hidden=r;document.getElementById("analysisContent").hidden=r;document.getElementById("dataPanel").hidden=r;document.getElementById("kpiGrid").classList.toggle("ratings-kpis",r)}
+function applyModuleLayout(){
+ let r=currentModule==="ratings";
+ document.getElementById("analysisCharts").hidden=r;
+ document.getElementById("analysisContent").hidden=r;
+ document.getElementById("dataPanel").hidden=r;
+ document.getElementById("kpiGrid").classList.toggle("ratings-kpis",r)
+}
 function renderAll(){
+ clearAppError();
  document.getElementById("brandSubtitle").textContent=`BANBIF · ${module().code} · Fecha SBS: ${document.getElementById("datePicker").value||"—"}`;
- setStatus(moduleAvailable()?"ok":"warn",moduleAvailable()?"Data disponible":"Pendiente sync");applyModuleLayout();
- renderKpis();if(currentModule!=="ratings"){setupTrendMetric();renderCharts();renderStats();renderRadar();renderPeers();renderDataPanel()}renderRatingsLens();renderSources()
+ setStatus(moduleAvailable()?"ok":"warn",moduleAvailable()?"Data disponible":"Pendiente sync");
+ safeCall("diseño del módulo",applyModuleLayout);
+ safeCall("KPIs",renderKpis);
+ if(currentModule!=="ratings"){
+   safeCall("selector de tendencia",setupTrendMetric);
+   safeCall("gráficos",renderCharts);
+   safeCall("estadísticas",renderStats);
+   safeCall("Regulatory Radar",renderRadar);
+   safeCall("Peers",renderPeers);
+   safeCall("Datos y cuentas SBS",renderDataPanel)
+ }
+ safeCall("Clasificadoras",renderRatingsLens);
+ safeCall("Fuentes SBS",renderSources)
 }
 function copySummary(){let p=currentFinancial(),r=risk(p),t=`BanBif · ${ym(p?.date)}\nActivo: S/ ${fmtMM(val(p,"balance","TOTAL ACTIVO"),1)} MM\nCréditos brutos: S/ ${fmtMM(gross(p),1)} MM\nMora: ${num(r.npl,1)}%\nDepósitos público: S/ ${fmtMM(val(p,"balance","OBLIGACIONES CON EL PÚBLICO"),1)} MM`;navigator.clipboard.writeText(t);showToast("Resumen copiado","ok")}
 function downloadCSV(){let a=dataRows(),lines=[["grupo","cuenta","MN","ME","TOTAL","comparativo","delta","var_pct","fuente"]];for(let x of a)lines.push([x.group,x.label,x.mn,x.me,x.total,x.comp,x.delta,x.varPct,x.st]);let csv=lines.map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\n"),ln=document.createElement("a");ln.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));ln.download=`banbif_${module().code}_${document.getElementById("datePicker").value}.csv`;ln.click()}
@@ -600,15 +747,28 @@ function openSync(){let d=document.getElementById("syncDialog");document.getElem
 function closeSync(){if(syncTimer){clearInterval(syncTimer);syncTimer=null}document.getElementById("syncDialog").close()}
 async function checkRemoteData(manual=false){
  let btn=document.getElementById("btnRefresh");btn.classList.add("is-loading");document.getElementById("syncState").textContent="Comprobando…";
- try{let r=await fetch(`./data/hub.json?t=${Date.now()}`,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);let fresh=await r.json(),old=DB.meta.generated_at||"",nw=fresh.meta?.generated_at||"";if(nw&&nw!==old){DB=fresh;document.getElementById("syncGenerated").textContent=new Date(nw).toLocaleString("es-PE");document.getElementById("syncLatest").textContent=ym(fperiods().at(-1)?.date)||"—";document.getElementById("syncState").textContent="Nueva data detectada";setupDateKeep();renderAll();showToast("Datos SBS sincronizados","ok")}else{document.getElementById("syncState").textContent="Sin cambios todavía";if(manual)showToast("Aún no hay cambios en hub.json","info")}}
- catch(e){document.getElementById("syncState").textContent="No se pudo comprobar";if(manual)showToast("No se pudo comprobar la sincronización","err")}
+ try{
+   let r=await fetch(`./data/hub.json?t=${Date.now()}`,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);
+   let fresh=await r.json(),old=DB.meta.generated_at||"",nw=fresh.meta?.generated_at||"";
+   if(nw&&nw!==old){DB=fresh;document.getElementById("syncGenerated").textContent=new Date(nw).toLocaleString("es-PE");document.getElementById("syncLatest").textContent=ym(fperiods().at(-1)?.date)||"—";document.getElementById("syncState").textContent="Nueva data detectada";setupDateKeep();renderAll();showToast("Datos SBS sincronizados","ok")}
+   else{document.getElementById("syncState").textContent="Sin cambios todavía";if(manual)showToast("Aún no hay cambios en hub.json","info")}
+ }catch(e){document.getElementById("syncState").textContent="No se pudo comprobar";if(manual)showToast("No se pudo comprobar la sincronización","err")}
  finally{btn.classList.remove("is-loading")}
 }
-function setupDateKeep(){let i=document.getElementById("datePicker"),old=i.value,ps=fperiods();i.min=ym(ps[0].date);i.max=ym(ps.at(-1).date);if(!findFinancial(old))i.value=ym(ps.at(-1).date)}
+function setupDateKeep(){
+ let i=document.getElementById("datePicker"),old=i.value,ps=fperiods();if(!ps.length)return;
+ i.min=ym(ps[0].date);i.max=ym(ps.at(-1).date);if(!findFinancial(old))i.value=ym(ps.at(-1).date)
+}
 function updateThemeIcon(){document.getElementById("themeIcon").className="fa-solid "+(document.documentElement.dataset.theme==="dark"?"fa-sun":"fa-moon")}
 async function init(){
- try{let r=await fetch(`./data/hub.json?t=${Date.now()}`,{cache:"no-store"});DB=r.ok?await r.json():SEED}catch(e){DB=SEED}
- setup();setupDate();renderAll();window.addEventListener("resize",()=>Object.values(charts).forEach(c=>c?.resize?.()))
+ try{
+   let r=await fetch(`./data/hub.json?t=${Date.now()}`,{cache:"no-store"});
+   DB=r.ok?await r.json():SEED
+ }catch(e){console.warn("hub.json no disponible; se usa SEED",e);DB=SEED}
+ try{
+   setup();setupDate();renderAll();
+   window.addEventListener("resize",()=>{Object.values(charts).forEach(c=>c?.resize?.());if(currentModule!=="ratings")requestAnimationFrame(bindHierarchySticky)})
+ }catch(e){console.error(e);showAppError("No se pudo iniciar el Hub",e?.message||String(e))}
 }
 init();
 </script>

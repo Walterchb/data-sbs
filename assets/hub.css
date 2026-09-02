@@ -401,66 +401,83 @@ dialog.sync-dialog::backdrop{background:rgba(5,17,29,.58);backdrop-filter:blur(2
 @media(max-width:430px){.ratings-agency-strip{grid-template-columns:1fr}.ratings-hero-copy h2{font-size:1.08rem}.intel-context{grid-template-columns:1fr 1fr}.intel-context span:last-child{grid-column:1/-1}.rating-view span{display:none}.rating-view{font-size:.72rem}.pillar-chip{height:31px}.ratings-source-notice{padding:7px 8px}}
 
 
-/* v3.6 — exact group color and nested sticky hierarchy */
-.data-matrix-wrap{
-  --data-table-head-h:34px;
-  --data-group-h:30px;
-  position:relative;
-  isolation:isolate;
-}
-.data-matrix thead th{
-  position:sticky!important;
-  top:0!important;
-  z-index:30!important;
-  height:var(--data-table-head-h);
-  background:var(--soft)!important;
-}
-.data-matrix .group-row td{
-  position:sticky!important;
-  top:var(--data-table-head-h)!important;
-  z-index:24!important;
-  height:var(--data-group-h);
-  background:#0b3654!important;
-  color:#fff!important;
-  box-shadow:0 1px 0 rgba(0,0,0,.20);
-}
-.data-matrix .rubric-row-v34 td{
-  position:sticky!important;
-  top:calc(var(--data-table-head-h) + var(--data-group-h))!important;
-  z-index:20!important;
-  background:color-mix(in srgb,var(--soft) 94%,var(--panel))!important;
-  box-shadow:0 1px 0 var(--line2);
-}
-.data-matrix .rubric-row-v34 td:first-child{
-  left:0!important;
-  z-index:22!important;
-  background:color-mix(in srgb,var(--soft) 94%,var(--panel))!important;
-}
-.data-matrix .impact-row td{position:static!important}
-.data-matrix thead th:first-child{z-index:36!important}
-.group-row td,.snapshot-matrix .group-row td,.history-matrix .group-row td{background:#0b3654!important}
+/* =========================================================
+   v3.7 — Stability + clean hierarchical scrolling
+   ========================================================= */
 
-/* Reliable data controls on mouse/touch */
+/* Error visibility: never fail silently */
+.app-error{
+  display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:9px 11px;
+  border:1px solid rgba(189,44,34,.28);border-left:4px solid var(--red);
+  border-radius:var(--radius);background:color-mix(in srgb,var(--red) 7%,var(--panel));
+  color:var(--ink);font-size:.74rem;font-weight:620
+}
+.app-error[hidden]{display:none!important}.app-error i{color:var(--red)}
+
+/* Group rows use the requested exact color, but SCROLL normally.
+   The hierarchy that stays fixed is rendered in the dedicated overlay below. */
+.data-matrix .group-row td,
+.snapshot-matrix .group-row td,
+.history-matrix .group-row td{
+  position:static!important;top:auto!important;
+  background:#0b3654!important;color:#fff!important;
+  font-size:.64rem!important;font-weight:720!important;letter-spacing:.08em!important;text-transform:uppercase!important
+}
+.data-matrix .rubric-row-v34 td,
+.data-matrix .rubric-row-v37 td{
+  position:static!important;top:auto!important;
+  background:color-mix(in srgb,var(--soft) 78%,var(--panel))!important;
+  box-shadow:none!important
+}
+.rubric-row-v37 td{font-weight:720!important;border-top:1px solid var(--line2);border-bottom:1px dotted var(--line2)}
+.rubric-row-v37 td:first-child{text-transform:uppercase;letter-spacing:.01em;border-left:4px solid var(--navy3);padding-left:9px!important}
+.detail-row-v37 td:first-child{position:relative}
+.detail-row-v37 .indent-1{padding-left:29px!important}.detail-row-v37 .indent-2{padding-left:45px!important}.detail-row-v37 .indent-3{padding-left:61px!important}
+.detail-row-v37 td:first-child::before{content:"";position:absolute;left:12px;top:50%;width:8px;border-top:1px solid var(--line2);opacity:.65}
+
+/* Only the column header itself is native sticky. */
+.data-matrix thead th{position:sticky!important;top:0!important;z-index:15!important;background:var(--soft)!important}
+.data-matrix thead th:first-child{z-index:17!important}
+
+/* Stable hierarchy overlay: ACTIVO + DISPONIBLE, then replaces DISPONIBLE when the next rubric arrives. */
+.hierarchy-scroll{position:relative;isolation:isolate}
+.hierarchy-overlay{
+  position:sticky;top:34px;z-index:14;height:58px;margin-bottom:-58px;
+  pointer-events:none;transition:opacity .12s ease
+}
+.hierarchy-overlay.is-hidden{opacity:0}
+.hierarchy-section,.hierarchy-rubric{
+  display:flex;align-items:center;height:29px;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.hierarchy-section{background:#0b3654;color:#fff;font-size:.63rem;font-weight:760;letter-spacing:.08em;text-transform:uppercase}
+.hierarchy-rubric{
+  background:color-mix(in srgb,var(--soft) 96%,var(--panel));color:var(--ink);
+  border:1px solid var(--line);border-top:0;font-size:.69rem;font-weight:720;text-transform:uppercase;
+  box-shadow:0 2px 5px rgba(5,28,44,.08)
+}
+
+/* Reliable data controls */
 .data-view-tabs,.data-view-tabs .tab,.data-tool{position:relative;z-index:3;pointer-events:auto!important;touch-action:manipulation}
 .data-view-tabs .tab.active{background:var(--navy3)!important;border-color:var(--navy3)!important;color:#fff!important}
 .data-tool.dark{background:var(--navy3)!important;color:#fff!important;border-color:var(--navy3)!important}
 
-/* Classificadoras = SBS only */
-.source-health-card{position:relative;overflow:hidden}
-.source-health-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#d99a30}
-.source-health-card.ok::before{background:#2dc48a}
-.ratings-agency-strip{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-.ratings-source-notice{border-left-color:var(--cyan)!important;background:color-mix(in srgb,var(--cyan) 5%,var(--panel))!important}
-.ratings-source-notice i{color:var(--cyan)!important}
-.metric-spark polyline{stroke:var(--cyan)}
-.rating-trend.up{color:var(--green)}.rating-trend.down{color:var(--red)}
+/* ECharts failure should not blank the site */
+.chart-fallback{height:100%;min-height:190px;display:grid;place-items:center;align-content:center;gap:8px;text-align:center;color:var(--muted);background:var(--soft);border:1px dashed var(--line);border-radius:var(--radius);padding:18px}
+.chart-fallback i{font-size:1.25rem;color:var(--navy3)}
 
-@media(max-width:1050px){
- .ratings-agency-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-}
+/* Ratings is SBS-only */
+.source-health-card{position:relative;overflow:hidden}.source-health-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber)}.source-health-card.ok::before{background:var(--green)}
+.ratings-agency-strip{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.metric-spark polyline{stroke:var(--cyan)}
+.ratings-source-notice{border-left-color:var(--cyan)!important;background:color-mix(in srgb,var(--cyan) 5%,var(--panel))!important}.ratings-source-notice i{color:var(--cyan)!important}
+
+/* Mobile: no horizontal page overflow; tables become cards as before. */
 @media(max-width:760px){
- .data-matrix-wrap{--data-table-head-h:33px;--data-group-h:29px}
- .data-view-tabs .tab,.data-tool{min-height:34px!important}
- .ratings-agency-strip{display:flex!important;overflow-x:auto;gap:6px;scroll-snap-type:x proximity}
- .ratings-agency-strip .agency-card{flex:0 0 145px;scroll-snap-align:start}
+  html,body,.app{max-width:100%;overflow-x:hidden}
+  .hierarchy-overlay{display:none!important}
+  .data-matrix-wrap{max-width:100%}
+  .top-actions{min-width:0}
+  .snapshot,.chart-row,.content-row,.panel,.panel-head,.panel-body{min-width:0;max-width:100%}
+  .ratings-agency-strip{display:flex!important;overflow-x:auto;gap:6px;scroll-snap-type:x proximity}
+  .ratings-agency-strip .agency-card{flex:0 0 145px;scroll-snap-align:start}
 }

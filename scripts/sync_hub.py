@@ -297,7 +297,7 @@ def update_report(db,code,title,page,freq):
 
 def main():
  db=json.loads(DATA.read_text(encoding="utf-8"))
- # v3.6: eliminar cualquier capa histórica basada en informes de clasificadoras.
+ # v3.7: the Hub uses no figures from rating-agency reports.
  db.pop("ratings",None)
  # Remove obsolete aliases created by v2.
  db.get("reports",{}).pop("B-230809",None);db.get("reports",{}).pop("B-234021",None)

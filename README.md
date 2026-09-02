@@ -148,21 +148,36 @@ La capa de referencias queda en `data/hub.json` bajo `ratings` y no se elimina c
 - Las métricas sin fuente regulatoria cargada muestran `Ref. dic-25 / Pendiente <código SBS>` explícitamente en lugar de celdas vacías.
 
 
-## v3.6
+## v3.7 — corrección integral
 
-### Datos y cuentas SBS
-- `group-row` usa exactamente **#0b3654**.
-- Sticky jerárquico:
-  - encabezado de columnas;
-  - sección (ACTIVO, PASIVO, ESTADO DE RESULTADOS, etc.);
-  - rubro activo (DISPONIBLE, INVERSIONES NETAS DE PROVISIONES, etc.).
-- El rubro activo se reemplaza al llegar al siguiente rubro.
-- Se rehizo la conexión de los botones `ACTUAL / 5 AÑOS / 12 MESES`, impacto y barras usando `addEventListener` y delegación de eventos para mouse/touch.
+Esta versión se reconstruyó desde la última base estable y no desde la v3.6 defectuosa.
+
+### Corrección crítica
+La v3.6 llamaba `setupTrendMetric()`, `renderCharts()`, `renderStats()` y `renderRadar()` pero esas funciones habían sido eliminadas accidentalmente del JavaScript. Eso detenía `renderAll()` y dejaba la interfaz en estado `Consultando`.
+
+v3.7 restaura toda la cadena:
+`setupTrendMetric → trendSeries → renderCharts → renderStats → renderRadar`.
+
+Además, cada bloque se ejecuta mediante `safeCall`, por lo que un fallo de un gráfico ya no impide que se muestren KPIs, Datos y cuentas o Fuentes SBS.
+
+### Datos y cuentas
+- Encabezado de columnas fijo.
+- `group-row` exactamente `#0b3654`.
+- Jerarquía fija mediante un overlay estable:
+  - ACTIVO/PASIVO/etc.
+  - rubro activo: DISPONIBLE, INVERSIONES NETAS..., etc.
+- Los renglones reales ya no usan múltiples `position:sticky`; esto elimina los encabezados que quedaban pegados/solapados.
+- ACTUAL / 5 AÑOS / 12 MESES funcionan con delegación de eventos.
+- Búsqueda conserva el rubro padre.
+- 2 decimales.
 
 ### Clasificadoras
-- El módulo es **100% SBS**.
-- Se eliminaron ratings, benchmarks y cifras provenientes de PCR/Moody's.
-- El usuario puede usar el módulo como fuente independiente para contrastar cualquier cifra que una clasificadora le atribuya.
-- Las únicas fuentes numéricas admitidas son:
-  B-2201, B-2401, B-3302, B-2340, B-230811, R-0010 y B-2368.
-- Si una fuente no está sincronizada, se muestra `Pendiente SBS`; nunca se sustituye por una cifra de un informe.
+100% SBS. No se cargan ni se leen archivos con cifras PCR/Moody's.
+Los reportes usados son B-2201, B-2401, B-3302, B-2340, B-230811, R-0010 y B-2368.
+Cuando un reporte regulatorio tiene rezago, la tarjeta muestra el periodo SBS real utilizado.
+
+### Robustez
+- Los reportes regulatorios usan el último periodo disponible <= a la fecha seleccionada.
+- Si ECharts/CDN falla, la tabla continúa funcionando.
+- Se muestra un error visible si una sección no puede renderizar.
+- `setupDate` valida que existan periodos.
