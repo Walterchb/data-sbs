@@ -146,3 +146,23 @@ La capa de referencias queda en `data/hub.json` bajo `ratings` y no se elimina c
 - Se corrige el cálculo de provisiones de cartera: B-2201 contiene varias filas llamadas `Provisiones`; para cobertura se usa la de mayor magnitud, que corresponde a cartera de créditos, evitando tomar la provisión de inversiones.
 - El módulo Clasificadoras se rediseñó como un observatorio visual: Panel, Histórico 5Y y Evidencia. No usa una tabla plana.
 - Las métricas sin fuente regulatoria cargada muestran `Ref. dic-25 / Pendiente <código SBS>` explícitamente en lugar de celdas vacías.
+
+
+## v3.6
+
+### Datos y cuentas SBS
+- `group-row` usa exactamente **#0b3654**.
+- Sticky jerárquico:
+  - encabezado de columnas;
+  - sección (ACTIVO, PASIVO, ESTADO DE RESULTADOS, etc.);
+  - rubro activo (DISPONIBLE, INVERSIONES NETAS DE PROVISIONES, etc.).
+- El rubro activo se reemplaza al llegar al siguiente rubro.
+- Se rehizo la conexión de los botones `ACTUAL / 5 AÑOS / 12 MESES`, impacto y barras usando `addEventListener` y delegación de eventos para mouse/touch.
+
+### Clasificadoras
+- El módulo es **100% SBS**.
+- Se eliminaron ratings, benchmarks y cifras provenientes de PCR/Moody's.
+- El usuario puede usar el módulo como fuente independiente para contrastar cualquier cifra que una clasificadora le atribuya.
+- Las únicas fuentes numéricas admitidas son:
+  B-2201, B-2401, B-3302, B-2340, B-230811, R-0010 y B-2368.
+- Si una fuente no está sincronizada, se muestra `Pendiente SBS`; nunca se sustituye por una cifra de un informe.

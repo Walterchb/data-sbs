@@ -399,3 +399,68 @@ dialog.sync-dialog::backdrop{background:rgba(5,17,29,.58);backdrop-filter:blur(2
  .ratings-hero{padding:12px;gap:10px}.ratings-hero-copy h2{font-size:1.2rem}.ratings-hero-copy p{font-size:.68rem}.ratings-agency-strip{grid-template-columns:1fr 1fr}.agency-card{padding:9px}.agency-card b{font-size:1.25rem;margin-top:7px}.ratings-commandbar{display:grid;grid-template-columns:1fr;gap:6px}.ratings-pillars{width:100%;margin:0 -1px}.ratings-view-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}.rating-view{justify-content:center;padding:0 5px}.intel-card-grid{grid-template-columns:1fr;padding:7px}.intel-card{padding:9px}.intel-card h3{min-height:0}.intel-value-row strong{font-size:1.28rem}.intel-context{grid-template-columns:repeat(3,minmax(0,1fr))}.history-card-grid{padding:7px}.history-timeline{display:flex;overflow-x:auto;gap:5px;scroll-snap-type:x proximity;padding-bottom:2px}.history-point{flex:0 0 76px;scroll-snap-align:start}.evidence-grid{grid-template-columns:1fr}.evidence-card{padding:10px}.ratings-source-notice{font-size:.62rem}.ratings-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
 @media(max-width:430px){.ratings-agency-strip{grid-template-columns:1fr}.ratings-hero-copy h2{font-size:1.08rem}.intel-context{grid-template-columns:1fr 1fr}.intel-context span:last-child{grid-column:1/-1}.rating-view span{display:none}.rating-view{font-size:.72rem}.pillar-chip{height:31px}.ratings-source-notice{padding:7px 8px}}
+
+
+/* v3.6 — exact group color and nested sticky hierarchy */
+.data-matrix-wrap{
+  --data-table-head-h:34px;
+  --data-group-h:30px;
+  position:relative;
+  isolation:isolate;
+}
+.data-matrix thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:30!important;
+  height:var(--data-table-head-h);
+  background:var(--soft)!important;
+}
+.data-matrix .group-row td{
+  position:sticky!important;
+  top:var(--data-table-head-h)!important;
+  z-index:24!important;
+  height:var(--data-group-h);
+  background:#0b3654!important;
+  color:#fff!important;
+  box-shadow:0 1px 0 rgba(0,0,0,.20);
+}
+.data-matrix .rubric-row-v34 td{
+  position:sticky!important;
+  top:calc(var(--data-table-head-h) + var(--data-group-h))!important;
+  z-index:20!important;
+  background:color-mix(in srgb,var(--soft) 94%,var(--panel))!important;
+  box-shadow:0 1px 0 var(--line2);
+}
+.data-matrix .rubric-row-v34 td:first-child{
+  left:0!important;
+  z-index:22!important;
+  background:color-mix(in srgb,var(--soft) 94%,var(--panel))!important;
+}
+.data-matrix .impact-row td{position:static!important}
+.data-matrix thead th:first-child{z-index:36!important}
+.group-row td,.snapshot-matrix .group-row td,.history-matrix .group-row td{background:#0b3654!important}
+
+/* Reliable data controls on mouse/touch */
+.data-view-tabs,.data-view-tabs .tab,.data-tool{position:relative;z-index:3;pointer-events:auto!important;touch-action:manipulation}
+.data-view-tabs .tab.active{background:var(--navy3)!important;border-color:var(--navy3)!important;color:#fff!important}
+.data-tool.dark{background:var(--navy3)!important;color:#fff!important;border-color:var(--navy3)!important}
+
+/* Classificadoras = SBS only */
+.source-health-card{position:relative;overflow:hidden}
+.source-health-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#d99a30}
+.source-health-card.ok::before{background:#2dc48a}
+.ratings-agency-strip{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.ratings-source-notice{border-left-color:var(--cyan)!important;background:color-mix(in srgb,var(--cyan) 5%,var(--panel))!important}
+.ratings-source-notice i{color:var(--cyan)!important}
+.metric-spark polyline{stroke:var(--cyan)}
+.rating-trend.up{color:var(--green)}.rating-trend.down{color:var(--red)}
+
+@media(max-width:1050px){
+ .ratings-agency-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+ .data-matrix-wrap{--data-table-head-h:33px;--data-group-h:29px}
+ .data-view-tabs .tab,.data-tool{min-height:34px!important}
+ .ratings-agency-strip{display:flex!important;overflow-x:auto;gap:6px;scroll-snap-type:x proximity}
+ .ratings-agency-strip .agency-card{flex:0 0 145px;scroll-snap-align:start}
+}
