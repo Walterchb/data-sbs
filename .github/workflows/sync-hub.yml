@@ -26,6 +26,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Configurar Python
         uses: actions/setup-python@v6
@@ -66,11 +69,55 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Guardar cambios
+
+      - name: Resumen de diagnósticos generados
+        if: always()
+        shell: bash
         run: |
+          echo "=== DEBUG SBS ==="
+          if [ -d debug-sbs ] && [ "$(find debug-sbs -type f | wc -l)" -gt 0 ]; then
+            find debug-sbs -maxdepth 1 -type f -printf "%f\n" | sort
+          else
+            echo "No se generaron archivos de diagnóstico."
+          fi
+
+      - name: Guardar cambios sin conflictos
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # The generated hub is the only output we want to publish.
+          # Keep it aside, then rebase by RESETTING to the latest remote main
+          # instead of rebasing a generated JSON commit.
+          cp data/hub.json /tmp/hub.generated.json
+
           git config user.name "sbs-data-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/hub.json
-          git diff --cached --quiet || git commit -m "SBS: actualizar Regulatory & Financial Hub"
-          git pull --rebase
-          git push
+
+          for attempt in 1 2 3 4; do
+            echo "Push attempt ${attempt}/4"
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            cp /tmp/hub.generated.json data/hub.json
+            git add data/hub.json
+
+            if git diff --cached --quiet; then
+              echo "hub.json ya está actualizado; no hay nada que publicar."
+              exit 0
+            fi
+
+            git commit -m "SBS: actualizar Regulatory & Financial Hub"
+
+            if git push origin HEAD:main; then
+              echo "hub.json publicado correctamente."
+              exit 0
+            fi
+
+            echo "El remoto cambió durante el push. Reintentando sobre el main más reciente..."
+            sleep $((attempt * 2))
+          done
+
+          echo "::error::No se pudo publicar hub.json después de 4 intentos."
+          exit 1
