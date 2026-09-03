@@ -4,8 +4,8 @@
 
 1. **Data regulatoria**
    - El sincronizador ahora soporta archivos SBS OOXML y archivos `.xls` binarios reales mediante `xlrd`.
-   - RCL usa el reporte público vigente **B-230811**.
-   - RFNE usa el reporte público vigente **R-0010**.
+   - RCL usa el reporte público vigente **B-230809**.
+   - RFNE usa el reporte público vigente **B-234021**.
    - Cada fuente guarda su estado de sincronización y errores en `data/hub.json`.
 
 2. **Móvil**
@@ -69,12 +69,12 @@ La primera ejecución hará el backfill; luego el cron corre diariamente a las *
 ## Fuentes regulatorias
 
 - B-2201 — Balance y P&L
-- C-1203 — Créditos Directos por Sector Económico
+- B-2311 — Créditos Directos por Sector Económico
 - B-2401 — Indicadores Financieros
-- B-3302 — Patrimonio Efectivo y Ratio de Capital Global
+- B-2402 — Patrimonio Efectivo y Ratio de Capital Global
 - B-2340 — Ratios de Liquidez
-- B-230811 — Ratio de Cobertura de Liquidez
-- R-0010 — Ratio de Financiación Neta Estable
+- B-230809 — Ratio de Cobertura de Liquidez
+- B-234021 — Ratio de Financiación Neta Estable
 - B-2368 — Posición Global en Moneda Extranjera
 
 
@@ -173,7 +173,7 @@ Además, cada bloque se ejecuta mediante `safeCall`, por lo que un fallo de un g
 
 ### Clasificadoras
 100% SBS. No se cargan ni se leen archivos con cifras PCR/Moody's.
-Los reportes usados son B-2201, B-2401, B-3302, B-2340, B-230811, R-0010 y B-2368.
+Los reportes usados son B-2201, B-2401, B-2402, B-2340, B-230809, B-234021 y B-2368.
 Cuando un reporte regulatorio tiene rezago, la tarjeta muestra el periodo SBS real utilizado.
 
 ### Robustez
@@ -188,9 +188,9 @@ Cuando un reporte regulatorio tiene rezago, la tarjeta muestra el periodo SBS re
 El run del workflow permitió identificar cuatro fallas independientes:
 
 1. El repo tenía `requirements.txt` con `xlrd`, pero el workflow publicado no ejecutaba `pip install -r requirements.txt`.
-   Por eso fallaban C-1203, B-3302 y B-2368 con `No module named 'xlrd'`.
+   Por eso fallaban B-2311, B-2402 y B-2368 con `No module named 'xlrd'`.
 
-2. Algunos B-230811 son OOXML con un relationship target absoluto (`/xl/worksheets/...`).
+2. Algunos B-230809 son OOXML con un relationship target absoluto (`/xl/worksheets/...`).
    El parser anterior lo convertía en `xl//xl/worksheets/...`. Se normalizan ahora todas las rutas OOXML.
 
 3. El parser genérico exigía al menos tres números en la misma fila del banco.
@@ -244,5 +244,64 @@ El mensaje de error incluye:
 - coordenadas donde aparece BanBif;
 - preview de filas alrededor del banco.
 
-Esto permite inspeccionar un archivo real de C-1203, B-3302, B-230811, R-0010 o B-2368
+Esto permite inspeccionar un archivo real de B-2311, B-2402, B-230809, B-234021 o B-2368
 sin seguir deduciendo la estructura únicamente desde el log.
+
+
+## v4.1 — publicación de hub.json sin conflictos Git
+
+El error `CONFLICT (content): Merge conflict in data/hub.json` no pertenece a SBS.
+Ocurre cuando el workflow genera un `hub.json`, crea un commit local y mientras tanto
+`main` recibe otro commit. Hacer `git pull --rebase` intenta fusionar dos versiones
+generadas del mismo JSON.
+
+v4.1 elimina ese rebase.
+
+Nueva estrategia:
+1. guardar el `hub.json` recién generado en `/tmp`;
+2. `git fetch origin main`;
+3. `git reset --hard origin/main`;
+4. volver a colocar únicamente el `hub.json` generado;
+5. commit + push;
+6. si `main` cambió durante el push, repetir hasta cuatro veces.
+
+El checkout usa además `ref: main` y `fetch-depth: 0`, de modo que un workflow que estuvo
+en cola comienza siempre desde el estado más reciente de la rama.
+
+Los artifacts de diagnóstico SBS se suben antes del paso de publicación, así que siguen
+disponibles incluso si el push final llegara a fallar.
+
+
+## v4.2 — corrección de raíz: códigos de Banca Múltiple
+
+El artifact `sbs-debug-17` permitió identificar que los cuatro archivos que seguían fallando
+no eran archivos de BanBif / Banca Múltiple:
+
+- el supuesto `B-2311` contenía **Cajas Municipales**;
+- el supuesto `B-2402` contenía **empresas financieras** (ej. Crediscotia);
+- el supuesto `B-230809` contenía hojas **CMAC**;
+- el supuesto `B-234021` contenía **Banco de la Nación, COFIDE, Agrobanco y Fondo MiVivienda**.
+
+La causa no era ya el formato del Excel. Estábamos usando códigos SBS de otras familias
+institucionales que tienen títulos iguales o muy parecidos.
+
+Los códigos correctos se tomaron del índice oficial **Información Estadística de Banca Múltiple**:
+
+| Módulo | Código incorrecto anterior | Código correcto Banca Múltiple |
+|---|---|---|
+| Créditos Directos por Sector Económico | C-1203 | **B-2311** |
+| Patrimonio Efectivo / Ratio de Capital Global | B-3302 | **B-2402** |
+| Ratio de Cobertura de Liquidez | B-230811 | **B-230809** |
+| Ratio de Financiación Neta Estable | R-0010 | **B-234021** |
+
+Se mantienen:
+- B-2201 Balance y P&L
+- B-2401 Indicadores Financieros
+- B-2340 Ratios de Liquidez
+- B-2368 Posición Global ME
+
+El sincronizador elimina del `hub.json` las cuatro claves incorrectas en el siguiente run
+y reconstruye las series con los códigos de Banca Múltiple.
+
+Además incorpora una validación defensiva para rechazar un archivo si, por error futuro,
+el contenido corresponde claramente a CMAC, empresas financieras o banca estatal.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BanBif Regulatory & Financial Intelligence Hub v4.0
+BanBif Regulatory & Financial Intelligence Hub v4.2
 SBS synchronizer.
 
 Key fixes:
@@ -34,12 +34,12 @@ SLEEP = .08
 
 REPORTS = {
     "B-2201": ("Balance y P&L", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2201", "monthly"),
-    "C-1203": ("Créditos Directos por Sector Económico", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=C-1203", "monthly"),
+    "B-2311": ("Créditos Directos por Sector Económico", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2311", "monthly"),
     "B-2401": ("Indicadores Financieros", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2401", "monthly"),
-    "B-3302": ("Patrimonio Efectivo y Ratio de Capital Global", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-3302", "monthly"),
+    "B-2402": ("Patrimonio Efectivo y Ratio de Capital Global", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2402", "monthly"),
     "B-2340": ("Ratios de Liquidez", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2340", "monthly"),
-    "B-230811": ("Ratio de Cobertura de Liquidez", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-230811", "quarterly"),
-    "R-0010": ("Ratio de Financiación Neta Estable", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=R-0010", "monthly"),
+    "B-230809": ("Ratio de Cobertura de Liquidez", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-230809", "quarterly"),
+    "B-234021": ("Ratio de Financiación Neta Estable", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-234021", "monthly"),
     "B-2368": ("Posición Global en Moneda Extranjera", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2368", "monthly"),
 }
 
@@ -47,12 +47,12 @@ REPORTS = {
 # avoid generating years of predictable 404s for that report.
 REPORT_START = {
     "B-2201": 2021,
-    "C-1203": 2021,
+    "B-2311": 2021,
     "B-2401": 2021,
-    "B-3302": 2021,
+    "B-2402": 2021,
     "B-2340": 2021,
-    "B-230811": 2021,
-    "R-0010": 2024,
+    "B-230809": 2024,
+    "B-234021": 2025,
     "B-2368": 2021,
 }
 
@@ -726,7 +726,7 @@ def canonicalize_metrics(code, metrics):
     vals = list(metrics.values())
     keys = [norm(k) for k in metrics]
 
-    if code == "B-230811":
+    if code == "B-230809":
         if not any("RCL" in k or ("COBERTURA" in k and "LIQUIDEZ" in k) for k in keys):
             # In sparse RCL files, TOTAL is usually the final/only ratio column.
             if len(vals) == 1:
@@ -736,7 +736,7 @@ def canonicalize_metrics(code, metrics):
                 if total_key:
                     metrics["RCL Total"] = metrics[total_key]
 
-    if code == "R-0010":
+    if code == "B-234021":
         if not any("RFNE" in k or ("FINANCIACION" in k and "ESTABLE" in k) for k in keys):
             if len(vals) == 1:
                 metrics["Ratio de Financiación Neta Estable"] = vals[0]
@@ -754,6 +754,52 @@ def extract_generic(raw,url,code):
     if not p["banbif_metrics"]:
         raise ValueError("BanBif sin métricas extraíbles; "+workbook_diagnostic(sh,raw))
     return p
+
+
+EXPECTED_BANCA_MULTIPLE = {
+    "B-2201": "Balance y P&L",
+    "B-2311": "Créditos Directos por Sector Económico",
+    "B-2401": "Indicadores Financieros",
+    "B-2402": "Patrimonio Efectivo y Ratio de Capital Global",
+    "B-2340": "Ratios de Liquidez",
+    "B-230809": "Ratio de Cobertura de Liquidez",
+    "B-234021": "Ratio de Financiación Neta Estable",
+    "B-2368": "Posición Global en Moneda Extranjera",
+}
+
+def validate_report_family(code, raw, url):
+    """
+    Reject obviously wrong SBS subsystem files before extraction.
+    The debug artifact showed that similarly named codes can point to
+    CMAC, financieras or banca estatal instead of Banca Múltiple.
+    """
+    if code == "B-2201":
+        return
+    try:
+        sh = workbook(raw)
+        topo = detect_workbook_topology(sh)
+        names = " | ".join(norm(x["name"]) for x in topo.get("sheets", []))
+        preview = workbook_diagnostic(sh, raw)
+        nprev = norm(preview)
+
+        wrong_markers = {
+            "B-2311": ("CAJAS MUNICIPALES", "CMAC"),
+            "B-2402": ("CREDISCOTIA FINANCIERA", "EMPRESA FINANCIERA"),
+            "B-230809": ("CMAC AREQUIPA", "CMAC CUSCO", "CMAC DEL SANTA"),
+            "B-234021": ("BANCO DE LA NACION", "COFIDE", "AGROBANCO", "FONDO MIVIVIENDA"),
+        }
+        markers = wrong_markers.get(code, ())
+        if markers and any(m in names or m in nprev for m in markers):
+            raise ValueError(
+                f"Archivo SBS pertenece a otra familia institucional; code={code}; "
+                f"url={url}; topology={topo.get('topology')}; sheets={names[:500]}"
+            )
+    except ValueError:
+        raise
+    except Exception:
+        # Parsing still gets the final say; this is only a defensive family guard.
+        return
+
 
 def update_report(db, code, title, page, freq):
     r = db["reports"].setdefault(code, {"title": title, "short": title, "source": page, "periods": []})
@@ -802,6 +848,7 @@ def update_report(db, code, title, page, freq):
         for u in by_date[d]:
             try:
                 raw = fetch(u)
+                validate_report_family(code, raw, u)
                 p = extract_b2201(raw, u) if code == "B-2201" else extract_generic(raw, u, code)
                 if p.get("date"):
                     merged[p["date"]] = p
@@ -874,8 +921,9 @@ def update_report(db, code, title, page, freq):
 def main():
     db = json.loads(DATA.read_text(encoding="utf-8"))
     db.pop("ratings", None)
-    db.get("reports", {}).pop("B-230809", None)
-    db.get("reports", {}).pop("B-234021", None)
+    # Remove legacy keys that belonged to other SBS subsystems / wrong report families.
+    for legacy in ("C-1203", "B-3302", "B-230811", "R-0010"):
+        db.get("reports", {}).pop(legacy, None)
 
     summaries = {}
     for code, (title, page, freq) in REPORTS.items():
@@ -883,7 +931,7 @@ def main():
 
     db["meta"]["generated_at"] = datetime.now(timezone.utc).isoformat()
     db["meta"]["latest_financial"] = db["financial"]["periods"][-1]["date"] if db["financial"]["periods"] else None
-    db["meta"]["sync_version"] = "4.0"
+    db["meta"]["sync_version"] = "4.2"
     db["meta"]["source_health"] = {
         code: {
             "status": s["status"],
