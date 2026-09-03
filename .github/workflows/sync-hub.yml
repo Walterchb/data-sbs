@@ -21,7 +21,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -55,6 +55,16 @@ jobs:
           for code,x in d.get("meta",{}).get("source_health",{}).items():
               print(f"{code:10} {x.get('status','-'):8} {x.get('loaded',0):8}  {str(x.get('latest') or '-'):10}  {x.get('errors',0):7}")
           PY
+
+
+      - name: Subir archivos SBS de diagnóstico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbs-debug-${{ github.run_number }}
+          path: debug-sbs/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Guardar cambios
         run: |
