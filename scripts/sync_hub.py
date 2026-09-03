@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BanBif Regulatory & Financial Intelligence Hub v3.9
+BanBif Regulatory & Financial Intelligence Hub v4.0
 SBS synchronizer.
 
 Key fixes:
@@ -26,6 +26,7 @@ from datetime import datetime, timedelta, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "hub.json"
+DEBUG_DIR = ROOT / "debug-sbs"
 
 UA = "Mozilla/5.0 (compatible; BanBif-Regulatory-Hub/3.8; GitHubActions)"
 TIMEOUT = 50
@@ -484,6 +485,95 @@ def is_entity_match(value,aliases):
     if "20101036813" in nv: return True
     return False
 
+
+def sheet_name_matches(name, aliases):
+    return is_entity_match(str(name or ""), aliases)
+
+def compact_sheet_preview(s, center_row=None, center_col=None, radius_rows=5, max_cols=12):
+    dd = s["data"]
+    if center_row is None:
+        rows = range(1, min(s["max_row"], 12) + 1)
+    else:
+        rows = range(max(1, center_row - radius_rows), min(s["max_row"], center_row + radius_rows) + 1)
+    cols = range(1, min(s["max_col"], max_cols) + 1)
+    lines = []
+    for r in rows:
+        vals = []
+        for c in cols:
+            v = dd.get((r, c))
+            if v is None:
+                vals.append("")
+            elif isinstance(v, float):
+                vals.append(f"{v:g}")
+            else:
+                vals.append(clean(v)[:60])
+        if any(vals):
+            lines.append(f"R{r}: " + " | ".join(vals))
+    return lines
+
+def detect_workbook_topology(sh):
+    info = {
+        "sheet_count": len(sh),
+        "sheets": [],
+        "banbif_sheet_names": [],
+        "banbif_hits": [],
+        "topology": "unknown",
+    }
+
+    for sn, s in sh.items():
+        info["sheets"].append({"name": sn, "rows": s["max_row"], "cols": s["max_col"]})
+        if sheet_name_matches(sn, ALIASES["banbif"]):
+            info["banbif_sheet_names"].append(sn)
+
+    hits = find_entity_coords(sh, ALIASES["banbif"])
+    for sn, r, c in hits:
+        s = sh[sn]
+        hnums = len(numeric_cells_in_row(s, r))
+        # Numeric density beneath / above the entity column is the strongest
+        # signal for "banks as columns".
+        vnums = 0
+        for rr in range(max(1, r - 3), min(s["max_row"], r + 60) + 1):
+            for cc in range(max(1, c - 1), min(s["max_col"], c + 1) + 1):
+                if isinstance(s["data"].get((rr, cc)), (int, float)):
+                    vnums += 1
+        info["banbif_hits"].append({"sheet": sn, "row": r, "col": c, "row_numeric": hnums, "column_numeric": vnums})
+
+    if info["banbif_sheet_names"]:
+        info["topology"] = "bank_sheets"
+    elif info["banbif_hits"]:
+        best_row = max((x["row_numeric"] for x in info["banbif_hits"]), default=0)
+        best_col = max((x["column_numeric"] for x in info["banbif_hits"]), default=0)
+        if best_row >= 1 and best_row >= best_col / 3:
+            info["topology"] = "banks_in_rows"
+        elif best_col >= 1:
+            info["topology"] = "banks_in_columns"
+        else:
+            info["topology"] = "entity_found_sparse"
+    elif len(sh) == 1:
+        info["topology"] = "single_sheet_no_entity"
+    else:
+        info["topology"] = "multi_sheet_no_entity"
+    return info
+
+def extract_dedicated_bank_sheet(s):
+    """Extract metrics when the entire worksheet belongs to BanBif."""
+    dd = s["data"]
+    out = {}
+    for r in range(1, s["max_row"] + 1):
+        for c in range(1, s["max_col"] + 1):
+            v = dd.get((r, c))
+            if not isinstance(v, (int, float)):
+                continue
+            # Avoid obvious Excel serial dates / IDs when no meaningful label exists.
+            lab = best_header(dd, r, c)
+            if not lab:
+                continue
+            nlab = norm(lab)
+            if any(x in nlab for x in ("FECHA DE REPORTE", "FECHA DE CORTE")) and 30000 < v < 70000:
+                continue
+            put(out, lab, v)
+    return out
+
 def find_entity_coords(sh,aliases):
     hits=[]
     for sn,s in sh.items():
@@ -533,47 +623,97 @@ def numeric_cells_in_row(s,row):
     dd=s["data"]
     return [(c,dd.get((row,c))) for c in range(1,s["max_col"]+1) if isinstance(dd.get((row,c)),(int,float))]
 
+
 def extract_metrics(sh,aliases):
-    out={}
-    for sn,er,ec in find_entity_coords(sh,aliases):
-        s=sh[sn]; dd=s["data"]
-        candidates=[]
-        for rr in range(max(1,er-2),min(s["max_row"],er+2)+1):
-            nums=numeric_cells_in_row(s,rr)
-            if nums: candidates.append((len(nums),-abs(rr-er),rr,nums))
+    out = {}
+
+    # A) Entire worksheets can belong to one bank. This was missing from the
+    # previous parser and is common in regulatory workbooks.
+    dedicated = [sn for sn in sh if sheet_name_matches(sn, aliases)]
+    for sn in dedicated:
+        metrics = extract_dedicated_bank_sheet(sh[sn])
+        for k, v in metrics.items():
+            put(out, k, v)
+    if out:
+        return out
+
+    # B) Consolidated workbook: locate the bank inside cells.
+    for sn, er, ec in find_entity_coords(sh, aliases):
+        s = sh[sn]
+        dd = s["data"]
+
+        # Banks as rows. Merged cells can move the bank label by 1-2 rows.
+        candidates = []
+        for rr in range(max(1, er - 2), min(s["max_row"], er + 2) + 1):
+            nums = numeric_cells_in_row(s, rr)
+            if nums:
+                candidates.append((len(nums), -abs(rr-er), rr, nums))
         if candidates:
-            _,_,rr,nums=max(candidates)
-            for c,v in nums:
-                if c==ec and abs(v)>1e8: continue
-                put(out,label_up(dd,rr,c,40) or label_left(dd,rr,c,50) or f"Columna {c}",v)
-            if out: continue
-        vertical=[]
-        for r in range(er+1,min(s["max_row"],er+260)+1):
-            for c in range(max(1,ec-3),min(s["max_col"],ec+8)+1):
-                v=dd.get((r,c))
-                if isinstance(v,(int,float)): vertical.append((r,c,v))
-        for r,c,v in vertical: put(out,best_header(dd,r,c) or f"Fila {r} / Columna {c}",v)
-        if out: continue
-        local=[]
-        for r in range(max(1,er-4),min(s["max_row"],er+12)+1):
-            for c in range(max(1,ec-6),min(s["max_col"],ec+25)+1):
-                v=dd.get((r,c))
-                if isinstance(v,(int,float)): local.append((abs(r-er)+abs(c-ec),r,c,v))
-        for _,r,c,v in sorted(local)[:50]: put(out,best_header(dd,r,c) or f"Fila {r} / Columna {c}",v)
+            _, _, rr, nums = max(candidates)
+            for c, v in nums:
+                if c == ec and abs(v) > 1e8:
+                    continue
+                put(out, label_up(dd, rr, c, 40) or label_left(dd, rr, c, 50) or f"Columna {c}", v)
+            if out:
+                continue
+
+        # Banks as columns. Search down the same/nearby bank column.
+        vertical = []
+        for r in range(er + 1, min(s["max_row"], er + 320) + 1):
+            for c in range(max(1, ec - 2), min(s["max_col"], ec + 2) + 1):
+                v = dd.get((r, c))
+                if isinstance(v, (int, float)):
+                    vertical.append((r, c, v))
+        for r, c, v in vertical:
+            put(out, best_header(dd, r, c) or f"Fila {r} / Columna {c}", v)
+        if out:
+            continue
+
+        # Last resort around the entity hit.
+        local = []
+        for r in range(max(1, er - 5), min(s["max_row"], er + 15) + 1):
+            for c in range(max(1, ec - 8), min(s["max_col"], ec + 30) + 1):
+                v = dd.get((r, c))
+                if isinstance(v, (int, float)):
+                    local.append((abs(r-er) + abs(c-ec), r, c, v))
+        for _, r, c, v in sorted(local)[:80]:
+            put(out, best_header(dd, r, c) or f"Fila {r} / Columna {c}", v)
+
     return out
 
+
 def workbook_diagnostic(sh,raw=None):
-    parts=[]
-    if raw is not None: parts.append(f"format={file_signature(raw)}")
-    parts.append("sheets="+",".join(f"{n}:{s['max_row']}x{s['max_col']}" for n,s in list(sh.items())[:8]))
-    samples=[]
-    for sn,s in sh.items():
-        for (r,c),v in s["data"].items():
-            if isinstance(v,str) and any(k in norm(v) for k in ("INTERAM","BANBIF","BIF","20101036813")):
-                samples.append(f"{sn}!R{r}C{c}={clean(v)[:80]}")
-                if len(samples)>=8: break
-        if len(samples)>=8: break
-    if samples: parts.append("entity_samples="+" || ".join(samples))
+    topo = detect_workbook_topology(sh)
+    parts = []
+    if raw is not None:
+        parts.append(f"format={file_signature(raw)}")
+    parts.append(f"topology={topo['topology']}")
+    parts.append("sheets=" + ",".join(f"{x['name']}:{x['rows']}x{x['cols']}" for x in topo["sheets"][:12]))
+    if topo["banbif_sheet_names"]:
+        parts.append("banbif_sheets=" + ",".join(topo["banbif_sheet_names"]))
+    if topo["banbif_hits"]:
+        parts.append("banbif_hits=" + " || ".join(
+            f"{x['sheet']}!R{x['row']}C{x['col']} rowNums={x['row_numeric']} colNums={x['column_numeric']}"
+            for x in topo["banbif_hits"][:8]
+        ))
+
+    preview = []
+    target_sheet = None
+    center = None
+    if topo["banbif_sheet_names"]:
+        target_sheet = topo["banbif_sheet_names"][0]
+    elif topo["banbif_hits"]:
+        target_sheet = topo["banbif_hits"][0]["sheet"]
+        center = (topo["banbif_hits"][0]["row"], topo["banbif_hits"][0]["col"])
+    elif sh:
+        target_sheet = next(iter(sh))
+
+    if target_sheet:
+        s = sh[target_sheet]
+        lines = compact_sheet_preview(s, center_row=center[0] if center else None, center_col=center[1] if center else None)
+        preview = [f"{target_sheet}:{x}" for x in lines[:10]]
+    if preview:
+        parts.append("preview=" + " || ".join(preview))
     return "; ".join(parts)
 
 def canonicalize_metrics(code, metrics):
@@ -648,6 +788,8 @@ def update_report(db, code, title, page, freq):
     misses = 0
     updated = 0
     attempted = 0
+    debug_saved = False
+    DEBUG_DIR.mkdir(parents=True, exist_ok=True)
 
     for d in all_dates:
         if d in existing_dates and d not in refresh_dates:
@@ -674,7 +816,23 @@ def update_report(db, code, title, page, freq):
                     continue
                 period_errors.append({"url": u, "error": f"HTTP {e.code}"})
             except Exception as e:
-                period_errors.append({"url": u, "error": str(e)[:260]})
+                msg = str(e)[:1800]
+                period_errors.append({"url": u, "error": msg})
+                if not debug_saved:
+                    safe_date = (d or "unknown").replace("-", "")
+                    raw_path = DEBUG_DIR / f"{code}-{safe_date}.xls"
+                    txt_path = DEBUG_DIR / f"{code}-{safe_date}.txt"
+                    try:
+                        raw_path.write_bytes(raw)
+                        txt_path.write_text(
+                            f"code={code}\ndate={d}\nurl={u}\nerror={msg}\n"
+                            f"signature={file_signature(raw)}\n",
+                            encoding="utf-8"
+                        )
+                        print("DEBUG_SAVED", code, raw_path)
+                        debug_saved = True
+                    except Exception as save_err:
+                        print("WARN debug-save", code, save_err)
             time.sleep(SLEEP)
 
         if not success:
@@ -725,7 +883,7 @@ def main():
 
     db["meta"]["generated_at"] = datetime.now(timezone.utc).isoformat()
     db["meta"]["latest_financial"] = db["financial"]["periods"][-1]["date"] if db["financial"]["periods"] else None
-    db["meta"]["sync_version"] = "3.9"
+    db["meta"]["sync_version"] = "4.0"
     db["meta"]["source_health"] = {
         code: {
             "status": s["status"],

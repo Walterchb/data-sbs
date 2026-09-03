@@ -214,3 +214,35 @@ El run de v3.8 confirma que `xlrd` ya funciona: B-2201, B-2401 y B-2340 cargan. 
 v3.9 agrega soporte para BIFF8, OOXML, Excel 2003 XML/SpreadsheetML, HTML disfrazado de XLS y texto delimitado. También amplía la detección de BanBif a `Banco Interamericano`, `Interamericano`, `BanBif`, `BIF`, `B. Interamericano` y RUC `20101036813`.
 
 Si todavía queda un formato excepcional, el error del workflow mostrará formato físico, dimensiones de hojas y celdas cercanas con `INTERAM/BANBIF/BIF`, para que el siguiente ajuste sea determinístico.
+
+
+## v4.0 — detector de topología de archivos SBS
+
+Antes de extraer datos, el sincronizador clasifica cada workbook como:
+- `bank_sheets`: una o más hojas corresponden directamente a bancos;
+- `banks_in_rows`: bancos en filas de una hoja consolidada;
+- `banks_in_columns`: bancos en columnas;
+- `entity_found_sparse`: se encontró BanBif pero la estructura es poco densa;
+- `single_sheet_no_entity`;
+- `multi_sheet_no_entity`.
+
+### Hojas por banco
+Si existe una hoja cuyo nombre coincide con `BANBIF`, `BIF`, `Banco Interamericano`,
+`Interamericano`, etc., el parser deja de buscar el nombre del banco dentro de las celdas
+y trata toda esa hoja como información de BanBif.
+
+### Diagnóstico automático
+Ante el primer fallo real de cada reporte durante un run:
+1. guarda el XLS original en `debug-sbs/`;
+2. guarda un TXT con URL, firma física y error;
+3. GitHub Actions publica la carpeta como artifact `sbs-debug-<run>` durante 7 días.
+
+El mensaje de error incluye:
+- tipo físico del archivo;
+- topología detectada;
+- nombres y dimensiones de hojas;
+- coordenadas donde aparece BanBif;
+- preview de filas alrededor del banco.
+
+Esto permite inspeccionar un archivo real de C-1203, B-3302, B-230811, R-0010 o B-2368
+sin seguir deduciendo la estructura únicamente desde el log.
