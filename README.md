@@ -305,3 +305,19 @@ y reconstruye las series con los códigos de Banca Múltiple.
 
 Además incorpora una validación defensiva para rechazar un archivo si, por error futuro,
 el contenido corresponde claramente a CMAC, empresas financieras o banca estatal.
+
+
+## v4.3 — corrección final de Sectores
+
+El artifact `sbs-debug-18` demostró que `B-2311` no contiene información por banco:
+es el cuadro agregado **Créditos Directos y Número de Deudores de la Banca Múltiple
+por Tipo de Crédito y Sector Económico**. Por eso nunca podía encontrar BanBif.
+
+El módulo Sectores pasa a **B-2336 — Créditos a Actividades Empresariales por Sector Económico**,
+que presenta sectores en filas y empresas bancarias en columnas.
+
+Se incorpora un parser específico `extract_b2336()` que toma exclusivamente la columna
+de `B. Interamericano de Finanzas`, preserva los nombres de sector SBS y captura también
+`TOTAL CRÉDITOS A ACTIVIDADES EMPRESARIALES`.
+
+`B-2311` se elimina del `hub.json` en el siguiente run.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BanBif Regulatory & Financial Intelligence Hub v4.2
+BanBif Regulatory & Financial Intelligence Hub v4.3
 SBS synchronizer.
 
 Key fixes:
@@ -34,7 +34,7 @@ SLEEP = .08
 
 REPORTS = {
     "B-2201": ("Balance y P&L", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2201", "monthly"),
-    "B-2311": ("Créditos Directos por Sector Económico", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2311", "monthly"),
+    "B-2336": ("Créditos a Actividades Empresariales por Sector Económico", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2336", "monthly"),
     "B-2401": ("Indicadores Financieros", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2401", "monthly"),
     "B-2402": ("Patrimonio Efectivo y Ratio de Capital Global", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2402", "monthly"),
     "B-2340": ("Ratios de Liquidez", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2340", "monthly"),
@@ -47,7 +47,7 @@ REPORTS = {
 # avoid generating years of predictable 404s for that report.
 REPORT_START = {
     "B-2201": 2021,
-    "B-2311": 2021,
+    "B-2336": 2021,
     "B-2401": 2021,
     "B-2402": 2021,
     "B-2340": 2021,
@@ -746,6 +746,78 @@ def canonicalize_metrics(code, metrics):
                     metrics["Ratio de Financiación Neta Estable"] = metrics[total_key]
     return metrics
 
+
+def sector_label_left(dd, row, bank_col):
+    labels = []
+    for c in range(1, bank_col):
+        v = dd.get((row, c))
+        if not isinstance(v, str) or not clean(v):
+            continue
+        nv = norm(v)
+        # Skip only true metadata/header rows. Do not use a loose "AL " substring:
+        # TOTAL contains "AL " and that would incorrectly remove the total row.
+        if (
+            nv.startswith("FUENTE:")
+            or nv.startswith("AL ")
+            or nv.startswith("(EN MILES")
+            or nv == "SECTOR ECONOMICO"
+            or nv == "EMPRESA BANCARIA"
+            or "ACTIVIDADES EMPRESARIALES POR SECTOR" in nv
+        ):
+            continue
+        labels.append(clean(v))
+    return " | ".join(labels[-2:]) if labels else None
+
+def extract_b2336(raw, url):
+    """
+    B-2336 - Créditos a Actividades Empresariales por Sector Económico.
+    Sectores en filas y empresas bancarias en columnas.
+    """
+    sh = workbook(raw)
+    hits = find_entity_coords(sh, ALIASES["banbif"])
+    if not hits:
+        raise ValueError("B-2336: no se encontró la columna de BanBif; " + workbook_diagnostic(sh, raw))
+
+    best = None
+    for sn, hr, hc in hits:
+        s = sh[sn]
+        dd = s["data"]
+        extracted = {}
+
+        for r in range(hr + 1, s["max_row"] + 1):
+            v = dd.get((r, hc))
+            if not isinstance(v, (int, float)):
+                continue
+            lab = sector_label_left(dd, r, hc)
+            if not lab:
+                continue
+            nlab = norm(lab)
+            if "TOTAL CREDITOS A ACTIVIDADES EMPRESARIALES" in nlab:
+                extracted["TOTAL CRÉDITOS A ACTIVIDADES EMPRESARIALES"] = float(v)
+            else:
+                put(extracted, lab, v)
+
+        score = len(extracted)
+        if best is None or score > best[0]:
+            best = (score, sn, hr, hc, extracted)
+
+    if not best or best[0] < 3:
+        raise ValueError("B-2336: BanBif encontrado pero no se pudo extraer la matriz sectorial; " + workbook_diagnostic(sh, raw))
+
+    _, sn, hr, hc, metrics = best
+    return {
+        "date": url_date(url),
+        "source_url": url,
+        "source_file": url.rsplit("/", 1)[-1],
+        "banbif_metrics": metrics,
+        "peer_metrics": {"banbif": metrics},
+        "parser": "b2336_sector_by_bank",
+        "sheet": sn,
+        "bank_header_row": hr,
+        "bank_column": hc,
+    }
+
+
 def extract_generic(raw,url,code):
     sh=workbook(raw); peers={}
     for slug_,aliases in ALIASES.items():
@@ -758,7 +830,7 @@ def extract_generic(raw,url,code):
 
 EXPECTED_BANCA_MULTIPLE = {
     "B-2201": "Balance y P&L",
-    "B-2311": "Créditos Directos por Sector Económico",
+    "B-2336": "Créditos a Actividades Empresariales por Sector Económico",
     "B-2401": "Indicadores Financieros",
     "B-2402": "Patrimonio Efectivo y Ratio de Capital Global",
     "B-2340": "Ratios de Liquidez",
@@ -783,7 +855,6 @@ def validate_report_family(code, raw, url):
         nprev = norm(preview)
 
         wrong_markers = {
-            "B-2311": ("CAJAS MUNICIPALES", "CMAC"),
             "B-2402": ("CREDISCOTIA FINANCIERA", "EMPRESA FINANCIERA"),
             "B-230809": ("CMAC AREQUIPA", "CMAC CUSCO", "CMAC DEL SANTA"),
             "B-234021": ("BANCO DE LA NACION", "COFIDE", "AGROBANCO", "FONDO MIVIVIENDA"),
@@ -849,7 +920,13 @@ def update_report(db, code, title, page, freq):
             try:
                 raw = fetch(u)
                 validate_report_family(code, raw, u)
-                p = extract_b2201(raw, u) if code == "B-2201" else extract_generic(raw, u, code)
+                p = (
+                    extract_b2201(raw, u)
+                    if code == "B-2201"
+                    else extract_b2336(raw, u)
+                    if code == "B-2336"
+                    else extract_generic(raw, u, code)
+                )
                 if p.get("date"):
                     merged[p["date"]] = p
                     updated += 1
@@ -922,7 +999,7 @@ def main():
     db = json.loads(DATA.read_text(encoding="utf-8"))
     db.pop("ratings", None)
     # Remove legacy keys that belonged to other SBS subsystems / wrong report families.
-    for legacy in ("C-1203", "B-3302", "B-230811", "R-0010"):
+    for legacy in ("C-1203", "B-3302", "B-230811", "R-0010", "B-2311"):
         db.get("reports", {}).pop(legacy, None)
 
     summaries = {}
@@ -931,7 +1008,7 @@ def main():
 
     db["meta"]["generated_at"] = datetime.now(timezone.utc).isoformat()
     db["meta"]["latest_financial"] = db["financial"]["periods"][-1]["date"] if db["financial"]["periods"] else None
-    db["meta"]["sync_version"] = "4.2"
+    db["meta"]["sync_version"] = "4.3"
     db["meta"]["source_health"] = {
         code: {
             "status": s["status"],
