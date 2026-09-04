@@ -321,3 +321,8 @@ de `B. Interamericano de Finanzas`, preserva los nombres de sector SBS y captura
 `TOTAL CRÉDITOS A ACTIVIDADES EMPRESARIALES`.
 
 `B-2311` se elimina del `hub.json` en el siguiente run.
+
+
+## v4.4 — auditoría integral
+
+Se eliminó la data histórica embebida del HTML; `hub.json` es la única fuente numérica. El selector de tendencias regulatorias ahora parte del periodo SBS actual y las series toleran cambios menores en labels. Los rangos son meses calendario, las estadísticas usan el último valor finito real y la UI muestra la fecha de fuente efectiva. `hub.css` fue consolidado desde cero para la tabla actual de 8 columnas. El primer workflow v4.4 reindexa una vez los reportes regulatorios con `schema_version=4.4`; después vuelve a actualización incremental.

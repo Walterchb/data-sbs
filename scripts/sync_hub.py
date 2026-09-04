@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BanBif Regulatory & Financial Intelligence Hub v4.3
+BanBif Regulatory & Financial Intelligence Hub v4.4
 SBS synchronizer.
 
 Key fixes:
@@ -31,6 +31,7 @@ DEBUG_DIR = ROOT / "debug-sbs"
 UA = "Mozilla/5.0 (compatible; BanBif-Regulatory-Hub/3.8; GitHubActions)"
 TIMEOUT = 50
 SLEEP = .08
+REPORT_SCHEMA_VERSION = "4.4"
 
 REPORTS = {
     "B-2201": ("Balance y P&L", "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2201", "monthly"),
@@ -875,6 +876,9 @@ def validate_report_family(code, raw, url):
 def update_report(db, code, title, page, freq):
     r = db["reports"].setdefault(code, {"title": title, "short": title, "source": page, "periods": []})
     start = REPORT_START[code]
+    schema_changed = code != "B-2201" and r.get("schema_version") != REPORT_SCHEMA_VERSION
+    if schema_changed:
+        print(f"REINDEX {code}: schema {r.get('schema_version')} -> {REPORT_SCHEMA_VERSION}")
 
     try:
         discovered = discover(page, start)
@@ -886,7 +890,7 @@ def update_report(db, code, title, page, freq):
     # B-2401/B-2340 when the SBS page exposed exactly three old links.
     links = union_urls(discovered, candidate_urls(code, start, freq))
 
-    current = db["financial"]["periods"] if code == "B-2201" else r.get("periods", [])
+    current = db["financial"]["periods"] if code == "B-2201" else ([] if schema_changed else r.get("periods", []))
     merged = {p["date"]: p for p in current if p.get("date")}
     existing_dates = set(merged)
 
@@ -987,7 +991,7 @@ def update_report(db, code, title, page, freq):
         db["financial"]["periods"] = periods
         db["meta"]["financial_sync"] = sync
     else:
-        r.update({"title": title, "source": page, "frequency": freq, "periods": periods, "sync": sync})
+        r.update({"title": title, "source": page, "frequency": freq, "periods": periods, "sync": sync, "schema_version": REPORT_SCHEMA_VERSION})
 
     print(
         f"SUMMARY {code}: status={sync['status']} loaded={sync['loaded']} "
@@ -1008,7 +1012,7 @@ def main():
 
     db["meta"]["generated_at"] = datetime.now(timezone.utc).isoformat()
     db["meta"]["latest_financial"] = db["financial"]["periods"][-1]["date"] if db["financial"]["periods"] else None
-    db["meta"]["sync_version"] = "4.3"
+    db["meta"]["sync_version"] = "4.4"
     db["meta"]["source_health"] = {
         code: {
             "status": s["status"],
