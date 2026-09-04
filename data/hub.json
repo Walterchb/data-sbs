@@ -2,7 +2,7 @@
   "meta": {
     "title": "BanBif Regulatory & Financial Intelligence Hub",
     "bank": "Banco Interamericano de Finanzas (BanBif)",
-    "generated_at": "2026-09-04T00:12:38.151167+00:00",
+    "generated_at": "2026-09-04T00:16:36.885722+00:00",
     "frequency": "monthly",
     "financial_source": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2201",
     "financial_start_year": 2021,
@@ -18,7 +18,7 @@
     "sync_repo": "Walterchb/data-sbs",
     "sync_workflow": "sync-hub.yml",
     "financial_sync": {
-      "last_attempt": "2026-09-04T00:11:06.636215+00:00",
+      "last_attempt": "2026-09-04T00:16:04.015878+00:00",
       "discovered_links": 67,
       "candidate_links": 75,
       "attempted_periods": 3,
@@ -149666,7 +149666,7 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-04T00:12:07.665396+00:00",
+        "last_attempt": "2026-09-04T00:16:14.371292+00:00",
         "discovered_links": 67,
         "candidate_links": 75,
         "attempted_periods": 3,
@@ -158286,7 +158286,7 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-04T00:12:19.759169+00:00",
+        "last_attempt": "2026-09-04T00:16:25.679558+00:00",
         "discovered_links": 66,
         "candidate_links": 75,
         "attempted_periods": 3,
@@ -160586,7 +160586,7 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-04T00:12:38.151120+00:00",
+        "last_attempt": "2026-09-04T00:16:36.885650+00:00",
         "discovered_links": 66,
         "candidate_links": 75,
         "attempted_periods": 3,
@@ -167699,7 +167699,7 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-04T00:12:13.254402+00:00",
+        "last_attempt": "2026-09-04T00:16:20.277067+00:00",
         "discovered_links": 66,
         "candidate_links": 75,
         "attempted_periods": 3,
@@ -176406,7 +176406,7 @@
       ],
       "frequency": "quarterly",
       "sync": {
-        "last_attempt": "2026-09-04T00:12:24.521902+00:00",
+        "last_attempt": "2026-09-04T00:16:28.902640+00:00",
         "discovered_links": 9,
         "candidate_links": 14,
         "attempted_periods": 4,
@@ -182689,7 +182689,7 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-04T00:12:33.380328+00:00",
+        "last_attempt": "2026-09-04T00:16:33.777860+00:00",
         "discovered_links": 7,
         "candidate_links": 23,
         "attempted_periods": 14,
@@ -186193,13 +186193,13 @@
       ],
       "frequency": "monthly",
       "sync": {
-        "last_attempt": "2026-09-04T00:12:01.183002+00:00",
+        "last_attempt": "2026-09-04T00:16:09.026493+00:00",
         "discovered_links": 67,
         "candidate_links": 75,
-        "attempted_periods": 69,
+        "attempted_periods": 3,
         "loaded": 67,
         "latest": "2026-07-31",
-        "updated": 67,
+        "updated": 1,
         "unpublished_or_missing": 2,
         "errors": 0,
         "error_samples": [],
