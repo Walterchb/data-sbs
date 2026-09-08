@@ -8,46 +8,100 @@
       content="Análisis financiero BanBif: balance SBS, movimientos materiales, indicadores regulatorios y comparación bancaria con trazabilidad de fuentes."
     />
     <meta name="color-scheme" content="light dark" />
-    <title>BanBif · Inteligencia financiera SBS</title>
+    <title>Información Financiera SBS · Treasury Hub</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
     <link rel="stylesheet" href="./assets/app.css" />
     <script type="module" src="./assets/js/app.js"></script>
   </head>
   <body>
     <a href="#content" class="skip">Ir al análisis</a>
     <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark">BIF</span>
-        <div>
-          <strong>Inteligencia financiera</strong
-          ><span>BanBif / Información SBS</span>
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">BIF</div>
+          <div>
+            <strong>Información Financiera SBS</strong>
+            <p>BanBif · Treasury Hub</p>
+          </div>
         </div>
-      </div>
-      <div class="actions">
-        <button id="theme" type="button">Tema oscuro</button
-        ><button id="export" type="button">Exportar CSV</button
-        ><button id="refresh" type="button" class="primary">Actualizar</button>
+        <div class="actions top-actions">
+          <button
+            id="health-status"
+            class="header-status"
+            data-nav="health"
+            title="Ver fechas y calidad de las fuentes"
+          >
+            <span class="dot" aria-hidden="true"></span
+            ><span id="health-label">Consultando</span>
+          </button>
+          <button
+            id="refresh"
+            type="button"
+            class="icon-only"
+            title="Actualizar información"
+            aria-label="Actualizar información"
+          >
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          </button>
+          <button
+            id="theme"
+            type="button"
+            class="icon-only"
+            title="Tema oscuro"
+            aria-label="Tema oscuro"
+          >
+            <i class="fa-solid fa-moon" aria-hidden="true"></i>
+          </button>
+          <button
+            id="export"
+            type="button"
+            class="icon-only"
+            title="Descargar CSV de esta vista"
+            aria-label="Descargar CSV de esta vista"
+          >
+            <i class="fa-solid fa-download" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>
     </header>
     <div class="workspace">
-      <aside class="sidebar">
-        <nav id="navigation" aria-label="Secciones del análisis"></nav>
-        <div class="sidebar-note">
-          <b>SBS · Banca múltiple</b
-          ><span id="latest">Consultando periodos…</span
-          ><span>Importes en millones, con dos decimales.</span>
-        </div>
-      </aside>
       <main id="main">
         <div class="commandbar">
           <div>
-            <span class="eyebrow">CORTE DEL ANÁLISIS</span>
+            <span class="eyebrow">FECHA SBS</span>
             <div class="period-controls">
-              <button id="prev" aria-label="Periodo anterior">‹</button
+              <button
+                id="prev"
+                aria-label="Periodo anterior"
+                title="Periodo anterior"
+              >
+                <i
+                  class="fa-solid fa-caret-left"
+                  aria-hidden="true"
+                ></i></button
               ><label class="sr-only" for="period">Periodo SBS</label
               ><select id="period" disabled>
                 <option>Cargando…</option></select
-              ><button id="next" aria-label="Periodo siguiente">›</button
+              ><button
+                id="next"
+                aria-label="Periodo siguiente"
+                title="Periodo siguiente"
+              >
+                <i
+                  class="fa-solid fa-caret-right"
+                  aria-hidden="true"
+                ></i></button
               ><button id="last">Último</button>
             </div>
           </div>
@@ -55,17 +109,35 @@
             Cargando datos verificados…
           </div>
         </div>
+        <nav
+          id="navigation"
+          class="section-nav"
+          aria-label="Secciones del análisis"
+        ></nav>
         <div id="error" class="notice error" role="alert" hidden></div>
         <div id="content" tabindex="-1" aria-busy="true">
           <div class="empty">Cargando información financiera…</div>
         </div>
-        <footer>
-          Fuente: Superintendencia de Banca, Seguros y AFP. Las fechas
-          corresponden a cada observación.
-          <a href="./README.md">Metodología y ejecución</a>
-        </footer>
       </main>
     </div>
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <div>
+          <strong>BanBif · Treasury Hub</strong
+          ><span>Fuente: Superintendencia de Banca, Seguros y AFP.</span>
+        </div>
+        <div>
+          <span id="latest">Consultando periodos…</span
+          ><button class="text-button" data-nav="health">
+            Fechas, fuentes y metodología
+            <i
+              class="fa-solid fa-arrow-up-right-from-square"
+              aria-hidden="true"
+            ></i>
+          </button>
+        </div>
+      </div>
+    </footer>
     <dialog id="sync-dialog" aria-labelledby="sync-title">
       <form method="dialog">
         <button class="dialog-close" aria-label="Cerrar">×</button>

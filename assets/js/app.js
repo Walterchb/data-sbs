@@ -62,11 +62,50 @@ const rangeButtons = () =>
         `<button data-range="${n}" aria-pressed="${state.range === n}">${t}</button>`,
     )
     .join("")}</div>`;
+// Share the TC Contable preference when both pages use the same origin.
+const THEME_KEY = "sbs_tc_theme_treasuryhub";
+const NAV_ICONS = {
+  overview: "chart-pie",
+  movements: "arrow-trend-up",
+  balance: "table-list",
+  reports: "shield-halved",
+  peers: "building-columns",
+  health: "database",
+};
+const KPI_ICONS = {
+  assets: "building-columns",
+  credits: "hand-holding-dollar",
+  deposits: "wallet",
+  equity: "layer-group",
+  npl: "gauge-high",
+  net_income: "chart-line",
+};
+const icon = (name) => `<i class="fa-solid fa-${name}" aria-hidden="true"></i>`;
+function applyTheme(value) {
+  const dark = value === "dark";
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  const label = dark ? "Tema claro" : "Tema oscuro";
+  $("theme").innerHTML = icon(dark ? "sun" : "moon");
+  $("theme").setAttribute("aria-label", label);
+  $("theme").title = label;
+}
+try {
+  applyTheme(
+    localStorage.getItem(THEME_KEY) ||
+      localStorage.getItem("sbs-theme") ||
+      "light",
+  );
+} catch {
+  applyTheme("light");
+}
+window.addEventListener("storage", (event) => {
+  if (event.key === THEME_KEY) applyTheme(event.newValue);
+});
 const heading = (title, description, controls = "") =>
   `<div class="page-head"><div><h1>${title}</h1><p>${description}</p></div>${controls}</div>`;
 const notice = (text) => `<div class="notice">${e(text)}</div>`;
 const panel = (title, sub, body, controls = "") =>
-  `<section class="panel"><div class="panel-head"><div><h2>${e(title)}</h2>${sub ? `<p>${e(sub)}</p>` : ""}</div>${controls}</div><div class="panel-body">${body}</div></section>`;
+  `<section class="panel"><div class="panel-head"><div class="panel-title"><span class="title-icon">${icon(NAV_ICONS[state.view] || "chart-line")}</span><div><h2>${e(title)}</h2>${sub ? `<p>${e(sub)}</p>` : ""}</div></div>${controls}</div><div class="panel-body">${body}</div></section>`;
 function sourceLink(url, text = "Ver archivo SBS ↗") {
   if (!/^https:\/\//.test(url || "")) return e(text);
   return `<a href="${e(url)}" target="_blank" rel="noopener noreferrer">${e(text)}</a>`;
@@ -109,6 +148,8 @@ function metricSeries(key) {
   );
 }
 function setError(err) {
+  $("health-status").dataset.status = "ERROR";
+  $("health-label").textContent = "Revisar carga";
   $("error").hidden = false;
   $("error").textContent =
     `${err.message || err} Puedes volver a intentar con Actualizar.`;
@@ -152,7 +193,7 @@ function kpi(key) {
   const mom = metricAt(overview, key, shift(date, -1)),
     yoy = metricAt(overview, key, shift(date, -12)),
     ytd = metricAt(overview, key, `${Number(date.slice(0, 4)) - 1}-12`);
-  return `<article class="kpi"><div class="label"><span>${e(config.label)}</span>${m && date !== state.date ? `<small>${month(date)}</small>` : ""}</div><strong class="value">${format(value, unit)}</strong><div class="comparisons">${config.kind === "ytd" ? `<span><small>Mismo mes año anterior</small>${deltaCell(value, yoy, unit, key)}</span><span><small>Acumulado enero–${month(date).split(" ")[0]}</small></span>` : `<span><small>MoM</small>${deltaCell(value, mom, unit, key)}</span><span><small>YTD</small>${deltaCell(value, ytd, unit, key)}</span><span><small>YoY</small>${deltaCell(value, yoy, unit, key)}</span>`}</div>${config.row ? `<button class="text-button" data-drill="${config.row}">Explorar ${key === "credits" ? "cartera neta y componentes" : "rubro"} →</button>` : ""}</article>`;
+  return `<article class="kpi" data-metric="${key}"><div class="label">${icon(KPI_ICONS[key])}<span>${e(config.label)}</span>${m && date !== state.date ? `<small>${month(date)}</small>` : ""}</div><strong class="value">${unit === "PEN_THOUSAND" ? num(finite(value) ? value / 1000 : null) : format(value, unit)}</strong><div class="kpi-unit">${unit === "PEN_THOUSAND" ? "Millones de soles · S/ MM" : "Cartera atrasada / créditos brutos"}</div><div class="comparisons">${config.kind === "ytd" ? `<span><small>Mismo mes año anterior</small>${deltaCell(value, yoy, unit, key)}</span><span><small>Acumulado enero–${month(date).split(" ")[0]}</small></span>` : `<span><small>MoM</small>${deltaCell(value, mom, unit, key)}</span><span><small>YTD</small>${deltaCell(value, ytd, unit, key)}</span><span><small>YoY</small>${deltaCell(value, yoy, unit, key)}</span>`}</div>${config.row ? `<button class="text-button" data-drill="${config.row}">Explorar ${key === "credits" ? "cartera neta y componentes" : "rubro"} →</button>` : ""}</article>`;
 }
 function ratioTable() {
   return wrapTable(
@@ -211,8 +252,8 @@ function overviewView() {
   ];
   return (
     heading(
-      "¿Cómo está BanBif?",
-      `Información actualizada a ${month(state.date, true)} · variaciones contra periodos exactos.`,
+      "Panorama financiero",
+      "Balance, resultados y movimientos relevantes de BanBif.",
     ) +
     `<section class="kpi-grid" aria-label="Resumen financiero">${MAIN.map(kpi).join("")}</section>` +
     `<div class="grid-two">${panel(
@@ -731,14 +772,14 @@ async function render() {
     if (id !== renderId) return;
     $("navigation").innerHTML = NAV.map(
       ([v, label]) =>
-        `<button class="nav-button" data-nav="${v}" ${v === state.view ? 'aria-current="page"' : ""}>${label}</button>`,
+        `<button class="nav-button" data-nav="${v}" ${v === state.view ? 'aria-current="page"' : ""}>${icon(NAV_ICONS[v])}${label}</button>`,
     ).join("");
     $("period").value = state.date;
     const i = overview.periods.findIndex((p) => p.date === state.date);
     $("prev").disabled = i <= 0;
     $("next").disabled = i >= overview.periods.length - 1;
     $("coverage").innerHTML =
-      `<strong>Información actualizada a ${month(state.date, true)}</strong>${state.date !== manifest.latest_period ? "Corte histórico seleccionado. " : ""}Último balance: ${month(manifest.latest_period)} · <button class="text-button" data-nav="health">Ver fechas por fuente</button>`;
+      `<strong>${state.date !== manifest.latest_period ? "Corte histórico" : "Último balance disponible"} · ${month(state.date, true)}</strong>Importes en S/ MM · ratios en % · variaciones de ratios en pb.<br><button class="text-button" data-nav="health">Ver fechas por fuente</button>`;
     $("content").innerHTML = {
       overview: overviewView,
       movements: movementsView,
@@ -784,11 +825,12 @@ function exportCsv() {
   toast("CSV exportado con unidades y fechas.");
 }
 function switchTheme() {
-  const dark = document.documentElement.dataset.theme !== "dark";
-  document.documentElement.dataset.theme = dark ? "dark" : "light";
-  $("theme").textContent = dark ? "Tema claro" : "Tema oscuro";
+  const value =
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(value);
   try {
-    localStorage.setItem("sbs-theme", dark ? "dark" : "light");
+    localStorage.setItem(THEME_KEY, value);
+    localStorage.setItem("sbs-theme", value);
   } catch {}
 }
 function bind() {
@@ -961,15 +1003,16 @@ async function init(first = true) {
     $("period").disabled = false;
     $("latest").textContent =
       `Último balance: ${month(manifest.latest_period)}.`;
-    if (first) {
-      try {
-        if (localStorage.getItem("sbs-theme") === "dark") {
-          document.documentElement.dataset.theme = "dark";
-          $("theme").textContent = "Tema claro";
-        }
-      } catch {}
-      bind();
-    }
+    const status = health.errors ? "ERROR" : health.warnings ? "WARNING" : "OK";
+    $("health-status").dataset.status = status;
+    $("health-label").textContent = health.errors
+      ? `${health.errors} errores`
+      : health.warnings
+        ? "Fuentes con avisos"
+        : "Fuentes verificadas";
+    $("health-status").title =
+      `${health.errors} errores · ${health.warnings} advertencias. Ver fechas por fuente.`;
+    if (first) bind();
     await render();
   } catch (err) {
     setError(err);
