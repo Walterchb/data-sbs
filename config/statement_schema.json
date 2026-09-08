@@ -1,0 +1,1496 @@
+{
+  "balance": [
+    {
+      "row": 9,
+      "label": "DISPONIBLE",
+      "indent": 0,
+      "id": "balance:9",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F9"
+    },
+    {
+      "row": 10,
+      "label": "Caja",
+      "indent": 1,
+      "id": "balance:10",
+      "parent": "balance:9",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F10"
+    },
+    {
+      "row": 11,
+      "label": "Bancos y Corresponsales",
+      "indent": 1,
+      "id": "balance:11",
+      "parent": "balance:9",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F11"
+    },
+    {
+      "row": 12,
+      "label": "Canje",
+      "indent": 1,
+      "id": "balance:12",
+      "parent": "balance:9",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F12"
+    },
+    {
+      "row": 13,
+      "label": "Otros",
+      "indent": 1,
+      "id": "balance:13",
+      "parent": "balance:9",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F13"
+    },
+    {
+      "row": 15,
+      "label": "FONDOS INTERBANCARIOS",
+      "indent": 0,
+      "id": "balance:15",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F15"
+    },
+    {
+      "row": 17,
+      "label": "INVERSIONES NETAS DE PROVISIONES",
+      "indent": 0,
+      "id": "balance:17",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F17"
+    },
+    {
+      "row": 18,
+      "label": "Inversiones a Valor Razonable con Cambios en Resultados",
+      "indent": 2,
+      "id": "balance:18",
+      "parent": "balance:17",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F18"
+    },
+    {
+      "row": 19,
+      "label": "Inversiones Disponibles para la Venta",
+      "indent": 2,
+      "id": "balance:19",
+      "parent": "balance:17",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F19"
+    },
+    {
+      "row": 20,
+      "label": "Inversiones a Vencimiento",
+      "indent": 2,
+      "id": "balance:20",
+      "parent": "balance:17",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F20"
+    },
+    {
+      "row": 21,
+      "label": "Inversiones en Subsidiarias, Asociadas y Negocios Conjuntos",
+      "indent": 2,
+      "id": "balance:21",
+      "parent": "balance:17",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F21"
+    },
+    {
+      "row": 22,
+      "label": "Inversiones en Commodities",
+      "indent": 2,
+      "id": "balance:22",
+      "parent": "balance:17",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F22"
+    },
+    {
+      "row": 23,
+      "label": "Provisiones",
+      "indent": 1,
+      "id": "balance:23",
+      "parent": "balance:17",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F23"
+    },
+    {
+      "row": 25,
+      "label": "CRÉDITOS NETOS DE PROVISIONES Y DE INGRESOS NO DEVENGADOS",
+      "indent": 0,
+      "id": "balance:25",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F25"
+    },
+    {
+      "row": 26,
+      "label": "Vigentes",
+      "indent": 1,
+      "id": "balance:26",
+      "parent": "balance:25",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F26"
+    },
+    {
+      "row": 27,
+      "label": "Cuentas Corrientes",
+      "indent": 3,
+      "id": "balance:27",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F27"
+    },
+    {
+      "row": 28,
+      "label": "Tarjetas de Crédito",
+      "indent": 3,
+      "id": "balance:28",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F28"
+    },
+    {
+      "row": 29,
+      "label": "Descuentos",
+      "indent": 3,
+      "id": "balance:29",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F29"
+    },
+    {
+      "row": 30,
+      "label": "Factoring",
+      "indent": 3,
+      "id": "balance:30",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F30"
+    },
+    {
+      "row": 31,
+      "label": "Préstamos",
+      "indent": 3,
+      "id": "balance:31",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F31"
+    },
+    {
+      "row": 32,
+      "label": "Arrendamiento Financiero",
+      "indent": 3,
+      "id": "balance:32",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F32"
+    },
+    {
+      "row": 33,
+      "label": "Hipotecarios para Vivienda",
+      "indent": 3,
+      "id": "balance:33",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F33"
+    },
+    {
+      "row": 34,
+      "label": "Comercio Exterior",
+      "indent": 3,
+      "id": "balance:34",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F34"
+    },
+    {
+      "row": 35,
+      "label": "Créditos por Liquidar",
+      "indent": 3,
+      "id": "balance:35",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F35"
+    },
+    {
+      "row": 36,
+      "label": "Otros",
+      "indent": 3,
+      "id": "balance:36",
+      "parent": "balance:26",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F36"
+    },
+    {
+      "row": 37,
+      "label": "Refinanciados y Reestructurados",
+      "indent": 1,
+      "id": "balance:37",
+      "parent": "balance:25",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F37"
+    },
+    {
+      "row": 38,
+      "label": "Atrasados",
+      "indent": 1,
+      "id": "balance:38",
+      "parent": "balance:25",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F38"
+    },
+    {
+      "row": 39,
+      "label": "Vencidos",
+      "indent": 3,
+      "id": "balance:39",
+      "parent": "balance:38",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F39"
+    },
+    {
+      "row": 40,
+      "label": "En Cobranza Judicial",
+      "indent": 3,
+      "id": "balance:40",
+      "parent": "balance:38",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F40"
+    },
+    {
+      "row": 41,
+      "label": "Provisiones",
+      "indent": 1,
+      "id": "balance:41",
+      "parent": "balance:25",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F41"
+    },
+    {
+      "row": 42,
+      "label": "Intereses y Comisiones no Devengados",
+      "indent": 1,
+      "id": "balance:42",
+      "parent": "balance:25",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F42"
+    },
+    {
+      "row": 44,
+      "label": "CUENTAS POR COBRAR NETAS DE PROVISIONES",
+      "indent": 0,
+      "id": "balance:44",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F44"
+    },
+    {
+      "row": 46,
+      "label": "RENDIMIENTOS POR COBRAR",
+      "indent": 0,
+      "id": "balance:46",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F46"
+    },
+    {
+      "row": 47,
+      "label": "Disponible",
+      "indent": 0,
+      "id": "balance:47",
+      "parent": "balance:46",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F47"
+    },
+    {
+      "row": 48,
+      "label": "Fondos Interbancarios",
+      "indent": 2,
+      "id": "balance:48",
+      "parent": "balance:46",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F48"
+    },
+    {
+      "row": 49,
+      "label": "Inversiones",
+      "indent": 2,
+      "id": "balance:49",
+      "parent": "balance:46",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F49"
+    },
+    {
+      "row": 50,
+      "label": "Créditos",
+      "indent": 2,
+      "id": "balance:50",
+      "parent": "balance:46",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F50"
+    },
+    {
+      "row": 51,
+      "label": "Cuentas por Cobrar",
+      "indent": 2,
+      "id": "balance:51",
+      "parent": "balance:46",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F51"
+    },
+    {
+      "row": 53,
+      "label": "BIENES REALIZABLES, RECIBIDOS EN PAGO Y ADJUDICADOS NETOS",
+      "indent": 0,
+      "id": "balance:53",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F53"
+    },
+    {
+      "row": 55,
+      "label": "INMUEBLES, MOBILIARIO Y EQUIPO NETO",
+      "indent": 0,
+      "id": "balance:55",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F55"
+    },
+    {
+      "row": 57,
+      "label": "OTROS ACTIVOS",
+      "indent": 0,
+      "id": "balance:57",
+      "parent": "balance:59",
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F57"
+    },
+    {
+      "row": 59,
+      "label": "TOTAL ACTIVO",
+      "indent": 0,
+      "id": "balance:59",
+      "parent": null,
+      "group": "Activo",
+      "code": null,
+      "reference": "B-2201 · F59"
+    },
+    {
+      "row": 76,
+      "label": "OBLIGACIONES CON EL PÚBLICO",
+      "indent": 0,
+      "id": "balance:76",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F76"
+    },
+    {
+      "row": 78,
+      "label": "Depósitos a la Vista",
+      "indent": 2,
+      "id": "balance:78",
+      "parent": "balance:76",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F78"
+    },
+    {
+      "row": 79,
+      "label": "Depósitos de Ahorro",
+      "indent": 2,
+      "id": "balance:79",
+      "parent": "balance:76",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F79"
+    },
+    {
+      "row": 80,
+      "label": "Depósitos a Plazo",
+      "indent": 2,
+      "id": "balance:80",
+      "parent": "balance:76",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F80"
+    },
+    {
+      "row": 81,
+      "label": "Certificados Bancarios y de Depósitos",
+      "indent": 4,
+      "id": "balance:81",
+      "parent": "balance:80",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F81"
+    },
+    {
+      "row": 82,
+      "label": "Cuentas a Plazo",
+      "indent": 4,
+      "id": "balance:82",
+      "parent": "balance:80",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F82"
+    },
+    {
+      "row": 83,
+      "label": "C.T.S.",
+      "indent": 4,
+      "id": "balance:83",
+      "parent": "balance:80",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F83"
+    },
+    {
+      "row": 84,
+      "label": "Otros",
+      "indent": 4,
+      "id": "balance:84",
+      "parent": "balance:80",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F84"
+    },
+    {
+      "row": 85,
+      "label": "Depósitos Restringidos",
+      "indent": 3,
+      "id": "balance:85",
+      "parent": "balance:76",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F85"
+    },
+    {
+      "row": 86,
+      "label": "Otras Obligaciones",
+      "indent": 3,
+      "id": "balance:86",
+      "parent": "balance:76",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F86"
+    },
+    {
+      "row": 87,
+      "label": "A la vista",
+      "indent": 4,
+      "id": "balance:87",
+      "parent": "balance:86",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F87"
+    },
+    {
+      "row": 88,
+      "label": "Relacionadas con Inversiones",
+      "indent": 4,
+      "id": "balance:88",
+      "parent": "balance:86",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F88"
+    },
+    {
+      "row": 90,
+      "label": "DEPÓSITOS DEL SISTEMA FINANCIERO Y ORGANISMOS INTERNACIONALES",
+      "indent": 0,
+      "id": "balance:90",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F90"
+    },
+    {
+      "row": 91,
+      "label": "Depósitos a la Vista",
+      "indent": 2,
+      "id": "balance:91",
+      "parent": "balance:90",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F91"
+    },
+    {
+      "row": 92,
+      "label": "Depósitos de Ahorro",
+      "indent": 2,
+      "id": "balance:92",
+      "parent": "balance:90",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F92"
+    },
+    {
+      "row": 93,
+      "label": "Depósitos a Plazo",
+      "indent": 2,
+      "id": "balance:93",
+      "parent": "balance:90",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F93"
+    },
+    {
+      "row": 95,
+      "label": "FONDOS INTERBANCARIOS",
+      "indent": 0,
+      "id": "balance:95",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F95"
+    },
+    {
+      "row": 97,
+      "label": "ADEUDOS Y OBLIGACIONES FINANCIERAS",
+      "indent": 0,
+      "id": "balance:97",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F97"
+    },
+    {
+      "row": 98,
+      "label": "Instituciones del País",
+      "indent": 2,
+      "id": "balance:98",
+      "parent": "balance:97",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F98"
+    },
+    {
+      "row": 99,
+      "label": "Instituciones del Exterior y Organismos Internacionales",
+      "indent": 2,
+      "id": "balance:99",
+      "parent": "balance:97",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F99"
+    },
+    {
+      "row": 101,
+      "label": "OBLIGACIONES EN CIRCULACIÓN NO SUBORDINADAS",
+      "indent": 0,
+      "id": "balance:101",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F101"
+    },
+    {
+      "row": 102,
+      "label": "Bonos de Arrendamiento Financiero",
+      "indent": 1,
+      "id": "balance:102",
+      "parent": "balance:101",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F102"
+    },
+    {
+      "row": 103,
+      "label": "Instrumentos Hipotecarios",
+      "indent": 1,
+      "id": "balance:103",
+      "parent": "balance:101",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F103"
+    },
+    {
+      "row": 104,
+      "label": "Otros Instrumentos de Deuda",
+      "indent": 1,
+      "id": "balance:104",
+      "parent": "balance:101",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F104"
+    },
+    {
+      "row": 106,
+      "label": "CUENTAS POR PAGAR",
+      "indent": 0,
+      "id": "balance:106",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F106"
+    },
+    {
+      "row": 108,
+      "label": "INTERESES Y OTROS GASTOS POR PAGAR",
+      "indent": 0,
+      "id": "balance:108",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F108"
+    },
+    {
+      "row": 109,
+      "label": "Obligaciones con el Público",
+      "indent": 1,
+      "id": "balance:109",
+      "parent": "balance:108",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F109"
+    },
+    {
+      "row": 110,
+      "label": "Depósitos del Sistema Financiero y Organismos Internacionales",
+      "indent": 1,
+      "id": "balance:110",
+      "parent": "balance:108",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F110"
+    },
+    {
+      "row": 111,
+      "label": "Fondos Interbancarios",
+      "indent": 1,
+      "id": "balance:111",
+      "parent": "balance:108",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F111"
+    },
+    {
+      "row": 112,
+      "label": "Adeudos y Obligaciones Financieras",
+      "indent": 1,
+      "id": "balance:112",
+      "parent": "balance:108",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F112"
+    },
+    {
+      "row": 113,
+      "label": "Obligaciones en Circulación no Subordinadas",
+      "indent": 1,
+      "id": "balance:113",
+      "parent": "balance:108",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F113"
+    },
+    {
+      "row": 114,
+      "label": "Cuentas por Pagar",
+      "indent": 1,
+      "id": "balance:114",
+      "parent": "balance:108",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F114"
+    },
+    {
+      "row": 116,
+      "label": "OTROS PASIVOS",
+      "indent": 0,
+      "id": "balance:116",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F116"
+    },
+    {
+      "row": 118,
+      "label": "PROVISIONES",
+      "indent": 0,
+      "id": "balance:118",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F118"
+    },
+    {
+      "row": 119,
+      "label": "Créditos Indirectos",
+      "indent": 2,
+      "id": "balance:119",
+      "parent": "balance:118",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F119"
+    },
+    {
+      "row": 120,
+      "label": "Otras Provisiones",
+      "indent": 2,
+      "id": "balance:120",
+      "parent": "balance:118",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F120"
+    },
+    {
+      "row": 122,
+      "label": "OBLIGACIONES EN CIRCULACIÓN SUBORDINADAS 1/",
+      "indent": 0,
+      "id": "balance:122",
+      "parent": "balance:124",
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F122"
+    },
+    {
+      "row": 124,
+      "label": "TOTAL PASIVO",
+      "indent": 0,
+      "id": "balance:124",
+      "parent": null,
+      "group": "Pasivo",
+      "code": null,
+      "reference": "B-2201 · F124"
+    },
+    {
+      "row": 126,
+      "label": "PATRIMONIO",
+      "indent": 0,
+      "id": "balance:126",
+      "parent": null,
+      "group": "Patrimonio",
+      "code": null,
+      "reference": "B-2201 · F126"
+    },
+    {
+      "row": 127,
+      "label": "Capital Social",
+      "indent": 2,
+      "id": "balance:127",
+      "parent": "balance:126",
+      "group": "Patrimonio",
+      "code": null,
+      "reference": "B-2201 · F127"
+    },
+    {
+      "row": 128,
+      "label": "Capital Adicional",
+      "indent": 2,
+      "id": "balance:128",
+      "parent": "balance:126",
+      "group": "Patrimonio",
+      "code": null,
+      "reference": "B-2201 · F128"
+    },
+    {
+      "row": 129,
+      "label": "Reservas",
+      "indent": 2,
+      "id": "balance:129",
+      "parent": "balance:126",
+      "group": "Patrimonio",
+      "code": null,
+      "reference": "B-2201 · F129"
+    },
+    {
+      "row": 130,
+      "label": "Ajustes al Patrimonio",
+      "indent": 2,
+      "id": "balance:130",
+      "parent": "balance:126",
+      "group": "Patrimonio",
+      "code": null,
+      "reference": "B-2201 · F130"
+    },
+    {
+      "row": 131,
+      "label": "Resultados Acumulados",
+      "indent": 2,
+      "id": "balance:131",
+      "parent": "balance:126",
+      "group": "Patrimonio",
+      "code": null,
+      "reference": "B-2201 · F131"
+    },
+    {
+      "row": 132,
+      "label": "Resultado Neto del Ejercicio",
+      "indent": 2,
+      "id": "balance:132",
+      "parent": "balance:126",
+      "group": "Patrimonio",
+      "code": null,
+      "reference": "B-2201 · F132"
+    },
+    {
+      "row": 134,
+      "label": "TOTAL PASIVO Y PATRIMONIO",
+      "indent": 0,
+      "id": "balance:134",
+      "parent": null,
+      "group": "Control",
+      "code": null,
+      "reference": "B-2201 · F134"
+    },
+    {
+      "row": 136,
+      "label": "CONTINGENTES",
+      "indent": 0,
+      "id": "balance:136",
+      "parent": null,
+      "group": "Contingentes",
+      "code": null,
+      "reference": "B-2201 · F136"
+    },
+    {
+      "row": 137,
+      "label": "Avales, Cartas Fianza, Cartas de Crédito y Aceptaciones Bancarias",
+      "indent": 2,
+      "id": "balance:137",
+      "parent": "balance:136",
+      "group": "Contingentes",
+      "code": null,
+      "reference": "B-2201 · F137"
+    },
+    {
+      "row": 138,
+      "label": "Líneas de Crédito no Utilizadas y Créditos Concedidos no Desembolsados",
+      "indent": 2,
+      "id": "balance:138",
+      "parent": "balance:136",
+      "group": "Contingentes",
+      "code": null,
+      "reference": "B-2201 · F138"
+    },
+    {
+      "row": 139,
+      "label": "Instrumentos Financieros Derivados",
+      "indent": 2,
+      "id": "balance:139",
+      "parent": "balance:136",
+      "group": "Contingentes",
+      "code": null,
+      "reference": "B-2201 · F139"
+    },
+    {
+      "row": 140,
+      "label": "Otras Cuentas Contingentes",
+      "indent": 2,
+      "id": "balance:140",
+      "parent": "balance:136",
+      "group": "Contingentes",
+      "code": null,
+      "reference": "B-2201 · F140"
+    }
+  ],
+  "income": [
+    {
+      "row": 9,
+      "label": "INGRESOS FINANCIEROS",
+      "indent": 0,
+      "id": "income:9",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F9"
+    },
+    {
+      "row": 10,
+      "label": "Disponible",
+      "indent": 3,
+      "id": "income:10",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F10"
+    },
+    {
+      "row": 11,
+      "label": "Fondos Interbancarios",
+      "indent": 3,
+      "id": "income:11",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F11"
+    },
+    {
+      "row": 12,
+      "label": "Inversiones",
+      "indent": 3,
+      "id": "income:12",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F12"
+    },
+    {
+      "row": 13,
+      "label": "Créditos Directos",
+      "indent": 3,
+      "id": "income:13",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F13"
+    },
+    {
+      "row": 14,
+      "label": "Ganancias por Valorización de Inversiones",
+      "indent": 3,
+      "id": "income:14",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F14"
+    },
+    {
+      "row": 15,
+      "label": "Ganancias por Inversiones en Subsidiarias, Asociadas y Negocios Conjuntos",
+      "indent": 3,
+      "id": "income:15",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F15"
+    },
+    {
+      "row": 16,
+      "label": "Diferencia de Cambio",
+      "indent": 3,
+      "id": "income:16",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F16"
+    },
+    {
+      "row": 17,
+      "label": "Ganancias en Productos Financieros Derivados",
+      "indent": 3,
+      "id": "income:17",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F17"
+    },
+    {
+      "row": 18,
+      "label": "Otros",
+      "indent": 3,
+      "id": "income:18",
+      "parent": "income:9",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F18"
+    },
+    {
+      "row": 20,
+      "label": "GASTOS FINANCIEROS",
+      "indent": 0,
+      "id": "income:20",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F20"
+    },
+    {
+      "row": 21,
+      "label": "Obligaciones con el Público",
+      "indent": 3,
+      "id": "income:21",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F21"
+    },
+    {
+      "row": 22,
+      "label": "Depósitos del Sistema Financiero y Organismos Financieros Internacionales",
+      "indent": 3,
+      "id": "income:22",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F22"
+    },
+    {
+      "row": 23,
+      "label": "Fondos Interbancarios",
+      "indent": 3,
+      "id": "income:23",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F23"
+    },
+    {
+      "row": 24,
+      "label": "Adeudos y Obligaciones Financieras",
+      "indent": 3,
+      "id": "income:24",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F24"
+    },
+    {
+      "row": 25,
+      "label": "Obligaciones en Circulación no Subordinadas",
+      "indent": 3,
+      "id": "income:25",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F25"
+    },
+    {
+      "row": 26,
+      "label": "Obligaciones en Circulación Subordinadas",
+      "indent": 3,
+      "id": "income:26",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F26"
+    },
+    {
+      "row": 27,
+      "label": "Pérdida por Valorización de Inversiones",
+      "indent": 3,
+      "id": "income:27",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F27"
+    },
+    {
+      "row": 28,
+      "label": "Pérdidas por Inversiones en Subsidiarias, Asociadas y Negocios Conjuntos",
+      "indent": 3,
+      "id": "income:28",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F28"
+    },
+    {
+      "row": 29,
+      "label": "Primas al Fondo de Seguro de Depósitos",
+      "indent": 3,
+      "id": "income:29",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F29"
+    },
+    {
+      "row": 30,
+      "label": "Diferencia de Cambio",
+      "indent": 3,
+      "id": "income:30",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F30"
+    },
+    {
+      "row": 31,
+      "label": "Pérdidas en Productos Financieros Derivados",
+      "indent": 3,
+      "id": "income:31",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F31"
+    },
+    {
+      "row": 32,
+      "label": "Otros",
+      "indent": 3,
+      "id": "income:32",
+      "parent": "income:20",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F32"
+    },
+    {
+      "row": 34,
+      "label": "MARGEN FINANCIERO BRUTO",
+      "indent": 0,
+      "id": "income:34",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F34"
+    },
+    {
+      "row": 36,
+      "label": "PROVISIONES PARA CRÉDITOS DIRECTOS",
+      "indent": 0,
+      "id": "income:36",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F36"
+    },
+    {
+      "row": 38,
+      "label": "MARGEN FINANCIERO NETO",
+      "indent": 0,
+      "id": "income:38",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F38"
+    },
+    {
+      "row": 40,
+      "label": "INGRESOS POR SERVICIOS FINANCIEROS",
+      "indent": 0,
+      "id": "income:40",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F40"
+    },
+    {
+      "row": 41,
+      "label": "Cuentas por Cobrar",
+      "indent": 3,
+      "id": "income:41",
+      "parent": "income:40",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F41"
+    },
+    {
+      "row": 42,
+      "label": "Créditos Indirectos",
+      "indent": 3,
+      "id": "income:42",
+      "parent": "income:40",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F42"
+    },
+    {
+      "row": 43,
+      "label": "Fideicomisos y Comisiones de Confianza",
+      "indent": 3,
+      "id": "income:43",
+      "parent": "income:40",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F43"
+    },
+    {
+      "row": 44,
+      "label": "Ingresos Diversos",
+      "indent": 3,
+      "id": "income:44",
+      "parent": "income:40",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F44"
+    },
+    {
+      "row": 46,
+      "label": "GASTOS POR SERVICIOS FINANCIEROS",
+      "indent": 0,
+      "id": "income:46",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F46"
+    },
+    {
+      "row": 47,
+      "label": "Cuentas por Pagar",
+      "indent": 3,
+      "id": "income:47",
+      "parent": "income:46",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F47"
+    },
+    {
+      "row": 48,
+      "label": "Créditos Indirectos",
+      "indent": 3,
+      "id": "income:48",
+      "parent": "income:46",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F48"
+    },
+    {
+      "row": 49,
+      "label": "Fideicomisos y Comisiones de Confianza",
+      "indent": 3,
+      "id": "income:49",
+      "parent": "income:46",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F49"
+    },
+    {
+      "row": 50,
+      "label": "Gastos Diversos",
+      "indent": 3,
+      "id": "income:50",
+      "parent": "income:46",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F50"
+    },
+    {
+      "row": 52,
+      "label": "UTILIDAD (PÉRDIDA) POR VENTA DE CARTERA",
+      "indent": 0,
+      "id": "income:52",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F52"
+    },
+    {
+      "row": 54,
+      "label": "MARGEN OPERACIONAL",
+      "indent": 0,
+      "id": "income:54",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F54"
+    },
+    {
+      "row": 56,
+      "label": "GASTOS ADMINISTRATIVOS",
+      "indent": 0,
+      "id": "income:56",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F56"
+    },
+    {
+      "row": 57,
+      "label": "Personal",
+      "indent": 3,
+      "id": "income:57",
+      "parent": "income:56",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F57"
+    },
+    {
+      "row": 58,
+      "label": "Directorio",
+      "indent": 3,
+      "id": "income:58",
+      "parent": "income:56",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F58"
+    },
+    {
+      "row": 59,
+      "label": "Servicios Recibidos de Terceros",
+      "indent": 3,
+      "id": "income:59",
+      "parent": "income:56",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F59"
+    },
+    {
+      "row": 60,
+      "label": "Impuestos y Contribuciones",
+      "indent": 3,
+      "id": "income:60",
+      "parent": "income:56",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F60"
+    },
+    {
+      "row": 62,
+      "label": "MARGEN OPERACIONAL NETO",
+      "indent": 0,
+      "id": "income:62",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F62"
+    },
+    {
+      "row": 64,
+      "label": "PROVISIONES, DEPRECIACIÓN Y AMORTIZACIÓN",
+      "indent": 0,
+      "id": "income:64",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F64"
+    },
+    {
+      "row": 65,
+      "label": "Provisones para Créditos Indirectos",
+      "indent": 3,
+      "id": "income:65",
+      "parent": "income:64",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F65"
+    },
+    {
+      "row": 66,
+      "label": "Provisiones por Pérdida por Deterioro de Inversiones",
+      "indent": 3,
+      "id": "income:66",
+      "parent": "income:64",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F66"
+    },
+    {
+      "row": 67,
+      "label": "Provisiones para Incobrabilidad de Cuentas por Cobrar",
+      "indent": 3,
+      "id": "income:67",
+      "parent": "income:64",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F67"
+    },
+    {
+      "row": 68,
+      "label": "Provisiones para Bienes Realizables, Recibidos en Pago y Adjudicados",
+      "indent": 3,
+      "id": "income:68",
+      "parent": "income:64",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F68"
+    },
+    {
+      "row": 69,
+      "label": "Otras Provisiones",
+      "indent": 3,
+      "id": "income:69",
+      "parent": "income:64",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F69"
+    },
+    {
+      "row": 70,
+      "label": "Depreciación",
+      "indent": 3,
+      "id": "income:70",
+      "parent": "income:64",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F70"
+    },
+    {
+      "row": 71,
+      "label": "Amortización",
+      "indent": 3,
+      "id": "income:71",
+      "parent": "income:64",
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F71"
+    },
+    {
+      "row": 73,
+      "label": "OTROS INGRESOS Y GASTOS",
+      "indent": 0,
+      "id": "income:73",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F73"
+    },
+    {
+      "row": 75,
+      "label": "RESULTADO ANTES DE IMPUESTO A LA RENTA",
+      "indent": 0,
+      "id": "income:75",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F75"
+    },
+    {
+      "row": 77,
+      "label": "IMPUESTO A LA RENTA",
+      "indent": 0,
+      "id": "income:77",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F77"
+    },
+    {
+      "row": 79,
+      "label": "RESULTADO NETO DEL EJERCICIO",
+      "indent": 0,
+      "id": "income:79",
+      "parent": null,
+      "group": "Resultados",
+      "code": null,
+      "reference": "B-2201 · F79"
+    }
+  ]
+}

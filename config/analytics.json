@@ -1,0 +1,16 @@
+{
+  "materiality": {
+    "minimum_change_pen_thousand": 10000,
+    "minimum_balance_share_pct": 0.25,
+    "minimum_relative_change_pct": 1,
+    "large_change_pen_thousand": 50000,
+    "maximum_items": 6
+  },
+  "health": {
+    "monthly_max_age_months": 3,
+    "quarterly_max_age_months": 6,
+    "money_tolerance_pen_thousand": 0.02,
+    "relative_tolerance": 0.000001
+  },
+  "peers": ["bcp", "bbva", "scotiabank", "interbank"]
+}

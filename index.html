@@ -1,703 +1,93 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BanBif Regulatory & Financial Intelligence Hub</title>
-<link rel="icon" type="image/svg+xml" href="./favicon.svg">
-<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer">
-<link rel="stylesheet" href="./assets/treasuryhub.css">
-<link rel="stylesheet" href="./assets/hub.css">
-</head>
-<body>
-<main class="app">
-<header class="topbar"><div class="topbar-inner">
-  <div class="brand"><div class="logo">BIF</div><div><h1>Regulatory & Financial Intelligence</h1><p id="brandSubtitle">BANBIF · SBS</p></div></div>
-  <div class="top-actions">
-    <div id="vStatus" class="status"><span class="dot"></span><span>Consultando</span></div>
-    <button id="btnRefresh" class="light icon-only" title="Sincronizar SBS" aria-label="Sincronizar SBS"><i class="fa-solid fa-rotate-right"></i></button>
-    <button id="btnTheme" class="dark icon-only" title="Cambiar tema" aria-label="Cambiar tema"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
-    <a id="btnDownload" class="btn light icon-only" title="Descargar CSV" aria-label="Descargar CSV"><i class="fa-solid fa-download"></i></a>
-    <button id="btnCopy" class="soft icon-only" title="Copiar resumen" aria-label="Copiar resumen"><i class="fa-regular fa-clipboard"></i></button>
-  </div>
-</div></header>
-
-<section class="wrap">
-  <section class="snapshot">
-    <article class="date-card">
-      <div class="date-control">
-        <div class="label">Fecha SBS</div>
-        <div class="date-stepper" role="group" aria-label="Navegar Fecha SBS">
-          <button id="datePrev" class="date-nav" type="button" title="Mes anterior"><i class="fa-solid fa-caret-left"></i></button>
-          <div class="date-picker-wrap compact-date"><input id="datePicker" class="date-picker" type="month" aria-label="Seleccionar mes SBS"></div>
-          <button id="dateNext" class="date-nav" type="button" title="Mes siguiente"><i class="fa-solid fa-caret-right"></i></button>
-          <button id="dateToday" class="date-today" type="button" title="Último disponible">HOY</button>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Análisis financiero BanBif: balance SBS, movimientos materiales, indicadores regulatorios y comparación bancaria con trazabilidad de fuentes."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>BanBif · Inteligencia financiera SBS</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./assets/app.css" />
+    <script type="module" src="./assets/js/app.js"></script>
+  </head>
+  <body>
+    <a href="#content" class="skip">Ir al análisis</a>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">BIF</span>
+        <div>
+          <strong>Inteligencia financiera</strong
+          ><span>BanBif / Información SBS</span>
         </div>
       </div>
-    </article>
-    <aside class="download-card">
-      <select id="moduleSelect" class="module-select" title="Módulo"></select>
-      <select id="compareSelect" class="compare-select" title="Comparación"><option value="mom">vs mes anterior</option><option value="yoy">vs año anterior</option></select>
-    </aside>
-  </section>
-
-  <div id="moduleStrip" class="reg-strip"></div>
-  <div id="appError" class="app-error" hidden><i class="fa-solid fa-triangle-exclamation"></i><span></span></div>
-  <section id="kpiGrid" class="kpi-grid"></section>
-
-  <section id="analysisCharts" class="chart-row">
-    <article class="panel">
-      <div class="panel-head">
-        <div class="panel-title"><span class="title-icon"><i class="fa-solid fa-chart-line"></i></span><div><h2>Tendencia</h2><p id="historySource">Histórico SBS</p></div></div>
-        <div class="tools"><select id="trendMetric" class="trend-other"></select><div class="tabs" id="rangeTabs"><button class="tab" data-range="12">12M</button><button class="tab active" data-range="24">24M</button><button class="tab" data-range="36">36M</button><button class="tab" data-range="0">TODO</button></div></div>
+      <div class="actions">
+        <button id="theme" type="button">Tema oscuro</button
+        ><button id="export" type="button">Exportar CSV</button
+        ><button id="refresh" type="button" class="primary">Actualizar</button>
       </div>
-      <div class="panel-body"><div id="trendLegend" class="chart-legend"></div><div id="trendChart" class="chart"></div></div>
-    </article>
-    <article class="panel change-panel">
-      <div class="panel-head"><div class="panel-title"><span class="title-icon"><i class="fa-solid fa-chart-column"></i></span><div><h2>Variación mensual</h2><p id="changeSource">MoM</p></div></div><button id="btnZoomReset" class="soft"><i class="fa-solid fa-magnifying-glass-minus"></i><span>Reset zoom</span></button></div>
-      <div class="panel-body"><div id="changeChart" class="chart side"></div></div>
-    </article>
-  </section>
-
-  <section id="analysisContent" class="content-row">
-    <article class="panel">
-      <div class="panel-head"><div class="panel-title"><span class="title-icon"><i class="fa-solid fa-chart-simple"></i></span><div><h2>Estadísticas</h2><p id="statsPair">—</p></div></div></div>
-      <div class="panel-body"><div id="statsPanel" class="stat-list"></div></div>
-    </article>
-    <article class="panel">
-      <div class="panel-head"><div class="panel-title"><span class="title-icon"><i class="fa-solid fa-shield-halved"></i></span><div><h2>Regulatory Radar</h2><p id="radarSub">Alertas y drivers</p></div></div></div>
-      <div class="panel-body"><div id="radarPanel" class="radar-list"></div></div>
-    </article>
-    <article class="panel">
-      <div class="panel-head"><div class="panel-title"><span class="title-icon"><i class="fa-solid fa-ranking-star"></i></span><div><h2>Peers</h2><p id="peerSub">Banca múltiple</p></div></div></div>
-      <div class="panel-body"><div class="table-tools"><span id="peerCount" class="chip"><i class="fa-solid fa-building-columns"></i> —</span></div><div id="peerTable"></div></div>
-    </article>
-  </section>
-
-  <section id="ratingsLensPanel" class="ratings-observatory" hidden>
-    <div class="ratings-hero">
-      <div class="ratings-hero-copy">
-        <span class="eyebrow"><i class="fa-solid fa-shield-halved"></i> SBS · RATIOS PARA CLASIFICACIÓN</span>
-        <h2>Contrasta cualquier informe directamente contra la SBS</h2>
-        <p>El módulo no incorpora cifras de PCR, Moody's ni otras clasificadoras. Cada valor proviene de la SBS o de un cálculo directo realizado sobre datos SBS.</p>
-      </div>
-      <div id="ratingsSourceStrip" class="ratings-agency-strip"></div>
-    </div>
-    <div class="ratings-commandbar">
-      <div id="ratingsPillars" class="ratings-pillars"></div>
-      <div class="ratings-view-tabs" role="tablist">
-        <button type="button" class="rating-view active" data-rating-view="dashboard"><i class="fa-solid fa-grid-2"></i><span>Panel</span></button>
-        <button type="button" class="rating-view" data-rating-view="annual"><i class="fa-solid fa-calendar-days"></i><span>5 años</span></button>
-        <button type="button" class="rating-view" data-rating-view="monthly"><i class="fa-solid fa-clock-rotate-left"></i><span>12 meses</span></button>
-      </div>
-    </div>
-    <div id="ratingsSourceNotice" class="ratings-source-notice"></div>
-    <div id="ratingsCanvas" class="ratings-canvas"></div>
-  </section>
-
-  <section id="dataPanel" class="panel data-panel">
-    <div class="panel-head">
-      <div class="panel-title"><span class="title-icon"><i class="fa-solid fa-table-list"></i></span><div><h2>Datos y cuentas SBS</h2><p id="detailSub">Detalle de cuentas, moneda y variación</p></div></div>
-      <div class="data-toolbar">
-        <div class="data-toolbar-left">
-          <div class="search-wrap data-search"><input id="searchBox" class="search" placeholder="Buscar cuenta o rubro… ej. Fondos Interbancarios"><i class="fa-solid fa-magnifying-glass search-icon"></i></div>
-          <select id="rowFilter" title="Filtrar filas"><option value="all">Todas</option><option value="main">Principales</option><option value="changes">Con variación</option></select>
+    </header>
+    <div class="workspace">
+      <aside class="sidebar">
+        <nav id="navigation" aria-label="Secciones del análisis"></nav>
+        <div class="sidebar-note">
+          <b>SBS · Banca múltiple</b
+          ><span id="latest">Consultando periodos…</span
+          ><span>Importes en millones, con dos decimales.</span>
         </div>
-        <div class="data-toolbar-right">
-          <div class="tabs data-view-tabs" id="dataViewTabs" aria-label="Vista de datos">
-            <button type="button" class="tab active" data-data-view="snapshot" title="Vista actual">ACTUAL</button>
-            <button type="button" class="tab" data-data-view="annual" title="Evolutivo anual, mismo mes">5 AÑOS</button>
-            <button type="button" class="tab" data-data-view="monthly" title="Evolutivo mensual">12 MESES</button>
+      </aside>
+      <main id="main">
+        <div class="commandbar">
+          <div>
+            <span class="eyebrow">CORTE DEL ANÁLISIS</span>
+            <div class="period-controls">
+              <button id="prev" aria-label="Periodo anterior">‹</button
+              ><label class="sr-only" for="period">Periodo SBS</label
+              ><select id="period" disabled>
+                <option>Cargando…</option></select
+              ><button id="next" aria-label="Periodo siguiente">›</button
+              ><button id="last">Último</button>
+            </div>
           </div>
-          <button type="button" id="btnImpact" class="soft data-tool" title="Ordenar por impacto" aria-label="Ordenar por impacto"><i class="fa-solid fa-arrow-down-wide-short"></i></button>
-          <button type="button" id="btnBars" class="soft data-tool" title="Barras de proporción" aria-label="Barras de proporción"><i class="fa-solid fa-bars-progress"></i></button>
+          <div class="coverage-note" id="coverage">
+            Cargando datos verificados…
+          </div>
         </div>
+        <div id="error" class="notice error" role="alert" hidden></div>
+        <div id="content" tabindex="-1" aria-busy="true">
+          <div class="empty">Cargando información financiera…</div>
+        </div>
+        <footer>
+          Fuente: Superintendencia de Banca, Seguros y AFP. Las fechas
+          corresponden a cada observación.
+          <a href="./README.md">Metodología y ejecución</a>
+        </footer>
+      </main>
+    </div>
+    <dialog id="sync-dialog" aria-labelledby="sync-title">
+      <form method="dialog">
+        <button class="dialog-close" aria-label="Cerrar">×</button>
+      </form>
+      <h2 id="sync-title">Actualizar información SBS</h2>
+      <p>
+        La descarga y validación se ejecutan en GitHub Actions. Abre el flujo y
+        selecciona <b>Run workflow</b>; después comprueba si se publicó una
+        nueva versión.
+      </p>
+      <p id="sync-generated" class="muted"></p>
+      <div class="actions">
+        <a
+          class="button primary"
+          href="https://github.com/Walterchb/data-sbs/actions/workflows/sync-hub.yml"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Abrir GitHub Actions ↗</a
+        ><button id="check-sync">Comprobar publicación</button>
       </div>
-    </div>
-    <div class="panel-body">
-      <div id="dataDesktop" class="data-desktop"></div>
-      <div id="dataMobile" class="data-mobile"></div>
-    </div>
-  </section>
-
-  <section class="panel">
-    <div class="panel-head"><div class="panel-title"><span class="title-icon"><i class="fa-solid fa-database"></i></span><div><h2>Fuentes SBS</h2><p>Cobertura y salud de sincronización</p></div></div><a class="btn soft" href="https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaBoletinEstadistico.aspx?p=1" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> SBS</a></div>
-    <div class="panel-body"><div id="sourceGrid" class="source-grid"></div></div>
-  </section>
-</section>
-
-<footer class="site-footer"><div class="site-footer-inner"></div></footer>
-<div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
-
-<dialog id="syncDialog" class="sync-dialog">
-  <div class="sync-modal">
-    <div class="panel-title"><span class="title-icon"><i class="fa-solid fa-rotate"></i></span><div><h3>Sincronizar SBS</h3><p>El sitio es estático: la descarga de SBS la ejecuta GitHub Actions sin exponer credenciales en el navegador.</p></div></div>
-    <div class="sync-status-box">
-      <div class="sync-status-row"><span>Última generación</span><b id="syncGenerated">—</b></div>
-      <div class="sync-status-row"><span>Último B-2201</span><b id="syncLatest">—</b></div>
-      <div class="sync-status-row"><span>Estado</span><b id="syncState">Listo</b></div>
-    </div>
-    <p>1) Abre GitHub Actions y ejecuta <b>Sincronizar BanBif Regulatory Hub</b>. 2) Deja este popup abierto; el Hub comprobará automáticamente si <code>hub.json</code> cambió.</p>
-    <div class="sync-actions">
-      <button id="syncClose" class="soft">Cerrar</button>
-      <button id="syncCheck" class="light"><i class="fa-solid fa-rotate-right"></i> Comprobar</button>
-      <a id="syncActionsLink" class="btn dark" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Abrir Actions</a>
-    </div>
-  </div>
-</dialog>
-
-<script>
-const SEED={"meta":{"title":"BanBif Regulatory & Financial Intelligence Hub","bank":"Banco Interamericano de Finanzas (BanBif)","generated_at":null,"financial_source":"https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2201","sync_repo":"Walterchb/data-sbs","sync_workflow":"sync-hub.yml","version":"4.4"},"financial":{"periods":[]},"reports":{}};
-const REPO="Walterchb/data-sbs";
-const WORKFLOW="sync-hub.yml";
-let DB=null,RANGE=24,currentModule="overview",charts={},detailSort="hierarchy",showBars=false,dataView="snapshot",ratingView="dashboard",ratingPillar="all",syncTimer=null,lastTrendModule=null;
-
-const MODULES={
- overview:{label:"Resumen financiero",code:"B-2201",icon:"fa-chart-pie",kind:"financial"},
- ratings:{label:"Clasificadoras",code:"RATINGS",icon:"fa-magnifying-glass-chart",kind:"ratings"},
- balance:{label:"Balance",code:"B-2201",icon:"fa-scale-balanced",kind:"balance"},
- credit:{label:"Cartera & calidad",code:"B-2201",icon:"fa-hand-holding-dollar",kind:"credit"},
- pnl:{label:"Resultados",code:"B-2201",icon:"fa-chart-column",kind:"pnl"},
- peers:{label:"Peers & Market Share",code:"B-2201",icon:"fa-ranking-star",kind:"peers"},
- sectors:{label:"Sectores económicos",code:"B-2336",icon:"fa-industry",kind:"report"},
- indicators:{label:"Indicadores",code:"B-2401",icon:"fa-gauge-high",kind:"report"},
- capital:{label:"Solvencia",code:"B-2402",icon:"fa-shield-halved",kind:"report"},
- liquidity:{label:"Liquidez",code:"B-2340",icon:"fa-droplet",kind:"report"},
- lcr:{label:"RCL",code:"B-230809",icon:"fa-water",kind:"report"},
- nsfr:{label:"RFNE",code:"B-234021",icon:"fa-building-columns",kind:"report"},
- fxpos:{label:"Posición ME",code:"B-2368",icon:"fa-money-bill-transfer",kind:"report"}
-};
-const MAJOR=["bcp","bbva","scotiabank","interbank","banbif"];
-
-const RATING_METRICS=[
- {id:"rcg",group:"Solvencia",label:"Ratio de Capital Global",unit:"%",direction:"higher",source:"B-2402",calc:"rcg"},
- {id:"tier1",group:"Solvencia",label:"Capital Nivel 1 / APR",unit:"%",direction:"higher",source:"B-2402",calc:"tier1"},
- {id:"leverage",group:"Solvencia",label:"Pasivo total / patrimonio",unit:"x",direction:"lower",source:"B-2201",calc:"leverage"},
- {id:"liab_cap_res",group:"Solvencia",label:"Pasivo total / capital + reservas",unit:"x",direction:"lower",source:"B-2201",calc:"liab_cap_res"},
-
- {id:"overdue_ratio",group:"Calidad de activos",label:"Cartera atrasada / créditos directos",unit:"%",direction:"lower",source:"B-2201",calc:"overdue_ratio"},
- {id:"refi_ratio",group:"Calidad de activos",label:"Refinanciada y reestructurada / créditos directos",unit:"%",direction:"lower",source:"B-2201",calc:"refi_ratio"},
- {id:"car_ratio",group:"Calidad de activos",label:"Cartera de alto riesgo / créditos directos",unit:"%",direction:"lower",source:"B-2201",calc:"car_ratio"},
- {id:"heavy_ratio",group:"Calidad de activos",label:"Cartera pesada",unit:"%",direction:"lower",source:"B-2401",calc:"heavy_ratio"},
-
- {id:"coverage_overdue",group:"Cobertura",label:"Provisiones / cartera atrasada",unit:"%",direction:"higher",source:"B-2201",calc:"coverage_overdue"},
- {id:"coverage_car",group:"Cobertura",label:"Provisiones / cartera de alto riesgo",unit:"%",direction:"higher",source:"B-2201",calc:"coverage_car"},
- {id:"provisions_direct",group:"Cobertura",label:"Provisiones / créditos directos",unit:"%",direction:"context",source:"B-2201",calc:"provisions_direct"},
-
- {id:"liq_mn",group:"Liquidez y fondeo",label:"Ratio de Liquidez MN",unit:"%",direction:"higher",source:"B-2340",calc:"liq_mn"},
- {id:"liq_me",group:"Liquidez y fondeo",label:"Ratio de Liquidez ME",unit:"%",direction:"higher",source:"B-2340",calc:"liq_me"},
- {id:"available_public",group:"Liquidez y fondeo",label:"Disponible / obligaciones con el público",unit:"%",direction:"higher",source:"B-2201",calc:"available_public"},
- {id:"rcl_total",group:"Liquidez y fondeo",label:"Ratio de Cobertura de Liquidez",unit:"%",direction:"higher",source:"B-230809",calc:"rcl_total"},
- {id:"rfne",group:"Liquidez y fondeo",label:"Ratio de Financiación Neta Estable",unit:"%",direction:"higher",source:"B-234021",calc:"rfne"},
-
- {id:"roe",group:"Rentabilidad",label:"ROE",unit:"%",direction:"higher",source:"B-2401",calc:"roe"},
- {id:"roa",group:"Rentabilidad",label:"ROA",unit:"%",direction:"higher",source:"B-2401",calc:"roa"},
- {id:"net_fin_margin",group:"Rentabilidad",label:"Margen financiero neto / ingresos financieros",unit:"%",direction:"higher",source:"B-2201",calc:"net_fin_margin"},
- {id:"operating_margin",group:"Rentabilidad",label:"Margen operacional neto",unit:"%",direction:"higher",source:"B-2201",calc:"operating_margin"},
- {id:"net_margin",group:"Rentabilidad",label:"Margen neto",unit:"%",direction:"higher",source:"B-2201",calc:"net_margin"},
-
- {id:"admin_eff",group:"Eficiencia",label:"Gastos administrativos / ingresos financieros + servicios",unit:"%",direction:"lower",source:"B-2201",calc:"admin_eff"},
- {id:"admin_gross_margin",group:"Eficiencia",label:"Gastos administrativos / margen financiero bruto",unit:"%",direction:"lower",source:"B-2201",calc:"admin_gross_margin"},
-
- {id:"fx_global_pe",group:"Riesgo de mercado",label:"Posición global ME / patrimonio efectivo",unit:"%",direction:"lower_abs",source:"B-2368",calc:"fx_global_pe"}
-];
-
-function N(s){return(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim()}
-function fmtMM(v,d=2){d=2;return v==null||!isFinite(v)?"—":(v/1000).toLocaleString("es-PE",{minimumFractionDigits:d,maximumFractionDigits:d})}
-function fmtPct(v,d=2){d=2;return v==null||!isFinite(v)?"—":(v>=0?"+":"")+Number(v).toLocaleString("es-PE",{minimumFractionDigits:d,maximumFractionDigits:d})+"%"}
-function num(v,d=2){d=2;return v==null||!isFinite(v)?"—":Number(v).toLocaleString("es-PE",{minimumFractionDigits:d,maximumFractionDigits:d})}
-function pct(a,b){return a==null||b==null||b===0?null:(a/b-1)*100}
-function ym(d){return d?.slice(0,7)||""}
-function prettyMonth(x){if(!x)return"—";let[y,m]=x.split("-").map(Number),names=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];return`${names[m-1]}-${String(y).slice(-2)}`}
-function fperiods(){return DB?.financial?.periods||[]}
-function findFinancial(x){return fperiods().find(p=>ym(p.date)===x)||null}
-function currentFinancial(){return findFinancial(document.getElementById("datePicker").value)}
-function rows(p,st){return p?.banbif?.[st]||[]}
-function row(p,st,label){let t=N(label);return rows(p,st).find(r=>N(r.label)===t)||null}
-function val(p,st,label,f="total"){return row(p,st,label)?.[f]??null}
-function gross(p){return(val(p,"balance","Vigentes")||0)+(val(p,"balance","Refinanciados y Reestructurados")||0)+(val(p,"balance","Atrasados")||0)}
-function risk(p){let g=gross(p),a=val(p,"balance","Atrasados"),r=val(p,"balance","Refinanciados y Reestructurados"),pr=Math.abs(val(p,"balance","Provisiones")||0);return{g,npl:g?a/g*100:null,refi:g?r/g*100:null,car:g?(a+r)/g*100:null,cov:a?pr/a*100:null}}
-function previousPeriod(p,months){if(!p)return null;let[y,m]=ym(p.date).split("-").map(Number),idx=y*12+m-months,ty=Math.floor((idx-1)/12),tm=((idx-1)%12)+1;return findFinancial(`${ty}-${String(tm).padStart(2,"0")}`)}
-function compFinancial(){let p=currentFinancial();return previousPeriod(p,document.getElementById("compareSelect").value==="yoy"?12:1)}
-function bankSummary(p,s){return p?.peers?.find(x=>x.slug===s)||null}
-function marketShare(p,s,key){if(!p)return null;let total=p.peers.reduce((z,x)=>z+(x[key]||0),0),v=bankSummary(p,s)?.[key];return total&&v!=null?v/total*100:null}
-function module(){return MODULES[currentModule]}
-function reportObj(){return DB?.reports?.[module().code]||null}
-
-function ymIndex(x){let[y,m]=(x||"").split("-").map(Number);return y&&m?y*12+(m-1):null}
-function shiftYm(x,delta){let i=ymIndex(x);if(i==null)return"";i+=delta;let y=Math.floor(i/12),m=i%12+1;return`${y}-${String(m).padStart(2,"0")}`}
-function selectedYm(){return document.getElementById("datePicker").value||ym(fperiods().at(-1)?.date)}
-function reportObjByCode(code){return DB?.reports?.[code]||null}
-function reportPeriodFor(code,wanted=selectedYm(),allowPrior=true){let ps=reportObjByCode(code)?.periods||[];if(!ps.length||!wanted)return null;let exact=ps.find(p=>ym(p.date)===wanted);if(exact)return exact;return allowPrior?ps.filter(p=>ym(p.date)<=wanted).at(-1)||null:null}
-function sourceAnchorYm(){return module().kind==="report"?ym(reportPeriod()?.date):selectedYm()}
-function periodRange(periods,anchorYm,months){let sorted=[...(periods||[])].filter(p=>ym(p.date)&&ym(p.date)<=anchorYm).sort((a,b)=>a.date.localeCompare(b.date));if(!months||!anchorYm)return sorted;let start=shiftYm(anchorYm,-months+1);return sorted.filter(p=>ym(p.date)>=start&&ym(p.date)<=anchorYm)}
-function metricCore(label){return N(label).replace(/\s+#\d+$/,"").replace(/\bEN MILES DE (SOLES|DOLARES|S\/)\b/g,"").replace(/\bAL \d{1,2} DE [A-Z]+ DE \d{4}\b/g,"").replace(/\bFUENTE:.*$/g,"").replace(/[()/:;,.-]+/g," ").replace(/\s+/g," ").trim()}
-function metricTokens(label){let stop=new Set(["DE","DEL","LA","EL","LOS","LAS","Y","EN","POR","PARA","CON","SIN","A","AL","UN","UNA"]);return metricCore(label).split(" ").filter(x=>x.length>1&&!stop.has(x))}
-function metricQualifier(label){let x=N(label);if(/\bMN\b|MONEDA NACIONAL/.test(x))return"MN";if(/\bME\b|MONEDA EXTRANJERA/.test(x))return"ME";return""}
-function metricMatchScore(target,candidate){let a=N(target),b=N(candidate);if(!a||!b)return 0;if(a===b)return 100;let ac=metricCore(target),bc=metricCore(candidate);if(ac===bc)return 96;let qa=metricQualifier(target),qb=metricQualifier(candidate);if(qa&&qb&&qa!==qb)return 0;if(Math.min(ac.length,bc.length)>=8&&(ac.includes(bc)||bc.includes(ac))){let ratio=Math.min(ac.length,bc.length)/Math.max(ac.length,bc.length);if(ratio>=.55)return 88+ratio*5}let at=new Set(metricTokens(target)),bt=new Set(metricTokens(candidate));if(!at.size||!bt.size)return 0;let common=[...at].filter(x=>bt.has(x)).length,union=new Set([...at,...bt]).size,j=common/union;if(common>=3&&j>=.58)return 76+j*10;if(common>=2&&j>=.72)return 74+j*10;return 0}
-function reportMetricEntry(period,label){let es=metricEntries(period);if(!es.length||!label)return null;let exact=es.find(e=>N(e.label)===N(label));if(exact)return exact;let best=null,score=0;for(let e of es){let s=metricMatchScore(label,e.label);if(s>score){score=s;best=e}}return score>=80?best:null}
-function reportMetricValue(period,label){return reportMetricEntry(period,label)?.value??null}
-function finitePoints(series){let out=[];for(let i=0;i<series.values.length;i++){let v=series.values[i];if(v!=null&&isFinite(v))out.push({i,date:series.dates[i],value:v})}return out}
-function pointAtOrBefore(points,targetYm){return points.filter(p=>ym(p.date)<=targetYm).at(-1)||null}
-
-function reportPeriod(){return reportPeriodFor(module().code,selectedYm(),true)}
-function reportComp(){let p=reportPeriod(),ps=reportObj()?.periods||[];if(!p)return null;if(document.getElementById("compareSelect").value==="yoy"){let target=shiftYm(ym(p.date),-12);return ps.find(x=>ym(x.date)===target)||ps.filter(x=>ym(x.date)<=target).at(-1)||null}return ps.filter(x=>x.date<p.date).at(-1)||null}
-function metricEntries(p){return Object.entries(p?.banbif_metrics||{}).map(([label,value])=>({label,value})).filter(x=>typeof x.value==="number"&&isFinite(x.value))}
-function moduleAvailable(){return module().kind==="ratings"?true:module().kind==="report"?!!reportPeriod():!!currentFinancial()}
-function showToast(message,type="info"){let stack=document.getElementById("toastStack"),icon=type==="ok"?"fa-circle-check":type==="warn"?"fa-triangle-exclamation":type==="err"?"fa-circle-xmark":"fa-circle-info",n=document.createElement("div");n.className=`toast ${type}`;n.innerHTML=`<i class="fa-solid ${icon}"></i><span>${message}</span>`;stack.appendChild(n);requestAnimationFrame(()=>n.classList.add("show"));setTimeout(()=>{n.classList.remove("show");setTimeout(()=>n.remove(),220)},2800)}
-function setStatus(type,text){let s=document.getElementById("vStatus");s.className="status "+type;s.querySelector("span:last-child").textContent=text}
-function colors(){let c=getComputedStyle(document.documentElement);return{ink:c.getPropertyValue("--ink").trim(),muted:c.getPropertyValue("--muted").trim(),grid:c.getPropertyValue("--grid").trim(),navy:c.getPropertyValue("--navy3").trim(),green:c.getPropertyValue("--green").trim(),red:c.getPropertyValue("--red").trim(),cyan:c.getPropertyValue("--cyan").trim()}}
-function ech(id,opt){
- let el=document.getElementById(id);if(!el)return;
- if(!window.echarts){
-   el.innerHTML='<div class="chart-fallback"><i class="fa-solid fa-chart-line"></i><span>El gráfico no pudo cargarse. Los datos y tablas siguen disponibles.</span></div>';
-   return
- }
- let c=charts[id]||window.echarts.init(el);charts[id]=c;c.setOption(opt,true);c.resize()
-}
-function chartNumber(v,unit){if(v==null||!isFinite(v))return"—";let x=Number(v),o={minimumFractionDigits:2,maximumFractionDigits:2};if(unit==="S/ MM")return x.toLocaleString("es-PE",o);if(unit==="%")return x.toLocaleString("es-PE",o)+"%";return x.toLocaleString("es-PE",o)}
-function statementGroup(r,st){if(st==="income")return"Estado de Resultados";let n=r.row||0;if(n<=65)return"Activo";if(n>=76&&n<=124)return"Pasivo";if(n>=126&&n<=134)return"Patrimonio";return"Contingentes / Otros"}
-function short(s,n=14){return s.length>n?s.slice(0,n):s}
-function inferUnit(label,code=module().code){let x=N(label);if(code==="B-2336")return"S/ MM";if(code==="B-230809"||code==="B-234021"||code==="B-2340")return"%";if(code==="B-2402")return x.includes("RATIO")||x.includes("%")||x.includes("APR")?"%":"S/ MM";if(code==="B-2368")return x.includes("%")||x.includes("RATIO")||x.includes("/ PATRIMONIO")||x.includes("LIMITE")?"%":"S/ MM";if(x.includes("RATIO")||x.includes("%")||x.includes("ROE")||x.includes("ROA")||x.includes("MOROS")||x.includes("COBERTURA"))return"%";if(x.includes("NUMERO")||x.includes("N°")||x.includes("NRO"))return"N°";return"S/ MM"}
-
-
-function showAppError(message,detail=""){
- let box=document.getElementById("appError");if(!box)return;
- box.hidden=false;box.querySelector("span").textContent=message+(detail?` · ${detail}`:"");
- setStatus("err","Error de interfaz")
-}
-function clearAppError(){let box=document.getElementById("appError");if(box)box.hidden=true}
-function safeCall(label,fn){
- try{return fn()}catch(e){console.error(`[${label}]`,e);showAppError(`No se pudo cargar ${label}`,e?.message||String(e));return null}
-}
-window.addEventListener("error",e=>showAppError("Error de interfaz",e?.message||""));
-window.addEventListener("unhandledrejection",e=>showAppError("Error de datos",e?.reason?.message||String(e?.reason||"")))
-
-function setup(){
- let ms=document.getElementById("moduleSelect");
- ms.innerHTML=Object.entries(MODULES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join("");
- document.getElementById("moduleStrip").innerHTML=Object.entries(MODULES).map(([k,v])=>`<button type="button" class="pair-btn ${k==="overview"?"active":""}" data-module="${k}"><i class="fa-solid ${v.icon}"></i>${v.label}</button>`).join("");
-
- ms.addEventListener("change",()=>selectModule(ms.value));
- document.getElementById("moduleStrip").addEventListener("click",e=>{let b=e.target.closest("[data-module]");if(b)selectModule(b.dataset.module)});
- document.getElementById("compareSelect").addEventListener("change",renderAll);
-
- const searchBox=document.getElementById("searchBox"),rowFilter=document.getElementById("rowFilter"),viewTabs=document.getElementById("dataViewTabs");
- searchBox.addEventListener("input",renderDataPanel);
- rowFilter.addEventListener("change",renderDataPanel);
- viewTabs.addEventListener("click",e=>{
-   let b=e.target.closest("[data-data-view]");if(!b)return;
-   dataView=b.dataset.dataView;
-   viewTabs.querySelectorAll("[data-data-view]").forEach(x=>x.classList.toggle("active",x===b));
-   renderDataPanel()
- });
-
- document.getElementById("ratingsLensPanel").addEventListener("click",e=>{
-   let rv=e.target.closest("[data-rating-view]");
-   if(rv){ratingView=rv.dataset.ratingView;document.querySelectorAll("[data-rating-view]").forEach(x=>x.classList.toggle("active",x===rv));renderRatingsLens();return}
-   let rp=e.target.closest("[data-pillar]");
-   if(rp){ratingPillar=rp.dataset.pillar;renderRatingsLens()}
- });
-
- document.getElementById("btnImpact").addEventListener("click",()=>{
-   detailSort=detailSort==="impact"?"hierarchy":"impact";
-   document.getElementById("btnImpact").classList.toggle("dark",detailSort==="impact");
-   renderDataPanel()
- });
- document.getElementById("btnBars").addEventListener("click",()=>{
-   showBars=!showBars;document.getElementById("btnBars").classList.toggle("dark",showBars);renderDataPanel()
- });
-
- document.getElementById("btnDownload").addEventListener("click",e=>{e.preventDefault();downloadCSV()});
- document.getElementById("btnCopy").addEventListener("click",copySummary);
- document.getElementById("btnTheme").addEventListener("click",toggleTheme);
- document.getElementById("btnRefresh").addEventListener("click",openSync);
- document.getElementById("btnZoomReset").addEventListener("click",()=>Object.values(charts).forEach(c=>c?.dispatchAction?.({type:"dataZoom",start:0,end:100})));
-
- document.getElementById("rangeTabs").addEventListener("click",e=>{
-   let b=e.target.closest("[data-range]");if(!b)return;
-   RANGE=+b.dataset.range;document.querySelectorAll("[data-range]").forEach(x=>x.classList.toggle("active",x===b));
-   safeCall("gráficos",renderCharts);safeCall("estadísticas",renderStats)
- });
-
- document.getElementById("syncClose").addEventListener("click",closeSync);
- document.getElementById("syncCheck").addEventListener("click",()=>checkRemoteData(true));
- document.getElementById("syncActionsLink").href=`https://github.com/${REPO}/actions/workflows/${WORKFLOW}`;
-
- let saved=localStorage.getItem("bifHubTheme");if(saved)document.documentElement.dataset.theme=saved;updateThemeIcon()
-}
-function selectModule(k){currentModule=k;document.getElementById("moduleSelect").value=k;document.querySelectorAll("[data-module]").forEach(x=>x.classList.toggle("active",x.dataset.module===k));renderAll()}
-function setupDate(){
- let ps=fperiods(),i=document.getElementById("datePicker");
- if(!ps.length){
-   i.value="";i.disabled=true;showAppError("No hay periodos financieros en hub.json");return
- }
- i.disabled=false;i.min=ym(ps[0].date);i.max=ym(ps.at(-1).date);i.value=ym(ps.at(-1).date);
- i.addEventListener("change",renderAll);
- document.getElementById("dateToday").addEventListener("click",()=>{i.value=ym(ps.at(-1).date);renderAll()});
- document.getElementById("datePrev").addEventListener("click",()=>stepDate(-1));
- document.getElementById("dateNext").addEventListener("click",()=>stepDate(1))
-}
-function stepDate(dir){let ms=fperiods().map(p=>ym(p.date)),i=ms.indexOf(document.getElementById("datePicker").value);if(i<0)i=ms.length-1;i=Math.max(0,Math.min(ms.length-1,i+dir));document.getElementById("datePicker").value=ms[i];renderAll()}
-function toggleTheme(){
- let d=document.documentElement,t=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=t;localStorage.setItem("bifHubTheme",t);updateThemeIcon();
- if(currentModule!=="ratings")safeCall("gráficos",renderCharts)
-}
-function updateThemeIcon(){document.getElementById("themeIcon").className="fa-solid "+(document.documentElement.dataset.theme==="dark"?"fa-sun":"fa-moon")}
-
-
-
-function creditProvisions(p){
- let a=rows(p,"balance").filter(r=>N(r.label)==="PROVISIONES"&&r.total!=null);
- if(!a.length)return null;
- return Math.abs(a.sort((x,y)=>Math.abs(y.total)-Math.abs(x.total))[0].total)
-}
-function ratingCatalog(){return RATING_METRICS}
-function ratingMetric(id){return RATING_METRICS.find(x=>x.id===id)||null}
-function reportPeriodAt(code,periodKey,exact=false){return reportPeriodFor(code,periodKey,!exact)}
-function reportMetricAt(code,patterns,periodKey,exact=false){let p=reportPeriodAt(code,periodKey,exact);if(!p)return null;let es=metricEntries(p);for(let pat of patterns){let rx=new RegExp(pat,"i"),hit=es.find(e=>rx.test(N(e.label)));if(hit)return hit.value}return null}
-function ratingSourcePeriod(metric,periodKey){
- if(metric.source==="B-2201")return findFinancial(periodKey)?.date||null;
- return reportPeriodAt(metric.source,periodKey)?.date||null
-}
-function ratingValueAt(metric,periodKey,exactSource=false){
- let p=findFinancial(periodKey);if(!p)return null;
- let g=gross(p),over=val(p,"balance","Atrasados"),refi=val(p,"balance","Refinanciados y Reestructurados"),prov=creditProvisions(p)||0;
- switch(metric.calc){
-  case "overdue_ratio":return g?over/g*100:null;
-  case "refi_ratio":return g?refi/g*100:null;
-  case "car_ratio":return g?(over+refi)/g*100:null;
-  case "coverage_overdue":return over?prov/over*100:null;
-  case "coverage_car":return(over+refi)?prov/(over+refi)*100:null;
-  case "provisions_direct":return g?prov/g*100:null;
-  case "available_public":{let dep=val(p,"balance","OBLIGACIONES CON EL PÚBLICO"),av=val(p,"balance","DISPONIBLE");return dep?av/dep*100:null}
-  case "leverage":{let li=val(p,"balance","TOTAL PASIVO"),eq=val(p,"balance","PATRIMONIO");return li&&eq?li/eq:null}
-  case "liab_cap_res":{let li=val(p,"balance","TOTAL PASIVO"),cap=val(p,"balance","Capital Social"),res=val(p,"balance","Reservas");return li&&(cap||res)?li/((cap||0)+(res||0)):null}
-  case "roe":{
-    let exact=reportMetricAt("B-2401",["ROE","RENTABILIDAD.*PATRIMONIO"],periodKey,exactSource);if(exact!=null)return exact;
-    if(periodKey.slice(5,7)!=="12")return null;let y=+periodKey.slice(0,4),prev=findFinancial(`${y-1}-12`),ni=val(p,"income","RESULTADO NETO DEL EJERCICIO"),eq=val(p,"balance","PATRIMONIO"),peq=val(prev,"balance","PATRIMONIO");return ni!=null&&eq&&peq?ni/((eq+peq)/2)*100:null
-  }
-  case "roa":{
-    let exact=reportMetricAt("B-2401",["ROA","RENTABILIDAD.*ACTIVO"],periodKey,exactSource);if(exact!=null)return exact;
-    if(periodKey.slice(5,7)!=="12")return null;let y=+periodKey.slice(0,4),prev=findFinancial(`${y-1}-12`),ni=val(p,"income","RESULTADO NETO DEL EJERCICIO"),a=val(p,"balance","TOTAL ACTIVO"),pa=val(prev,"balance","TOTAL ACTIVO");return ni!=null&&a&&pa?ni/((a+pa)/2)*100:null
-  }
-  case "net_fin_margin":{if(periodKey.slice(5,7)!=="12")return null;let inc=val(p,"income","INGRESOS FINANCIEROS"),m=val(p,"income","MARGEN FINANCIERO NETO");return inc?m/inc*100:null}
-  case "operating_margin":{if(periodKey.slice(5,7)!=="12")return null;let mon=val(p,"income","MARGEN OPERACIONAL NETO"),fi=val(p,"income","INGRESOS FINANCIEROS"),si=val(p,"income","INGRESOS POR SERVICIOS FINANCIEROS"),fx=val(p,"income","Diferencia de Cambio"),gd=val(p,"income","Ganancias en Productos Financieros Derivados"),pd=val(p,"income","Pérdidas en Productos Financieros Derivados"),den=(fi||0)+(si||0)+(fx||0)+(gd||0)-(pd||0);return den?mon/den*100:null}
-  case "net_margin":{if(periodKey.slice(5,7)!=="12")return null;let net=val(p,"income","RESULTADO NETO DEL EJERCICIO"),fi=val(p,"income","INGRESOS FINANCIEROS"),si=val(p,"income","INGRESOS POR SERVICIOS FINANCIEROS"),fx=val(p,"income","Diferencia de Cambio"),gd=val(p,"income","Ganancias en Productos Financieros Derivados"),pd=val(p,"income","Pérdidas en Productos Financieros Derivados"),den=(fi||0)+(si||0)+(fx||0)+(gd||0)-(pd||0);return den?net/den*100:null}
-  case "admin_eff":{if(periodKey.slice(5,7)!=="12")return null;let adm=val(p,"income","GASTOS ADMINISTRATIVOS"),fi=val(p,"income","INGRESOS FINANCIEROS"),si=val(p,"income","INGRESOS POR SERVICIOS FINANCIEROS"),fx=val(p,"income","Diferencia de Cambio"),gd=val(p,"income","Ganancias en Productos Financieros Derivados"),pd=val(p,"income","Pérdidas en Productos Financieros Derivados"),den=(fi||0)+(si||0)+(fx||0)+(gd||0)-(pd||0);return den?Math.abs(adm)/den*100:null}
-  case "admin_gross_margin":{if(periodKey.slice(5,7)!=="12")return null;let adm=val(p,"income","GASTOS ADMINISTRATIVOS"),m=val(p,"income","MARGEN FINANCIERO BRUTO");return m?Math.abs(adm)/m*100:null}
-  case "rcg":return reportMetricAt("B-2402",["RATIO DE CAPITAL GLOBAL","CAPITAL GLOBAL"],periodKey,exactSource);
-  case "tier1":return reportMetricAt("B-2402",["RATIO.*CAPITAL.*NIVEL 1","TIER 1.*APR","NIVEL 1"],periodKey,exactSource);
-  case "liq_mn":return reportMetricAt("B-2340",["LIQUIDEZ.*MN","MONEDA NACIONAL"],periodKey,exactSource);
-  case "liq_me":return reportMetricAt("B-2340",["LIQUIDEZ.*ME","MONEDA EXTRANJERA"],periodKey,exactSource);
-  case "rcl_total":return reportMetricAt("B-230809",["RATIO.*COBERTURA.*TOTAL","RCL.*TOTAL","TOTAL"],periodKey,exactSource);
-  case "rfne":return reportMetricAt("B-234021",["FINANCIACION NETA ESTABLE","RFNE","TOTAL"],periodKey,exactSource);
-  case "fx_global_pe":return reportMetricAt("B-2368",["POSICION GLOBAL.*PATRIMONIO","POSICION GLOBAL.*%"],periodKey,exactSource);
-  case "heavy_ratio":return reportMetricAt("B-2401",["CARTERA PESADA"],periodKey,exactSource);
-  default:return null
- }
-}
-function ratingCurrent(metric){return ratingValueAt(metric,document.getElementById("datePicker").value)}
-function ratingPrior(metric,months){
- let key=document.getElementById("datePicker").value,[y,m]=key.split("-").map(Number),idx=y*12+m-months,yy=Math.floor((idx-1)/12),mm=((idx-1)%12)+1;
- return ratingValueAt(metric,`${yy}-${String(mm).padStart(2,"0")}`)
-}
-function ratingStatusFromTrend(metric,current,prior){
- if(current==null)return{cls:"neutral",icon:"fa-minus",label:"Sin dato"};
- if(prior==null)return{cls:"neutral",icon:"fa-circle",label:"Sin comparativo"};
- if(Math.abs(current-prior)<1e-9)return{cls:"neutral",icon:"fa-equals",label:"Sin cambio"};
- let up=current>prior,good=metric.direction==="higher"?up:metric.direction==="lower"?!up:metric.direction==="lower_abs"?Math.abs(current)<Math.abs(prior):null;
- if(good===null)return{cls:"neutral",icon:up?"fa-arrow-trend-up":"fa-arrow-trend-down",label:up?"Sube":"Baja"};
- return good?{cls:"good",icon:"fa-circle-check",label:"Mejora"}:{cls:"warn",icon:"fa-triangle-exclamation",label:"Deteriora"}
-}
-function fmtRating(v,u){if(v==null||!isFinite(v))return"—";if(u==="%")return num(v,2)+"%";if(u==="x")return num(v,2)+"x";return num(v,2)}
-function kpiCard(code,label,value,comp,cls="",unit="S/ MM",inverse=false){
- let pp=pct(value,comp),dc=pp==null?"flat":(((pp>0)!==inverse)?"pos":"neg"),v=unit==="S/ MM"?fmtMM(value,1):num(value,1);
- return`<article class="kpi ${cls}"><div class="kpi-top"><span><i class="fa-solid fa-circle-dot"></i>${code}</span><b class="delta ${dc}">${fmtPct(pp,1)}</b></div><strong>${v}</strong><small>${label} · ${unit}</small></article>`
-}
-function emptyKpis(){return["","accent","green","purple","amber",""].map((c,i)=>`<article class="kpi ${c}"><div class="kpi-top"><span>SYNC</span><b class="delta flat">—</b></div><strong>—</strong><small>Sin dato local · sincroniza SBS</small></article>`).join("")}
-function pickReportMetrics(code,e){let pats={"B-2336":["AGRICULT","INDUSTRIA","COMERCIO","INMOB","TRANSPORTE","MINER"],"B-2401":["ROE","ROA","MOROS","EFICIEN","MARGEN","COBERT"],"B-2402":["CAPITAL GLOBAL","PATRIMONIO EFECTIVO","REQUERIMIENTO","CET1","TIER"],"B-2340":["LIQUIDEZ.*MN","LIQUIDEZ.*ME","RATIO.*MN","RATIO.*ME"],"B-230809":["COBERTURA DE LIQUIDEZ","RCL","TOTAL"],"B-234021":["FINANCIACION NETA ESTABLE","RFNE","TOTAL"],"B-2368":["POSICION GLOBAL","POSICION.*ME","PATRIMONIO","LIMITE"]}[code]||[],out=[],used=new Set();for(let p of pats){let rx=new RegExp(p,"i"),x=e.find(v=>rx.test(N(v.label))&&!used.has(v.label));if(x){out.push(x);used.add(x.label)}}for(let x of e){if(out.length>=6)break;if(!used.has(x.label)){out.push(x);used.add(x.label)}}return out}
-function renderKpis(){
- let a=currentFinancial(),b=compFinancial(),k=module().kind,html="";
- if(k==="financial"){let r=risk(a),rb=risk(b);html=[
-  kpiCard("ACTIVO","Total activo",val(a,"balance","TOTAL ACTIVO"),val(b,"balance","TOTAL ACTIVO")),
-  kpiCard("CRÉDITOS","Créditos directos brutos",gross(a),gross(b),"accent"),
-  kpiCard("DEPÓSITOS","Obligaciones con público",val(a,"balance","OBLIGACIONES CON EL PÚBLICO"),val(b,"balance","OBLIGACIONES CON EL PÚBLICO"),"green"),
-  kpiCard("PATRIM.","Patrimonio",val(a,"balance","PATRIMONIO"),val(b,"balance","PATRIMONIO"),"purple"),
-  kpiCard("MORA","Ratio de mora",r.npl,rb.npl,"amber","%",true),
-  kpiCard("UTILIDAD","Resultado neto YTD",val(a,"income","RESULTADO NETO DEL EJERCICIO"),val(b,"income","RESULTADO NETO DEL EJERCICIO"))
- ].join("")}
- else if(k==="ratings"){
-   let ids=["rcg","tier1","car_ratio","coverage_car","roe","liq_mn"];
-   html=ids.map((id,i)=>{let m=ratingMetric(id),v=ratingCurrent(m),prior=ratingPrior(m,12);return kpiCard(short(N(m.label),12),m.label,v,prior,["","accent","green","purple","amber",""][i],m.unit,m.direction==="lower"||m.direction==="lower_abs")}).join("")
- }
- else if(k==="balance"){html=[
-  kpiCard("ACTIVO","Total activo",val(a,"balance","TOTAL ACTIVO"),val(b,"balance","TOTAL ACTIVO")),
-  kpiCard("DISP.","Disponible",val(a,"balance","DISPONIBLE"),val(b,"balance","DISPONIBLE"),"accent"),
-  kpiCard("INV.","Inversiones netas",val(a,"balance","INVERSIONES NETAS DE PROVISIONES"),val(b,"balance","INVERSIONES NETAS DE PROVISIONES"),"green"),
-  kpiCard("CRÉD.NET","Créditos netos",val(a,"balance","CRÉDITOS NETOS DE PROVISIONES Y DE INGRESOS NO DEVENGADOS"),val(b,"balance","CRÉDITOS NETOS DE PROVISIONES Y DE INGRESOS NO DEVENGADOS"),"purple"),
-  kpiCard("PÚBLICO","Obligaciones con público",val(a,"balance","OBLIGACIONES CON EL PÚBLICO"),val(b,"balance","OBLIGACIONES CON EL PÚBLICO"),"amber"),
-  kpiCard("OTR.PAS","Otros pasivos",val(a,"balance","OTROS PASIVOS"),val(b,"balance","OTROS PASIVOS"))
- ].join("")}
- else if(k==="credit"){html=[
-  kpiCard("BRUTA","Créditos brutos",gross(a),gross(b)),kpiCard("PRÉSTAMOS","Préstamos",val(a,"balance","Préstamos"),val(b,"balance","Préstamos"),"accent"),
-  kpiCard("REFI","Refinanciados",val(a,"balance","Refinanciados y Reestructurados"),val(b,"balance","Refinanciados y Reestructurados"),"green"),
-  kpiCard("VENC.","Vencidos",val(a,"balance","Vencidos"),val(b,"balance","Vencidos"),"purple","S/ MM",true),
-  kpiCard("JUD.","Cobranza judicial",val(a,"balance","Cobranza Judicial"),val(b,"balance","Cobranza Judicial"),"amber","S/ MM",true),
-  kpiCard("PROV.","Provisiones",creditProvisions(a),creditProvisions(b))
- ].join("")}
- else if(k==="pnl"){let y=previousPeriod(a,12);html=[
-  kpiCard("ING.FIN","Ingresos financieros",val(a,"income","INGRESOS FINANCIEROS"),val(y,"income","INGRESOS FINANCIEROS")),
-  kpiCard("GTO.FIN","Gastos financieros",val(a,"income","GASTOS FINANCIEROS"),val(y,"income","GASTOS FINANCIEROS"),"accent","S/ MM",true),
-  kpiCard("MARGEN","Margen financiero neto",val(a,"income","MARGEN FINANCIERO NETO"),val(y,"income","MARGEN FINANCIERO NETO"),"green"),
-  kpiCard("G.ADM","Gastos administrativos",val(a,"income","GASTOS ADMINISTRATIVOS"),val(y,"income","GASTOS ADMINISTRATIVOS"),"purple","S/ MM",true),
-  kpiCard("OTROS","Otros ingresos y gastos",val(a,"income","OTROS INGRESOS Y GASTOS"),val(y,"income","OTROS INGRESOS Y GASTOS"),"amber"),
-  kpiCard("NETO","Resultado neto",val(a,"income","RESULTADO NETO DEL EJERCICIO"),val(y,"income","RESULTADO NETO DEL EJERCICIO"))
- ].join("")}
- else if(k==="peers"){let ba=bankSummary(a,"banbif"),bb=bankSummary(b,"banbif");html=[
-  kpiCard("SH.CRÉD","Market share créditos",marketShare(a,"banbif","gross_credits"),marketShare(b,"banbif","gross_credits"),"","%"),
-  kpiCard("SH.DEP","Market share depósitos",marketShare(a,"banbif","public_deposits"),marketShare(b,"banbif","public_deposits"),"accent","%"),
-  kpiCard("ACTIVO","Activo BanBif",ba?.total_assets,bb?.total_assets,"green"),kpiCard("CRÉDITOS","Créditos BanBif",ba?.gross_credits,bb?.gross_credits,"purple"),
-  kpiCard("DEPÓSITOS","Depósitos BanBif",ba?.public_deposits,bb?.public_deposits,"amber"),kpiCard("RESULT.","Resultado neto",ba?.net_income,bb?.net_income)
- ].join("")}
- else{
-   let rp=reportPeriod(),rc=reportComp(),e=metricEntries(rp);
-   if(!e.length)html=emptyKpis();else{let top=pickReportMetrics(module().code,e).slice(0,6);while(top.length<6)top.push({label:"Indicador",value:null});html=top.map((x,i)=>kpiCard(short(N(x.label),12),x.label,x.value,reportMetricValue(rc,x.label),["","accent","green","purple","amber",""][i],inferUnit(x.label,module().code))).join("")}
- }
- document.getElementById("kpiGrid").innerHTML=html
-}
-function setupTrendMetric(){let s=document.getElementById("trendMetric"),old=s.value,k=module().kind,o=[];if(k==="financial"||k==="balance")o=[["total_assets","Total activo"],["gross_credits","Créditos brutos"],["public_deposits","Obligaciones con público"],["equity","Patrimonio"],["available","Disponible"]];else if(k==="credit")o=[["gross_credits","Créditos brutos"],["loans","Préstamos"],["mortgages","Hipotecarios"],["foreign_trade","Comercio Exterior"],["overdue","Atrasados"],["refinanced","Refinanciados"]];else if(k==="pnl")o=[["financial_income","Ingresos financieros"],["net_margin","Margen financiero neto"],["admin_expenses","Gastos administrativos"],["net_income","Resultado neto"],["fx","Diferencia de cambio"]];else if(k==="peers")o=[["share_credits","Market share créditos"],["share_deposits","Market share depósitos"],["gross_credits","Créditos BanBif"],["public_deposits","Depósitos BanBif"]];else if(k==="ratings")o=ratingCatalog().map(m=>[m.id,m.label]);else{let current=metricEntries(reportPeriod()),ordered=pickReportMetrics(module().code,current),seen=new Set(ordered.map(x=>x.label));for(let x of current)if(!seen.has(x.label)){ordered.push(x);seen.add(x.label)}o=ordered.slice(0,140).map(x=>[x.label,x.label]);if(!o.length)o=[["sync","Sin datos en el periodo SBS actual"]]}s.innerHTML=o.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join("");if(lastTrendModule===currentModule&&[...s.options].some(x=>x.value===old))s.value=old;else if(s.options.length)s.value=s.options[0].value;lastTrendModule=currentModule;s.onchange=()=>{safeCall("gráficos",renderCharts);safeCall("estadísticas",renderStats)}}
-function financialMetric(p,key){let b=bankSummary(p,"banbif");return key==="total_assets"?b?.total_assets:key==="gross_credits"?b?.gross_credits:key==="public_deposits"?b?.public_deposits:key==="equity"?b?.equity:key==="available"?val(p,"balance","DISPONIBLE"):key==="loans"?val(p,"balance","Préstamos"):key==="mortgages"?val(p,"balance","Hipotecarios para Vivienda"):key==="foreign_trade"?val(p,"balance","Comercio Exterior"):key==="overdue"?val(p,"balance","Atrasados"):key==="refinanced"?val(p,"balance","Refinanciados y Reestructurados"):key==="financial_income"?val(p,"income","INGRESOS FINANCIEROS"):key==="net_margin"?val(p,"income","MARGEN FINANCIERO NETO"):key==="admin_expenses"?val(p,"income","GASTOS ADMINISTRATIVOS"):key==="net_income"?val(p,"income","RESULTADO NETO DEL EJERCICIO"):key==="fx"?val(p,"income","Diferencia de Cambio"):key==="share_credits"?marketShare(p,"banbif","gross_credits"):key==="share_deposits"?marketShare(p,"banbif","public_deposits"):null}
-function trendSeries(){let key=document.getElementById("trendMetric").value,k=module().kind,anchor=sourceAnchorYm();if(k==="ratings"){let m=ratingMetric(key),ps=periodRange(fperiods(),selectedYm(),RANGE||0);return{dates:ps.map(x=>x.date),values:ps.map(x=>ratingValueAt(m,ym(x.date),true)),label:m?.label||key,unit:m?.unit||"%",sourceYm:selectedYm()}}if(k!=="report"){let p=periodRange(fperiods(),selectedYm(),RANGE||0);return{dates:p.map(x=>x.date),values:p.map(x=>financialMetric(x,key)),label:document.getElementById("trendMetric").selectedOptions[0]?.textContent||key,unit:key.startsWith("share_")?"%":"S/ MM",sourceYm:selectedYm()}}let p=periodRange(reportObj()?.periods||[],anchor,RANGE||0);return{dates:p.map(x=>x.date),values:p.map(x=>reportMetricValue(x,key)),label:key,unit:inferUnit(key,module().code),sourceYm:anchor}}
-function renderCharts(){let c=colors(),s=trendSeries(),raw=finitePoints(s),scale=s.unit==="S/ MM"?1000:1,vals=s.values.map(v=>v==null?null:v/scale),labels=s.dates.map(x=>ym(x)),last=raw.at(-1),lastDisplay=last?last.value/scale:null,chg=vals.map((v,i)=>{if(v==null)return null;for(let j=i-1;j>=0;j--)if(vals[j]!=null)return v-vals[j];return null});let upto=last?ym(last.date):s.sourceYm||"—";document.getElementById("historySource").textContent=`${s.label} · hasta ${upto} · ${raw.length} datos`;document.getElementById("changeSource").textContent=`Variación vs dato previo · ${s.unit}`;document.getElementById("trendLegend").innerHTML=`<span class="legend-pill"><i class="legend-dot"></i>${s.label}<strong>${chartNumber(lastDisplay,s.unit)}</strong></span>`;if(!raw.length){document.getElementById("trendChart").innerHTML='<div class="chart-fallback"><i class="fa-solid fa-chart-line"></i><span>La métrica no tiene datos para el rango seleccionado.</span></div>';document.getElementById("changeChart").innerHTML='<div class="chart-fallback"><i class="fa-solid fa-chart-column"></i><span>Sin variaciones calculables.</span></div>';return}let axis={color:c.muted,fontSize:10,formatter:v=>chartNumber(v,s.unit).replace("%","")},common={textStyle:{fontFamily:"Manrope",color:c.ink},grid:{left:52,right:16,top:18,bottom:42},tooltip:{trigger:"axis",confine:true,formatter:ps=>{let p=ps?.[0];return p?`<b>${p.axisValue}</b><br>${p.marker}${p.seriesName}: ${chartNumber(p.value,s.unit)}`:""},backgroundColor:getComputedStyle(document.documentElement).getPropertyValue("--tooltip-bg").trim(),borderColor:getComputedStyle(document.documentElement).getPropertyValue("--tooltip-border").trim(),textStyle:{color:"#fff"}},xAxis:{type:"category",data:labels,axisLabel:{color:c.muted,fontSize:10,hideOverlap:true},axisLine:{lineStyle:{color:c.grid}},axisTick:{show:false}},yAxis:{type:"value",axisLabel:axis,splitLine:{lineStyle:{color:c.grid}}},dataZoom:[{type:"inside"},{type:"slider",height:15,bottom:5,borderColor:c.grid,fillerColor:"rgba(11,54,84,.12)"}]};ech("trendChart",{...common,series:[{name:s.label,type:"line",data:vals,smooth:.18,connectNulls:false,showSymbol:false,lineStyle:{width:2,color:c.navy},areaStyle:{color:"rgba(0,163,181,.07)"},itemStyle:{color:c.navy}}]});ech("changeChart",{...common,tooltip:{...common.tooltip,formatter:ps=>{let p=ps?.[0];return p?`<b>${p.axisValue}</b><br>${p.marker}Variación: ${chartNumber(p.value,s.unit)}`:""}},series:[{name:"Variación",type:"bar",data:chg.map(x=>({value:x,itemStyle:{color:x==null?c.grid:x>=0?c.green:c.red}})),barMaxWidth:18}]})}
-function renderStats(){let s=trendSeries(),pts=finitePoints(s),last=pts.at(-1)||null,prev=pts.at(-2)||null,yoy=last?pointAtOrBefore(pts,shiftYm(ym(last.date),-12)):null,values=pts.map(x=>x.value),disp=x=>s.unit==="S/ MM"?fmtMM(x,2):num(x,2)+(s.unit==="%"?"%":s.unit==="x"?"x":"");let arr=[["Actual",disp(last?.value),last?ym(last.date):"Sin dato"],["Vs previo",fmtPct(pct(last?.value,prev?.value),2),prev?`vs ${ym(prev.date)}`:"Sin comparativo"],["YoY",fmtPct(pct(last?.value,yoy?.value),2),yoy?`vs ${ym(yoy.date)}`:"Sin comparativo"],["Promedio",disp(values.length?values.reduce((z,x)=>z+x,0)/values.length:null),`${values.length} datos`],["Máximo",disp(values.length?Math.max(...values):null),"rango visible"],["Mínimo",disp(values.length?Math.min(...values):null),"rango visible"]];document.getElementById("statsPair").textContent=s.label;document.getElementById("statsPanel").innerHTML=arr.map(x=>`<div class="stat-box"><div class="slabel">${x[0]}</div><strong>${x[1]}</strong><small>${x[2]}</small></div>`).join("")}
-function renderRadar(){
- let a=currentFinancial(),b=compFinancial(),k=module().kind,it=[];
- if(!moduleAvailable())it=[["warn","Sin dato del módulo","La fuente SBS todavía no tiene un periodo utilizable para la fecha seleccionada."]];
- else if(k==="ratings"){
-   let watch=["rcg","car_ratio","coverage_car","liq_mn","roe","leverage"].map(ratingMetric).filter(Boolean);
-   it=watch.map(m=>{let v=ratingCurrent(m),prior=ratingPrior(m,12),st=ratingStatusFromTrend(m,v,prior);return[st.cls,m.label,`${fmtRating(v,m.unit)} · 12M previo: ${fmtRating(prior,m.unit)} · ${m.source}`]})
- }
- else if(k==="financial"||k==="balance"||k==="credit"||k==="peers"){let r=risk(a),ld=gross(a)/(val(a,"balance","OBLIGACIONES CON EL PÚBLICO")||1)*100;it=[[r.npl<4?"good":"warn","Mora",`${num(r.npl,2)}% · cobertura ${num(r.cov,2)}%.`],[ld<110?"good":"warn","Loan / depósitos",`${num(ld,2)}%.`],["","Participación créditos",`${num(marketShare(a,"banbif","gross_credits"),2)}% del sistema B-2201.`],[pct(gross(a),gross(b))>=0?"good":"warn","Crecimiento cartera",`${fmtPct(pct(gross(a),gross(b)),2)} frente al comparativo.`]]}
- else if(k==="pnl"){let y=previousPeriod(a,12);it=[["","Resultado neto",`${fmtPct(pct(val(a,"income","RESULTADO NETO DEL EJERCICIO"),val(y,"income","RESULTADO NETO DEL EJERCICIO")),2)} YoY.`],["","Otros ingresos/gastos",`S/ ${fmtMM(val(a,"income","OTROS INGRESOS Y GASTOS"),2)} MM YTD.`],["","Diferencia de cambio",`S/ ${fmtMM(val(a,"income","Diferencia de Cambio"),2)} MM YTD.`],["warn","Comparabilidad","Resultados SBS son YTD; compara el mismo mes del año anterior."]]}
- else it=pickReportMetrics(module().code,metricEntries(reportPeriod())).slice(0,4).map(x=>["",short(x.label,24),`${x.label}: ${inferUnit(x.label)==="S/ MM"?fmtMM(x.value,2)+" S/ MM":num(x.value,2)+"%"}.`]);
- document.getElementById("radarSub").textContent=module().code+" · drivers";
- document.getElementById("radarPanel").innerHTML=it.map(x=>`<div class="radar-item ${x[0]}"><b>${x[1]}</b><p>${x[2]}</p></div>`).join("")
-}
-function renderPeers(){
- let a=currentFinancial(),out=[],k=module().kind;document.getElementById("peerSub").textContent="Banca múltiple";
- if(k==="report"){
-   let rp=reportPeriod(),metric=pickReportMetrics(module().code,metricEntries(rp))[0]?.label;
-   if(rp&&metric)for(let[s,m]of Object.entries(rp.peer_metrics||{})){let v=m?.[metric];if(typeof v==="number")out.push({slug:s,name:s.toUpperCase(),value:v})}
- }else{
-   let key=currentModule==="peers"?"gross_credits":"total_assets";
-   out=(a?.peers||[]).filter(x=>MAJOR.includes(x.slug)).map(x=>({slug:x.slug,name:x.name,value:x[key]}))
- }
- out.sort((x,y)=>(y.value||0)-(x.value||0));
- document.getElementById("peerCount").innerHTML=`<i class="fa-solid fa-building-columns"></i>${out.length} bancos`;
- document.getElementById("peerTable").innerHTML=!out.length?`<div class="empty-state"><div><i class="fa-solid fa-arrows-rotate"></i>Sin peers para este módulo/periodo.</div></div>`:`<div class="table-wrap"><table><thead><tr><th>#</th><th>Banco</th><th style="text-align:right">Valor</th></tr></thead><tbody>${out.map((x,i)=>`<tr><td><span class="peer-rank">${i+1}</span></td><td class="code">${x.slug==="banbif"?"BanBif":x.name}</td><td class="num">${k==="report"?num(x.value,2):fmtMM(x.value,2)}</td></tr>`).join("")}</tbody></table></div>`
-}
-function dataRows(){
- let k=module().kind,q=N(document.getElementById("searchBox").value),filter=document.getElementById("rowFilter").value,out=[];
- if(k==="ratings"){
-   out=ratingCatalog().map((m,i)=>({group:m.group,rubric:m.group,isRubric:false,label:m.label,indent:1,row:i,st:"rating",mn:null,me:null,total:ratingCurrent(m),comp:ratingPrior(m,document.getElementById("compareSelect").value==="yoy"?12:1),unit:m.unit}))
- }else if(k==="report"){
-   let a=reportPeriod(),b=reportComp();
-   out=metricEntries(a).map((e,i)=>({group:module().label,rubric:module().label,isRubric:i===0,label:e.label,indent:0,row:i,st:"report",mn:null,me:null,total:e.value,comp:reportMetricValue(b,e.label),unit:inferUnit(e.label,module().code)}))
- }else if(k==="peers"){
-   let a=currentFinancial(),b=compFinancial();
-   out=(a?.peers||[]).map((x,i)=>{let xb=bankSummary(b,x.slug);return{group:"Banca múltiple",rubric:"Banca múltiple",isRubric:false,label:x.name,indent:0,row:i,st:"peer",mn:null,me:null,total:x.gross_credits,comp:xb?.gross_credits??null,unit:"S/ MM"}})
- }else{
-   let a=currentFinancial(),stList=k==="pnl"?["income"]:k==="overview"?["balance","income"]:["balance"];
-   for(let st of stList){
-     let b=st==="income"?previousPeriod(a,12):compFinancial(),bm=new Map(rows(b,st).map(r=>[`${r.row}|${N(r.label)}`,r]));
-     let rubric=null,currentGroup=null;
-     for(let r of rows(a,st)){
-       let group=statementGroup(r,st);
-       if(group!==currentGroup){currentGroup=group;rubric=null}
-       if((r.indent||0)===0)rubric=r.label;
-       let rb=bm.get(`${r.row}|${N(r.label)}`)||rows(b,st).find(x=>N(x.label)===N(r.label));
-       out.push({group,rubric:(r.indent||0)===0?r.label:(rubric||group),isRubric:(r.indent||0)===0,label:r.label,indent:r.indent||0,row:r.row||0,st,mn:r.mn,me:r.me,total:r.total,comp:rb?.total??null,unit:"S/ MM"})
-     }
-   }
- }
- out=out.map(x=>({...x,delta:x.comp==null?null:x.total-x.comp,varPct:pct(x.total,x.comp)}));
- if(q){
-   let matched=out.filter(x=>N(x.label).includes(q)||N(x.group).includes(q)||N(x.rubric||"").includes(q)),keep=new Set();
-   for(let x of matched){
-     keep.add(`${x.st}|${x.row}`);
-     if(!x.isRubric&&x.rubric){
-       let parent=out.find(p=>p.st===x.st&&p.group===x.group&&p.isRubric&&N(p.label)===N(x.rubric));
-       if(parent)keep.add(`${parent.st}|${parent.row}`)
-     }
-   }
-   out=out.filter(x=>keep.has(`${x.st}|${x.row}`))
- }
- if(filter==="main")out=out.filter(x=>x.indent===0);
- if(filter==="changes")out=out.filter(x=>x.delta!=null&&Math.abs(x.delta)>0.0001);
- if(detailSort==="impact"&&!q)out.sort((a,b)=>Math.abs(b.delta||0)-Math.abs(a.delta||0));
- else out.sort((a,b)=>a.st.localeCompare(b.st)||a.row-b.row);
- return out
-}
-function dataFmt(v,unit){let d=2;return unit==="S/ MM"?fmtMM(v,d):num(v,d)+(unit==="%"?"%":"")}
-
-function findHistoricalFinancial(periodKey){
- return fperiods().find(p=>ym(p.date)===periodKey)||null
-}
-function rowValueForPeriod(baseRow,periodKey,field="total"){if(baseRow.st==="rating"){let m=ratingCatalog().find(x=>x.label===baseRow.label);return m?ratingValueAt(m,periodKey,true):null}if(baseRow.st==="report")return reportMetricValue(reportPeriodFor(module().code,periodKey,false),baseRow.label);if(baseRow.st==="peer"){let p=findHistoricalFinancial(periodKey),slug=(p?.peers||[]).find(x=>N(x.name)===N(baseRow.label))?.slug;return slug?bankSummary(p,slug)?.gross_credits??null:null}let p=findHistoricalFinancial(periodKey);return val(p,baseRow.st,baseRow.label,field)}
-function annualPeriods(){let anchor=sourceAnchorYm()||selectedYm(),[year,month]=anchor.split("-").map(Number),out=[];for(let y=year-4;y<=year;y++){let key=`${y}-${String(month).padStart(2,"0")}`;out.push({key,label:String(y)})}return out}
-function monthlyPeriods(){let anchor=sourceAnchorYm()||selectedYm();if(module().kind==="report")return periodRange(reportObj()?.periods||[],anchor,12).map(p=>({key:ym(p.date),label:prettyMonth(ym(p.date))}));let out=[];for(let back=11;back>=0;back--){let key=shiftYm(anchor,-back);out.push({key,label:prettyMonth(key)})}return out}
-
-
-function ratingPillarOrder(){return ["Solvencia","Calidad de activos","Cobertura","Liquidez y fondeo","Rentabilidad","Eficiencia","Riesgo de mercado"]}
-function ratingPillarIcon(g){return ({"Solvencia":"fa-shield-halved","Calidad de activos":"fa-heart-pulse","Cobertura":"fa-umbrella","Liquidez y fondeo":"fa-droplet","Rentabilidad":"fa-chart-line","Eficiencia":"fa-gauge-high","Riesgo de mercado":"fa-wave-square"})[g]||"fa-circle-nodes"}
-function trendGlyph(curr,prev,direction="context"){
- if(curr==null||prev==null)return`<span class="rating-trend neutral">—</span>`;
- if(Math.abs(curr-prev)<1e-9)return`<span class="rating-trend neutral">●</span>`;
- let up=curr>prev,beneficial=direction==="higher"?up:direction==="lower"?!up:direction==="lower_abs"?Math.abs(curr)<Math.abs(prev):null,cls=beneficial===null?(up?"up":"down"):(beneficial?"good":"bad");
- return`<span class="rating-trend ${cls}" title="${up?"Aumentó":"Cayó"}">${up?"▲":"▼"}</span>`
-}
-function ratingSeries(m,view){let selected=selectedYm();if(m.source!=="B-2201"){let src=reportObjByCode(m.source),anchor=ym(reportPeriodFor(m.source,selected,true)?.date);if(!anchor)return[];if(view==="monthly")return periodRange(src?.periods||[],anchor,12).map(p=>({label:prettyMonth(ym(p.date)),key:ym(p.date),value:ratingValueAt(m,ym(p.date),true)}));let[y,mo]=anchor.split("-").map(Number),out=[];for(let yr=y-4;yr<=y;yr++){let key=`${yr}-${String(mo).padStart(2,"0")}`;out.push({label:String(yr),key,value:ratingValueAt(m,key,true)})}return out}let anchor=selected,[y,mo]=anchor.split("-").map(Number);if(view==="annual"){let out=[];for(let yr=y-4;yr<=y;yr++){let key=`${yr}-${String(mo).padStart(2,"0")}`;out.push({label:String(yr),key,value:ratingValueAt(m,key,true)})}return out}return periodRange(fperiods(),anchor,12).map(p=>({label:prettyMonth(ym(p.date)),key:ym(p.date),value:ratingValueAt(m,ym(p.date),true)}))}
-function ratingSparkline(m){
- let s=ratingSeries(m,"monthly").filter(x=>x.value!=null);if(s.length<2)return"";
- let vs=s.map(x=>x.value),mn=Math.min(...vs),mx=Math.max(...vs),span=mx-mn||1,pts=s.map((x,i)=>`${(i/(s.length-1))*100},${30-((x.value-mn)/span)*24}`).join(" ");
- return `<svg class="metric-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" vector-effect="non-scaling-stroke"/></svg>`
-}
-function metricCard(m){
- let selected=document.getElementById("datePicker").value,current=ratingCurrent(m),prior=ratingPrior(m,document.getElementById("compareSelect").value==="yoy"?12:1),st=ratingStatusFromTrend(m,current,prior),delta=current!=null&&prior!=null?current-prior:null,srcDate=ratingSourcePeriod(m,selected);
- return `<article class="intel-card ${st.cls}">
-   <div class="intel-card-top"><div><span class="intel-source">${m.source}</span><h3>${m.label}</h3></div><span class="intel-status ${st.cls}"><i class="fa-solid ${st.icon}"></i>${st.label}</span></div>
-   <div class="intel-value-row"><strong>${fmtRating(current,m.unit)}</strong><span class="${current==null?"pending-badge":"live-badge"}"><i class="fa-solid ${current==null?"fa-clock":"fa-bolt"}"></i>${current==null?"Pendiente SBS":"SBS "+prettyMonth(ym(srcDate))}</span></div>
-   <div class="intel-context"><span><small>Comparativo</small><b>${fmtRating(prior,m.unit)}</b></span><span><small>Variación</small><b class="${delta>0?"pos":delta<0?"neg":""}">${delta==null?"—":(delta>0?"+":"")+fmtRating(delta,m.unit)}</b></span><span><small>Fuente</small><b>${m.source}</b></span></div>
-   ${ratingSparkline(m)}
- </article>`
-}
-function ratingHistoryCard(m,view){
- let pts=ratingSeries(m,view);
- return `<article class="history-intel-card"><div class="history-intel-head"><div><span>${m.group}</span><h3>${m.label}</h3></div><span class="intel-source">${m.source}</span></div><div class="history-timeline">${pts.map((x,i)=>`<div class="history-point"><span>${x.label}</span><b>${fmtRating(x.value,m.unit)}</b>${trendGlyph(x.value,i?pts[i-1].value:null,"context")}</div>`).join("")}</div></article>`
-}
-function renderRatingsLens(){
- let panel=document.getElementById("ratingsLensPanel"),isRatings=currentModule==="ratings";panel.hidden=!isRatings;if(!isRatings)return;
- let catalog=ratingCatalog(),order=ratingPillarOrder(),groups=order.filter(g=>catalog.some(m=>m.group===g)),required=["B-2201","B-2401","B-2402","B-2340","B-230809","B-234021","B-2368"];
- document.getElementById("ratingsSourceStrip").innerHTML=required.map(code=>{let periods=code==="B-2201"?fperiods():(DB.reports?.[code]?.periods||[]),last=periods.at(-1)?.date;return `<div class="agency-card source-health-card ${last?"ok":"warn"}"><span>${code}</span><b>${last?prettyMonth(ym(last)):"—"}</b><small>${last?"SBS cargada":"Pendiente sincronización"}</small></div>`}).join("");
- document.getElementById("ratingsPillars").innerHTML=`<button type="button" class="pillar-chip ${ratingPillar==="all"?"active":""}" data-pillar="all">Todo</button>`+groups.map(g=>`<button type="button" class="pillar-chip ${ratingPillar===g?"active":""}" data-pillar="${g}"><i class="fa-solid ${ratingPillarIcon(g)}"></i>${g}</button>`).join("");
- let loaded=required.filter(code=>code==="B-2201"?fperiods().length:(DB.reports?.[code]?.periods||[]).length).length;
- document.getElementById("ratingsSourceNotice").innerHTML=`<i class="fa-solid ${loaded===required.length?"fa-circle-check":"fa-circle-exclamation"}"></i><span><b>${loaded}/${required.length} fuentes SBS con data.</b> Ningún valor proviene de una clasificadora. Si falta una fuente, el indicador queda pendiente.</span>`;
- let filtered=ratingPillar==="all"?catalog:catalog.filter(m=>m.group===ratingPillar),canvas=document.getElementById("ratingsCanvas");
- if(ratingView==="annual"||ratingView==="monthly"){
-   canvas.innerHTML=groups.filter(g=>ratingPillar==="all"||ratingPillar===g).map(g=>`<section class="intel-section"><div class="intel-section-head"><span class="intel-section-icon"><i class="fa-solid ${ratingPillarIcon(g)}"></i></span><div><h3>${g}</h3><p>${ratingView==="annual"?"Mismo mes durante los últimos 5 años.":"Evolución de los últimos 12 meses."}</p></div></div><div class="history-card-grid">${filtered.filter(m=>m.group===g).map(m=>ratingHistoryCard(m,ratingView)).join("")}</div></section>`).join("");return
- }
- canvas.innerHTML=groups.filter(g=>ratingPillar==="all"||ratingPillar===g).map(g=>`<section class="intel-section"><div class="intel-section-head"><span class="intel-section-icon"><i class="fa-solid ${ratingPillarIcon(g)}"></i></span><div><h3>${g}</h3><p>${g==="Solvencia"?"Capital, capacidad de absorción y apalancamiento.":g==="Calidad de activos"?"Mora, refinanciados y deterioro de cartera.":g==="Cobertura"?"Cobertura de provisiones sobre cartera problema.":g==="Liquidez y fondeo"?"Liquidez regulatoria y estabilidad del fondeo.":g==="Rentabilidad"?"Retornos y generación de resultados.":g==="Eficiencia"?"Relación entre gastos e ingresos.":"Exposición cambiaria frente al patrimonio."}</p></div></div><div class="intel-card-grid">${filtered.filter(m=>m.group===g).map(metricCard).join("")}</div></section>`).join("")
-}
-
-function hierarchyOverlay(){
- return `<div class="hierarchy-overlay is-hidden" aria-hidden="true"><div class="hierarchy-section"></div><div class="hierarchy-rubric"></div></div>`
-}
-function bindHierarchySticky(){
- let wrap=document.querySelector(".data-desktop .hierarchy-scroll");if(!wrap)return;
- let overlay=wrap.querySelector(".hierarchy-overlay"),sectionEl=overlay?.querySelector(".hierarchy-section"),rubricEl=overlay?.querySelector(".hierarchy-rubric");
- if(!overlay||detailSort==="impact"){if(overlay)overlay.classList.add("is-hidden");return}
- let sections=[...wrap.querySelectorAll("tr.group-row[data-section]")],rubrics=[...wrap.querySelectorAll("tr[data-rubric]")];
- let update=()=>{
-   let top=wrap.scrollTop,head=36,groupH=29,section=null,rubric=null;
-   for(let r of sections)if(r.offsetTop<=top+head+2)section=r.dataset.section;else break;
-   if(section)for(let r of rubrics)if(r.dataset.section===section&&r.offsetTop<=top+head+groupH+2)rubric=r.dataset.rubric;
-   sectionEl.textContent=section||"";rubricEl.textContent=rubric||"";
-   overlay.classList.toggle("is-hidden",top<8||!section)
- };
- wrap.addEventListener("scroll",update,{passive:true});requestAnimationFrame(update)
-}
-
-function renderDataPanel(){
- let arr=dataRows(),period=sourceAnchorYm()||selectedYm(),viewText=dataView==="snapshot"?"Vista actual":dataView==="annual"?"Evolutivo 5 años · mismo mes":"Evolutivo 12 meses";
- document.getElementById("detailSub").textContent=`${module().code} · ${period} · ${arr.length} filas · ${viewText}`;
- if(!arr.length){
-   let e=`<div class="empty-state"><div><i class="fa-solid fa-database"></i>No hay datos utilizables para este módulo/periodo.</div></div>`;
-   document.getElementById("dataDesktop").innerHTML=e;document.getElementById("dataMobile").innerHTML=e;return
- }
- let grouped=new Map();for(let x of arr){if(!grouped.has(x.group))grouped.set(x.group,[]);grouped.get(x.group).push(x)}
- let max=Math.max(1,...arr.map(x=>Math.abs(x.total||0)));
-
- if(dataView==="snapshot"){
-   let body="",last=null;
-   for(let x of arr){
-     if(detailSort!=="impact"&&x.group!==last){body+=`<tr class="group-row" data-section="${x.group}"><td colspan="8">${x.group}</td></tr>`;last=x.group}
-     let bar=showBars?Math.min(100,Math.abs(x.total||0)/max*100):0,cls=x.indent===0?"major-row rubric-row-v37":"detail-row-v37",attrs=x.indent===0?` data-section="${x.group}" data-rubric="${x.label}"`:"";
-     body+=`<tr class="${cls}"${attrs}><td class="indent-${Math.min(3,x.indent)}">${x.label}${document.getElementById("searchBox").value&&x.indent>0?`<small class="inline-parent">${x.rubric}</small>`:""}</td><td class="num">${dataFmt(x.mn,x.unit)}</td><td class="num">${dataFmt(x.me,x.unit)}</td><td class="num cell-bar" style="--bar:${bar.toFixed(1)}%"><span>${dataFmt(x.total,x.unit)}</span></td><td class="num">${dataFmt(x.comp,x.unit)}</td><td class="num ${x.delta>0?"pos":x.delta<0?"neg":""}">${dataFmt(x.delta,x.unit)}</td><td class="num ${x.varPct>0?"pos":x.varPct<0?"neg":""}">${fmtPct(x.varPct,2)}</td><td>${x.st==="income"?"P&L":x.st==="balance"?"Balance":x.st==="peer"?"Peer":x.st==="rating"?"SBS Ratio":module().code}</td></tr>`
-   }
-   document.getElementById("dataDesktop").innerHTML=`<div class="data-matrix-wrap hierarchy-scroll">${hierarchyOverlay()}<table class="data-matrix snapshot-matrix"><thead><tr><th>Cuenta / indicador</th><th>MN</th><th>ME</th><th>Total</th><th>Comparativo</th><th>Δ</th><th>Δ %</th><th>Fuente</th></tr></thead><tbody>${body}</tbody></table></div>`;
- }else{
-   let periods=dataView==="annual"?annualPeriods():monthlyPeriods(),body="",last=null;
-   for(let x of arr){
-     if(detailSort!=="impact"&&x.group!==last){body+=`<tr class="group-row" data-section="${x.group}"><td colspan="${periods.length+1}">${x.group}</td></tr>`;last=x.group}
-     let cls=x.indent===0?"major-row rubric-row-v37":"detail-row-v37",attrs=x.indent===0?` data-section="${x.group}" data-rubric="${x.label}"`:"";
-     body+=`<tr class="${cls}"${attrs}><td class="indent-${Math.min(3,x.indent)}">${x.label}${document.getElementById("searchBox").value&&x.indent>0?`<small class="inline-parent">${x.rubric}</small>`:""}</td>`;
-     for(let i=0;i<periods.length;i++){let p=periods[i],v=rowValueForPeriod(x,p.key,"total"),prev=i?rowValueForPeriod(x,periods[i-1].key,"total"):null;body+=`<td class="num history-cell"><span>${dataFmt(v,x.unit)}</span>${trendGlyph(v,prev,"context")}</td>`}
-     body+=`</tr>`
-   }
-   document.getElementById("dataDesktop").innerHTML=`<div class="data-matrix-wrap history-wrap hierarchy-scroll">${hierarchyOverlay()}<table class="data-matrix history-matrix"><thead><tr><th>Cuenta / indicador</th>${periods.map(p=>`<th>${p.label}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`
- }
-
- let mobile="";
- for(let[g,rs]of grouped){
-   mobile+=`<div class="data-group-card"><div class="data-group-title"><span>${g}</span><span>${rs.length}</span></div>`;
-   for(let x of rs){
-     if(dataView==="snapshot"){
-       mobile+=`<div class="data-line ${x.indent===0?"mobile-rubric":"mobile-child"} indent-mobile-${Math.min(3,x.indent)}"><div class="data-line-name">${x.label}</div><div class="data-line-grid"><div class="data-mini"><span>MN</span><b>${dataFmt(x.mn,x.unit)}</b></div><div class="data-mini"><span>ME</span><b>${dataFmt(x.me,x.unit)}</b></div><div class="data-mini"><span>Total</span><b>${dataFmt(x.total,x.unit)}</b></div><div class="data-mini"><span>Var.</span><b class="${x.varPct>0?"pos":x.varPct<0?"neg":""}">${fmtPct(x.varPct,2)}</b></div></div></div>`
-     }else{
-       let periods=dataView==="annual"?annualPeriods():monthlyPeriods(),values=periods.map(p=>({label:p.label,value:rowValueForPeriod(x,p.key,"total")})).filter(v=>v.value!=null),latest=values.at(-1)?.value??null,first=values[0]?.value??null,change=pct(latest,first);
-       mobile+=`<div class="data-line ${x.indent===0?"mobile-rubric":"mobile-child"} indent-mobile-${Math.min(3,x.indent)}"><div class="data-line-name">${x.label}</div><div class="mobile-history-summary"><span>${values.length?values[0].label:"—"} → ${values.length?values.at(-1).label:"—"}</span><b class="${change>0?"pos":change<0?"neg":""}">${fmtPct(change,2)}</b></div><div class="mobile-history-scroll">${periods.map((p,i)=>{let v=rowValueForPeriod(x,p.key,"total"),prev=i?rowValueForPeriod(x,periods[i-1].key,"total"):null;return `<div class="history-mini"><span>${p.label}</span><b>${dataFmt(v,x.unit)} ${trendGlyph(v,prev,"context")}</b></div>`}).join("")}</div></div>`
-     }
-   }
-   mobile+="</div>"
- }
- document.getElementById("dataMobile").innerHTML=mobile;
- if(window.matchMedia?.("(min-width:761px)")?.matches!==false)requestAnimationFrame(bindHierarchySticky)
-}
-function renderSources(){
- let cards=[{code:"B-2201",title:"Balance y P&L",periods:fperiods(),source:DB.meta.financial_source,sync:DB.meta.financial_sync},...Object.entries(DB.reports||{}).map(([code,r])=>({code,title:r.short||r.title,periods:r.periods||[],source:r.source,sync:r.sync,frequency:r.frequency}))];
- document.getElementById("sourceGrid").innerHTML=cards.map(x=>{let last=x.periods.at(-1)?.date,err=x.sync?.errors||0,state=last?(err?"warn":"pos"):"neg",txt=last?`${x.periods.length} periodos${err?` · ${err} error(es)`:""}`:"Pendiente de sync";return`<a class="source-card" href="${x.source}" target="_blank"><b>${x.code} · ${x.title}</b><span>${last?`Último: ${ym(last)}`:"Sin data local"}${x.frequency?` · ${x.frequency}`:""}</span><span class="source-state ${state}">${txt} ↗</span></a>`}).join("")
-}
-function applyModuleLayout(){
- let r=currentModule==="ratings";
- document.getElementById("analysisCharts").hidden=r;
- document.getElementById("analysisContent").hidden=r;
- document.getElementById("dataPanel").hidden=r;
- document.getElementById("kpiGrid").classList.toggle("ratings-kpis",r)
-}
-function renderAll(){clearAppError();let selected=selectedYm(),source=module().kind==="report"?ym(reportPeriod()?.date):selected,lag=source&&selected&&source!==selected?` · selección ${selected}`:"";document.getElementById("brandSubtitle").textContent=`BANBIF · ${module().code} · Fecha SBS: ${source||selected||"—"}${lag}`;setStatus(moduleAvailable()?"ok":"warn",moduleAvailable()?(lag?"Data disponible · fuente con rezago":"Data disponible"):"Pendiente sync");safeCall("diseño del módulo",applyModuleLayout);safeCall("KPIs",renderKpis);if(currentModule!=="ratings"){safeCall("selector de tendencia",setupTrendMetric);safeCall("gráficos",renderCharts);safeCall("estadísticas",renderStats);safeCall("Regulatory Radar",renderRadar);safeCall("Peers",renderPeers);safeCall("Datos y cuentas SBS",renderDataPanel)}safeCall("Clasificadoras",renderRatingsLens);safeCall("Fuentes SBS",renderSources)}
-function copySummary(){let p=currentFinancial(),r=risk(p),t=`BanBif · ${ym(p?.date)}\nActivo: S/ ${fmtMM(val(p,"balance","TOTAL ACTIVO"),1)} MM\nCréditos brutos: S/ ${fmtMM(gross(p),1)} MM\nMora: ${num(r.npl,1)}%\nDepósitos público: S/ ${fmtMM(val(p,"balance","OBLIGACIONES CON EL PÚBLICO"),1)} MM`;navigator.clipboard.writeText(t);showToast("Resumen copiado","ok")}
-function downloadCSV(){let a=dataRows(),lines=[["grupo","cuenta","MN","ME","TOTAL","comparativo","delta","var_pct","fuente"]];for(let x of a)lines.push([x.group,x.label,x.mn,x.me,x.total,x.comp,x.delta,x.varPct,x.st]);let csv=lines.map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\n"),ln=document.createElement("a");ln.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));ln.download=`banbif_${module().code}_${document.getElementById("datePicker").value}.csv`;ln.click()}
-function openSync(){let d=document.getElementById("syncDialog");document.getElementById("syncGenerated").textContent=DB.meta.generated_at?new Date(DB.meta.generated_at).toLocaleString("es-PE"):"—";document.getElementById("syncLatest").textContent=ym(fperiods().at(-1)?.date)||"—";document.getElementById("syncState").textContent="Esperando ejecución";d.showModal();if(syncTimer)clearInterval(syncTimer);syncTimer=setInterval(()=>checkRemoteData(false),15000)}
-function closeSync(){if(syncTimer){clearInterval(syncTimer);syncTimer=null}document.getElementById("syncDialog").close()}
-async function checkRemoteData(manual=false){
- let btn=document.getElementById("btnRefresh");btn.classList.add("is-loading");document.getElementById("syncState").textContent="Comprobando…";
- try{
-   let r=await fetch(`./data/hub.json?t=${Date.now()}`,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);
-   let fresh=await r.json(),old=DB.meta.generated_at||"",nw=fresh.meta?.generated_at||"";
-   if(nw&&nw!==old){DB=fresh;document.getElementById("syncGenerated").textContent=new Date(nw).toLocaleString("es-PE");document.getElementById("syncLatest").textContent=ym(fperiods().at(-1)?.date)||"—";document.getElementById("syncState").textContent="Nueva data detectada";setupDateKeep();renderAll();showToast("Datos SBS sincronizados","ok")}
-   else{document.getElementById("syncState").textContent="Sin cambios todavía";if(manual)showToast("Aún no hay cambios en hub.json","info")}
- }catch(e){document.getElementById("syncState").textContent="No se pudo comprobar";if(manual)showToast("No se pudo comprobar la sincronización","err")}
- finally{btn.classList.remove("is-loading")}
-}
-function setupDateKeep(){
- let i=document.getElementById("datePicker"),old=i.value,ps=fperiods();if(!ps.length)return;
- i.min=ym(ps[0].date);i.max=ym(ps.at(-1).date);if(!findFinancial(old))i.value=ym(ps.at(-1).date)
-}
-
-async function init(){
- try{
-   let r=await fetch(`./data/hub.json?t=${Date.now()}`,{cache:"no-store"});
-   DB=r.ok?await r.json():SEED
- }catch(e){console.warn("hub.json no disponible; se usa SEED",e);DB=SEED}
- try{
-   setup();setupDate();renderAll();
-   window.addEventListener("resize",()=>{Object.values(charts).forEach(c=>c?.resize?.());if(currentModule!=="ratings")requestAnimationFrame(bindHierarchySticky)})
- }catch(e){console.error(e);showAppError("No se pudo iniciar el Hub",e?.message||String(e))}
-}
-init();
-</script>
-</body></html>
+      <p id="sync-message" role="status"></p>
+    </dialog>
+    <div id="toast" role="status" class="toast" hidden></div>
+  </body>
+</html>

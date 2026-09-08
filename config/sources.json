@@ -1,0 +1,50 @@
+{
+  "B-2201": {
+    "title": "Balance y P&L",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2201",
+    "frequency": "monthly",
+    "start_year": 2021
+  },
+  "B-2336": {
+    "title": "Créditos a Actividades Empresariales por Sector Económico",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2336",
+    "frequency": "monthly",
+    "start_year": 2021
+  },
+  "B-2401": {
+    "title": "Indicadores Financieros",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2401",
+    "frequency": "monthly",
+    "start_year": 2021
+  },
+  "B-2402": {
+    "title": "Patrimonio Efectivo y Ratio de Capital Global",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2402",
+    "frequency": "monthly",
+    "start_year": 2021
+  },
+  "B-2340": {
+    "title": "Ratios de Liquidez",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2340",
+    "frequency": "monthly",
+    "start_year": 2021
+  },
+  "B-230809": {
+    "title": "Ratio de Cobertura de Liquidez",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-230809",
+    "frequency": "quarterly",
+    "start_year": 2024
+  },
+  "B-234021": {
+    "title": "Ratio de Financiación Neta Estable",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-234021",
+    "frequency": "monthly",
+    "start_year": 2025
+  },
+  "B-2368": {
+    "title": "Posición Global en Moneda Extranjera",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2368",
+    "frequency": "monthly",
+    "start_year": 2021
+  }
+}
