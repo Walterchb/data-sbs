@@ -5,11 +5,8 @@ on:
   schedule:
     - cron: "35 12 * * *"
   push:
-    branches: [ main ]
-    paths:
-      - "scripts/sync_hub.py"
-      - "requirements.txt"
-      - ".github/workflows/sync-hub.yml"
+    branches: [main]
+    paths: ["scripts/**", "config/**", "tests/**", "requirements.txt", ".github/workflows/sync-hub.yml"]
 
 permissions:
   contents: write
@@ -22,102 +19,69 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          ref: main
-          fetch-depth: 0
-
-      - name: Configurar Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-          cache: "pip"
-
-      - name: Instalar dependencias
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python - <<'PY'
-          import xlrd
-          print("xlrd OK:", xlrd.__version__)
-          PY
-
-      - name: Sincronizar SBS
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Instalar lector XLS
+        run: python -m pip install -r requirements.txt
+      - name: Instalar herramientas de prueba
+        run: npm ci --ignore-scripts
+      - name: Descargar, procesar y validar SBS
         run: python scripts/sync_hub.py
-
-      - name: Mostrar salud de fuentes
+      - name: Tests de datos y parsers
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Tests de cálculos del frontend
+        run: npm test
+      - name: Verificar entrega y fechas de frontend
+        run: python scripts/validate_project.py
+      - name: Resumen de calidad
+        if: always()
         run: |
           python - <<'PY'
-          import json
-          d=json.load(open("data/hub.json",encoding="utf-8"))
-          print("\nFUENTE      ESTADO   PERIODOS  ULTIMO       ERRORES")
-          print("-"*55)
-          for code,x in d.get("meta",{}).get("source_health",{}).items():
-              print(f"{code:10} {x.get('status','-'):8} {x.get('loaded',0):8}  {str(x.get('latest') or '-'):10}  {x.get('errors',0):7}")
+          import json, os
+          from pathlib import Path
+          path=Path('data/data_health.json')
+          if not path.exists():
+              raise SystemExit('No se generó DATA HEALTH')
+          h=json.loads(path.read_text())
+          lines=['## DATA HEALTH','','| Fuente | Estado | Último dato | Observaciones |','|---|---|---|---:|']
+          for d in h['datasets']:
+              lines.append(f"| {d['dataset']} | {d['status']} | {d['latest_period']} | {d['rows']} |")
+          lines+=['',f"Errors: {h['errors']} · Warnings: {h['warnings']}"]
+          for d in h['datasets']:
+              for message in d['errors']+d['warnings']:
+                  lines.append(f"- {d['dataset']}: {message}")
+          text='\n'.join(lines)+'\n'
+          print(text)
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(text)
           PY
-
-
-      - name: Subir archivos SBS de diagnóstico
+      - name: Guardar diagnósticos de la ejecución
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sbs-debug-${{ github.run_number }}
-          path: debug-sbs/
-          if-no-files-found: ignore
-          retention-days: 7
-
-
-      - name: Resumen de diagnósticos generados
-        if: always()
-        shell: bash
-        run: |
-          echo "=== DEBUG SBS ==="
-          if [ -d debug-sbs ] && [ "$(find debug-sbs -type f | wc -l)" -gt 0 ]; then
-            find debug-sbs -maxdepth 1 -type f -printf "%f\n" | sort
-          else
-            echo "No se generaron archivos de diagnóstico."
-          fi
-
-      - name: Guardar cambios sin conflictos
-        shell: bash
+          name: sbs-data-health-${{ github.run_number }}
+          path: data/data_health.json
+          retention-days: 14
+      - name: Publicar únicamente outputs validados
         run: |
           set -euo pipefail
-
-          # The generated hub is the only output we want to publish.
-          # Keep it aside, then rebase by RESETTING to the latest remote main
-          # instead of rebasing a generated JSON commit.
-          cp data/hub.json /tmp/hub.generated.json
-
+          git add data/hub.json data/manifest.json data/overview.json data/financial.json data/data_health.json data/reports/
+          if git diff --cached --quiet; then
+            echo "Datos sin cambios: no se crea commit."
+            exit 0
+          fi
           git config user.name "sbs-data-bot"
           git config user.email "actions@users.noreply.github.com"
-
-          for attempt in 1 2 3 4; do
-            echo "Push attempt ${attempt}/4"
-
-            git fetch origin main
-            git reset --hard origin/main
-
-            cp /tmp/hub.generated.json data/hub.json
-            git add data/hub.json
-
-            if git diff --cached --quiet; then
-              echo "hub.json ya está actualizado; no hay nada que publicar."
-              exit 0
-            fi
-
-            git commit -m "SBS: actualizar Regulatory & Financial Hub"
-
-            if git push origin HEAD:main; then
-              echo "hub.json publicado correctamente."
-              exit 0
-            fi
-
-            echo "El remoto cambió durante el push. Reintentando sobre el main más reciente..."
-            sleep $((attempt * 2))
-          done
-
-          echo "::error::No se pudo publicar hub.json después de 4 intentos."
-          exit 1
+          git commit -m "SBS: actualizar datos y controles validados"
+          git fetch origin main
+          if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo "::error::main cambió durante la ejecución. Reejecuta el workflow sobre la versión nueva."
+            exit 1
+          fi
+          git push origin HEAD:main
