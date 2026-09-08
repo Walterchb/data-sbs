@@ -15,7 +15,7 @@ import {
   stats,
   norm,
 } from "./analytics.js";
-import { lineChart, bars } from "./charts.js";
+import { lineChart, bars, clearCharts, mountCharts } from "./charts.js";
 import { accountTable, wrapTable } from "./tables.js";
 
 const $ = (id) => document.getElementById(id);
@@ -88,6 +88,7 @@ function applyTheme(value) {
   $("theme").innerHTML = icon(dark ? "sun" : "moon");
   $("theme").setAttribute("aria-label", label);
   $("theme").title = label;
+  mountCharts();
 }
 try {
   applyTheme(
@@ -156,10 +157,13 @@ function setError(err) {
   console.error(err);
 }
 function toast(message) {
-  clearTimeout(toastTimer);
+  window.clearTimeout(toastTimer);
   $("toast").textContent = message;
   $("toast").hidden = false;
-  toastTimer = setTimeout(() => ($("toast").hidden = true), 3500);
+  toastTimer = window.setTimeout(() => {
+    const target = $("toast");
+    if (target) target.hidden = true;
+  }, 3500);
 }
 function urlState() {
   const p = new URLSearchParams({ view: state.view, date: state.date });
@@ -190,10 +194,221 @@ function kpi(key) {
     value = m?.value,
     unit = unitOf(key),
     date = m?.date || state.date;
-  const mom = metricAt(overview, key, shift(date, -1)),
-    yoy = metricAt(overview, key, shift(date, -12)),
-    ytd = metricAt(overview, key, `${Number(date.slice(0, 4)) - 1}-12`);
-  return `<article class="kpi" data-metric="${key}"><div class="label">${icon(KPI_ICONS[key])}<span>${e(config.label)}</span>${m && date !== state.date ? `<small>${month(date)}</small>` : ""}</div><strong class="value">${unit === "PEN_THOUSAND" ? num(finite(value) ? value / 1000 : null) : format(value, unit)}</strong><div class="kpi-unit">${unit === "PEN_THOUSAND" ? "Millones de soles · S/ MM" : "Cartera atrasada / créditos brutos"}</div><div class="comparisons">${config.kind === "ytd" ? `<span><small>Mismo mes año anterior</small>${deltaCell(value, yoy, unit, key)}</span><span><small>Acumulado enero–${month(date).split(" ")[0]}</small></span>` : `<span><small>MoM</small>${deltaCell(value, mom, unit, key)}</span><span><small>YTD</small>${deltaCell(value, ytd, unit, key)}</span><span><small>YoY</small>${deltaCell(value, yoy, unit, key)}</span>`}</div>${config.row ? `<button class="text-button" data-drill="${config.row}">Explorar ${key === "credits" ? "cartera neta y componentes" : "rubro"} →</button>` : ""}</article>`;
+  const period = config.kind === "ytd" ? "YoY" : "MoM";
+  const prior = metricAt(
+    overview,
+    key,
+    shift(date, config.kind === "ytd" ? -12 : -1),
+  );
+  const labels = {
+    deposits: "Depósitos",
+    net_income: "Utilidad YTD",
+    credits: "Créditos brutos",
+  };
+  return `<button type="button" class="kpi" data-metric="${key}" data-popup="${key}" aria-haspopup="dialog" aria-label="${e(config.label)}: ${format(value, unit)}. Ver detalle"><span class="kpi-top"><span class="label">${icon(KPI_ICONS[key])}${e(labels[key] || config.label)}</span>${icon("circle-info")}</span><strong class="value">${unit === "PEN_THOUSAND" ? num(finite(value) ? value / 1000 : null) : format(value, unit)}</strong><span class="kpi-bottom"><small>${unit === "PEN_THOUSAND" ? "S/ MM" : "Cartera atrasada"}</small><span class="kpi-change">${deltaCell(value, prior, unit, key)}<small>${period}${unit === "PERCENT" ? " · pb" : ""}</small></span></span></button>`;
+}
+function detailContent(key, modal = false) {
+  const titleId = modal ? ' id="detail-title"' : "";
+  if (key === "info")
+    return `<h2${titleId}>Información del corte</h2><div class="detail-lead"><strong>${state.date === manifest.latest_period ? "Último balance disponible" : "Corte histórico"} · ${month(state.date, true)}</strong></div><p>Importes en S/ MM · ratios en % · variaciones de ratios en pb.</p><p>Último balance disponible: ${month(manifest.latest_period, true)}.</p><p>${health.errors} errores · ${health.warnings} advertencias. Las fechas pueden variar por fuente.</p><p id="last-checked">${lastChecked ? `Última comprobación: ${lastChecked}.` : ""}</p><button class="detail-link" data-nav="health">Ver fechas por fuente ${icon("arrow-right")}</button><details class="update-help"><summary>Cómo se actualiza</summary><p>Actualizar comprueba los datos publicados. También se comprueban cada cinco minutos con la página visible y al regresar después de ese intervalo.</p><p>La descarga desde SBS se ejecuta automáticamente en GitHub Actions.</p><a href="https://github.com/Walterchb/data-sbs/actions/workflows/sync-hub.yml" target="_blank" rel="noopener noreferrer">Abrir proceso de descarga ${icon("arrow-up-right-from-square")}</a></details>`;
+  const config = METRICS[key],
+    m = current()?.metrics[key],
+    date = m?.date || state.date,
+    value = m?.value,
+    unit = unitOf(key);
+  const bases =
+    config.kind === "ytd"
+      ? [["YoY · mismo acumulado", shift(date, -12)]]
+      : [
+          ["MoM", shift(date, -1)],
+          ["YTD", `${Number(date.slice(0, 4)) - 1}-12`],
+          ["YoY", shift(date, -12)],
+        ];
+  const rows = bases
+    .map(([name, base]) => {
+      const previous = metricAt(overview, key, base);
+      return `<div class="detail-comparison"><div><b>${name}</b><small>vs. ${month(base)}</small></div><div>${deltaCell(value, previous, unit, key)}<small>${unit === "PERCENT" ? "Puntos básicos" : finite(value) && finite(previous) ? format(value - previous, unit, true) : "Sin base comparable"}</small></div><div><small>Base</small><b>${format(previous, unit)}</b></div></div>`;
+    })
+    .join("");
+  return `<h2${titleId}>${e(config.label)}</h2><div class="detail-lead"><strong>${format(value, unit)}</strong><span>${month(date, true)}</span></div>${rows}<p>${config.kind === "ytd" ? "Acumulado desde enero. La comparación corresponde al mismo mes del año anterior." : key === "npl" ? "Cartera vencida y en cobranza judicial / créditos brutos. Variaciones en puntos básicos." : "Las comparaciones usan periodos exactos; una base ausente se muestra con guion."}</p><p>Fuente: ${e(m?.source || "Sin dato")}${m?.warning ? ` · ${e(m.warning)}` : ""}</p>${config.row ? `<button class="detail-link" data-drill="${config.row}">Explorar rubro ${icon("arrow-right")}</button>` : `<button class="detail-link" data-key="${key}">Explorar indicador ${icon("arrow-right")}</button>`}`;
+}
+let hoverTimer, popupTrigger;
+let refreshInFlight = false,
+  lastRefreshAt = Date.now(),
+  lastChecked = "";
+function hideHover() {
+  clearTimeout(hoverTimer);
+  if ($("hover-detail")) $("hover-detail").hidden = true;
+}
+function closeDetails() {
+  hideHover();
+  if ($("detail-dialog").open) $("detail-dialog").close();
+}
+function bindDetails() {
+  const popover = $("hover-detail"),
+    dialog = $("detail-dialog");
+  document.addEventListener("pointerover", (event) => {
+    const target = event.target.closest("[data-popup]");
+    if (
+      !target ||
+      target.contains(event.relatedTarget) ||
+      !manifest ||
+      event.pointerType === "touch" ||
+      !window.matchMedia?.("(hover: hover) and (min-width: 761px)").matches ||
+      dialog.open
+    )
+      return;
+    clearTimeout(hoverTimer);
+    popupTrigger = target;
+    popover.innerHTML = detailContent(target.dataset.popup);
+    popover.hidden = false;
+    const rect = target.getBoundingClientRect(),
+      box = popover.getBoundingClientRect();
+    popover.style.left =
+      Math.max(12, Math.min(rect.left, window.innerWidth - box.width - 12)) +
+      "px";
+    popover.style.top =
+      Math.max(
+        12,
+        Math.min(rect.bottom + 8, window.innerHeight - box.height - 12),
+      ) + "px";
+  });
+  document.addEventListener("pointerout", (event) => {
+    if (
+      event.target.closest("[data-popup]") &&
+      !event.target.closest("[data-popup]").contains(event.relatedTarget)
+    )
+      hoverTimer = setTimeout(hideHover, 180);
+  });
+  popover.addEventListener("pointerenter", () => clearTimeout(hoverTimer));
+  popover.addEventListener("pointerleave", () => {
+    hoverTimer = setTimeout(hideHover, 180);
+  });
+  document.addEventListener("click", (event) => {
+    const target = event.target.closest("[data-popup]");
+    if (!target || !manifest) return;
+    hideHover();
+    popupTrigger = target;
+    $("detail-body").innerHTML = detailContent(target.dataset.popup, true);
+    dialog.showModal();
+  });
+  $("detail-close").addEventListener("click", closeDetails);
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) {
+      const r = dialog.getBoundingClientRect();
+      if (
+        event.clientX < r.left ||
+        event.clientX > r.right ||
+        event.clientY < r.top ||
+        event.clientY > r.bottom
+      )
+        closeDetails();
+    }
+  });
+  dialog.addEventListener("close", () => {
+    if (popupTrigger?.isConnected) popupTrigger.focus();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") hideHover();
+  });
+  window.addEventListener("scroll", hideHover, { passive: true });
+  window.addEventListener("resize", hideHover);
+}
+function updateStatus() {
+  $("health-status").dataset.status = health.errors
+    ? "ERROR"
+    : health.warnings
+      ? "WARNING"
+      : "OK";
+  $("health-label").textContent = health.errors
+    ? `${health.errors} errores`
+    : lastChecked
+      ? `Comprobado ${lastChecked}`
+      : health.warnings
+        ? "Fuentes con avisos"
+        : "Fuentes verificadas";
+  $("health-status").title =
+    `${health.errors} errores · ${health.warnings} advertencias. Ver fechas por fuente.`;
+}
+async function runRefresh(manual = false) {
+  if (refreshInFlight) {
+    if (manual) toast("Ya hay una actualización en curso.");
+    return;
+  }
+  refreshInFlight = true;
+  const button = $("refresh");
+  button.disabled = true;
+  button.classList.add("is-loading");
+  button.setAttribute("aria-busy", "true");
+  if (manual) toast("Actualizando datos…");
+  try {
+    const followLatest = state.date === manifest.latest_period;
+    const changed = await Data.refresh();
+    if (changed) {
+      const fresh = await Data.initialize();
+      ({ overview, health, manifest } = fresh);
+      if (followLatest || !overview.periods.some((p) => p.date === state.date))
+        state.date = manifest.latest_period;
+      setPeriodBounds();
+      await render();
+      $("latest").textContent =
+        `Último balance: ${month(manifest.latest_period)}.`;
+    }
+    lastChecked = new Intl.DateTimeFormat("es-PE", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(new Date());
+    updateStatus();
+    if (manual || changed)
+      toast(
+        changed
+          ? `Nueva publicación cargada · ${lastChecked}`
+          : `Datos comprobados · sin novedades · ${lastChecked}`,
+      );
+  } catch (err) {
+    $("health-status").dataset.status = "ERROR";
+    $("health-label").textContent = "No se pudo actualizar";
+    if (manual)
+      toast("No se pudo actualizar. Se conservan los datos visibles.");
+  } finally {
+    lastRefreshAt = Date.now();
+    refreshInFlight = false;
+    button.disabled = false;
+    button.classList.remove("is-loading");
+    button.removeAttribute("aria-busy");
+  }
+}
+function calendarDate(period) {
+  const [year, month] = period.split("-").map(Number);
+  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
+}
+function setPeriodBounds() {
+  $("period").min = calendarDate(overview.periods[0].date);
+  $("period").max = calendarDate(manifest.latest_period);
+  $("period").disabled = false;
+  $("period").value = calendarDate(state.date);
+}
+function startAutoRefresh() {
+  const interval = 5 * 60 * 1000;
+  const check = () => {
+    if (
+      document.visibilityState === "visible" &&
+      Date.now() - lastRefreshAt >= interval
+    )
+      runRefresh();
+  };
+  let timer = window.setInterval(check, interval);
+  document.addEventListener("visibilitychange", check);
+  window.addEventListener("focus", check);
+  window.addEventListener("pagehide", () => window.clearInterval(timer));
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      check();
+      timer = window.setInterval(check, interval);
+    }
+  });
 }
 function ratioTable() {
   return wrapTable(
@@ -774,12 +989,12 @@ async function render() {
       ([v, label]) =>
         `<button class="nav-button" data-nav="${v}" ${v === state.view ? 'aria-current="page"' : ""}>${icon(NAV_ICONS[v])}${label}</button>`,
     ).join("");
-    $("period").value = state.date;
+    $("period").value = calendarDate(state.date);
     const i = overview.periods.findIndex((p) => p.date === state.date);
     $("prev").disabled = i <= 0;
     $("next").disabled = i >= overview.periods.length - 1;
-    $("coverage").innerHTML =
-      `<strong>${state.date !== manifest.latest_period ? "Corte histórico" : "Último balance disponible"} · ${month(state.date, true)}</strong>Importes en S/ MM · ratios en % · variaciones de ratios en pb.<br><button class="text-button" data-nav="health">Ver fechas por fuente</button>`;
+    closeDetails();
+    clearCharts();
     $("content").innerHTML = {
       overview: overviewView,
       movements: movementsView,
@@ -788,6 +1003,7 @@ async function render() {
       peers: peersView,
       health: healthView,
     }[state.view]();
+    mountCharts();
     urlState();
   } catch (err) {
     if (id === renderId) {
@@ -838,11 +1054,13 @@ function bind() {
     const b = event.target.closest("button");
     if (!b) return;
     if (b.dataset.nav) {
+      closeDetails();
       state.view = b.dataset.nav;
       render();
       return;
     }
     if (b.dataset.drill) {
+      closeDetails();
       drill(b.dataset.drill);
       return;
     }
@@ -878,6 +1096,7 @@ function bind() {
       return;
     }
     if (b.dataset.key) {
+      closeDetails();
       const m = current().metrics[b.dataset.key];
       if (m?.id) {
         state.report = m.source;
@@ -932,7 +1151,15 @@ function bind() {
         : state.peerBanks.filter((b) => b !== el.dataset.peer);
       render();
     } else if (fields[el.id]) {
-      state[fields[el.id]] = el.value;
+      if (el.id === "period") {
+        const chosen = el.value.slice(0, 7);
+        if (!overview.periods.some((p) => p.date === chosen)) {
+          el.value = calendarDate(state.date);
+          toast("Ese periodo no tiene información SBS disponible.");
+          return;
+        }
+        state.date = chosen;
+      } else state[fields[el.id]] = el.value;
       if (el.id === "statement") {
         state.account = el.value === "income" ? "income:79" : "balance:59";
         state.query = "";
@@ -959,30 +1186,10 @@ function bind() {
   });
   $("theme").addEventListener("click", switchTheme);
   $("export").addEventListener("click", exportCsv);
-  $("refresh").addEventListener("click", () => {
-    $("sync-generated").textContent =
-      `Última generación: ${manifest?.generated_at || "sin dato"}.`;
-    $("sync-message").textContent = "";
-    $("sync-dialog").showModal();
-  });
-  $("check-sync").addEventListener("click", async () => {
-    const button = $("check-sync");
-    button.disabled = true;
-    $("sync-message").textContent = "Comprobando…";
-    try {
-      const changed = await Data.refresh();
-      if (changed) {
-        await init(false);
-        $("sync-message").textContent = "Nueva versión cargada.";
-      } else
-        $("sync-message").textContent =
-          "No hay una nueva versión publicada todavía.";
-    } catch (err) {
-      $("sync-message").textContent = err.message;
-    } finally {
-      button.disabled = false;
-    }
-  });
+  $("refresh").addEventListener("click", () => runRefresh(true));
+  bindDetails();
+  startAutoRefresh();
+  window.addEventListener("load", mountCharts, { once: true });
   window.addEventListener("hashchange", () => {
     recoverUrl();
     render();
@@ -996,22 +1203,10 @@ async function init(first = true) {
       ? state.date
       : manifest.latest_period;
     if (first) recoverUrl();
-    $("period").innerHTML = overview.periods
-      .map((p) => `<option value="${p.date}">${month(p.date)}</option>`)
-      .reverse()
-      .join("");
-    $("period").disabled = false;
+    setPeriodBounds();
     $("latest").textContent =
       `Último balance: ${month(manifest.latest_period)}.`;
-    const status = health.errors ? "ERROR" : health.warnings ? "WARNING" : "OK";
-    $("health-status").dataset.status = status;
-    $("health-label").textContent = health.errors
-      ? `${health.errors} errores`
-      : health.warnings
-        ? "Fuentes con avisos"
-        : "Fuentes verificadas";
-    $("health-status").title =
-      `${health.errors} errores · ${health.warnings} advertencias. Ver fechas por fuente.`;
+    updateStatus();
     if (first) bind();
     await render();
   } catch (err) {

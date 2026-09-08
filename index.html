@@ -22,6 +22,10 @@
       referrerpolicy="no-referrer"
     />
     <link rel="stylesheet" href="./assets/app.css" />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"
+    ></script>
     <script type="module" src="./assets/js/app.js"></script>
   </head>
   <body>
@@ -44,6 +48,16 @@
           >
             <span class="dot" aria-hidden="true"></span
             ><span id="health-label">Consultando</span>
+          </button>
+          <button
+            id="info"
+            class="icon-only"
+            type="button"
+            data-popup="info"
+            aria-label="Información del corte y las fuentes"
+            aria-haspopup="dialog"
+          >
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
           </button>
           <button
             id="refresh"
@@ -77,43 +91,49 @@
     </header>
     <div class="workspace">
       <main id="main">
-        <div class="commandbar">
-          <div>
-            <span class="eyebrow">FECHA SBS</span>
-            <div class="period-controls">
-              <button
-                id="prev"
-                aria-label="Periodo anterior"
-                title="Periodo anterior"
-              >
-                <i
-                  class="fa-solid fa-caret-left"
-                  aria-hidden="true"
-                ></i></button
-              ><label class="sr-only" for="period">Periodo SBS</label
-              ><select id="period" disabled>
-                <option>Cargando…</option></select
-              ><button
-                id="next"
-                aria-label="Periodo siguiente"
-                title="Periodo siguiente"
-              >
-                <i
-                  class="fa-solid fa-caret-right"
-                  aria-hidden="true"
-                ></i></button
-              ><button id="last">Último</button>
+        <div class="analysis-toolbar">
+          <div class="commandbar">
+            <div>
+              <span class="eyebrow">FECHA SBS</span>
+              <div class="period-controls">
+                <button
+                  id="prev"
+                  aria-label="Periodo anterior"
+                  title="Periodo anterior"
+                >
+                  <i
+                    class="fa-solid fa-caret-left"
+                    aria-hidden="true"
+                  ></i></button
+                ><label class="sr-only" for="period">Periodo SBS</label
+                ><span class="date-picker-wrap"
+                  ><input
+                    id="period"
+                    type="date"
+                    disabled
+                    aria-label="Seleccionar fecha SBS" /><i
+                    class="fa-regular fa-calendar-days date-fa"
+                    aria-hidden="true"
+                  ></i></span
+                ><button
+                  id="next"
+                  aria-label="Periodo siguiente"
+                  title="Periodo siguiente"
+                >
+                  <i
+                    class="fa-solid fa-caret-right"
+                    aria-hidden="true"
+                  ></i></button
+                ><button id="last">Último</button>
+              </div>
             </div>
           </div>
-          <div class="coverage-note" id="coverage">
-            Cargando datos verificados…
-          </div>
+          <nav
+            id="navigation"
+            class="section-nav"
+            aria-label="Secciones del análisis"
+          ></nav>
         </div>
-        <nav
-          id="navigation"
-          class="section-nav"
-          aria-label="Secciones del análisis"
-        ></nav>
         <div id="error" class="notice error" role="alert" hidden></div>
         <div id="content" tabindex="-1" aria-busy="true">
           <div class="empty">Cargando información financiera…</div>
@@ -138,27 +158,27 @@
         </div>
       </div>
     </footer>
-    <dialog id="sync-dialog" aria-labelledby="sync-title">
-      <form method="dialog">
-        <button class="dialog-close" aria-label="Cerrar">×</button>
-      </form>
-      <h2 id="sync-title">Actualizar información SBS</h2>
-      <p>
-        La descarga y validación se ejecutan en GitHub Actions. Abre el flujo y
-        selecciona <b>Run workflow</b>; después comprueba si se publicó una
-        nueva versión.
-      </p>
-      <p id="sync-generated" class="muted"></p>
-      <div class="actions">
-        <a
-          class="button primary"
-          href="https://github.com/Walterchb/data-sbs/actions/workflows/sync-hub.yml"
-          target="_blank"
-          rel="noopener noreferrer"
-          >Abrir GitHub Actions ↗</a
-        ><button id="check-sync">Comprobar publicación</button>
-      </div>
-      <p id="sync-message" role="status"></p>
+    <div
+      id="hover-detail"
+      class="detail-popover"
+      role="dialog"
+      aria-label="Detalle"
+      hidden
+    ></div>
+    <dialog
+      id="detail-dialog"
+      class="detail-dialog"
+      aria-labelledby="detail-title"
+    >
+      <button
+        id="detail-close"
+        class="detail-close"
+        type="button"
+        aria-label="Cerrar detalle"
+      >
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+      <div id="detail-body"></div>
     </dialog>
     <div id="toast" role="status" class="toast" hidden></div>
   </body>

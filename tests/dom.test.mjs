@@ -12,6 +12,14 @@ const dom = new JSDOM(html, {
 for (const key of ["window", "document", "location", "history", "localStorage"])
   globalThis[key] = dom.window[key];
 window.scrollTo = () => {};
+window.HTMLDialogElement.prototype.showModal = function () {
+  this.open = true;
+};
+window.HTMLDialogElement.prototype.close = function () {
+  this.open = false;
+  this.dispatchEvent(new window.Event("close"));
+};
+window.matchMedia = () => ({ matches: true });
 const requests = [];
 let failPath = "";
 globalThis.fetch = async (path) => {
@@ -49,14 +57,21 @@ async function click(selector) {
 async function change(id, value) {
   const el = document.getElementById(id);
   assert.ok(el, "Missing control " + id);
-  el.value = value;
+  el.value =
+    id === "period" && value.length === 7
+      ? new Date(
+          Date.UTC(Number(value.slice(0, 4)), Number(value.slice(5, 7)), 0),
+        )
+          .toISOString()
+          .slice(0, 10)
+      : value;
   el.dispatchEvent(new window.Event("change", { bubbles: true }));
   await ready();
 }
 await ready();
 
 test("all views and controls render with real data and no JS errors", async () => {
-  assert.ok(document.body.textContent.includes("julio 2026"));
+  assert.equal(document.getElementById("period").value, "2026-07-31");
   assert.ok(document.body.textContent.includes("23,316.79"));
   assert.ok(document.body.textContent.includes("3.09%"));
   assert.ok(
@@ -140,6 +155,60 @@ test("search by parent, empty results, and historical earliest date", async () =
   assert.ok(document.body.textContent.includes("Falta el mes anterior"));
   assert.ok(document.getElementById("prev").disabled);
   assert.equal(errors.length, 0, errors.join("\n"));
+});
+
+test("compact cards reveal details, date bounds hold, and refresh is direct", async () => {
+  await click('[data-nav="overview"]');
+  await click("#last");
+  const card = document.querySelector('[data-popup="assets"]');
+  assert.ok(
+    !card.textContent.includes("YTD"),
+    "Detailed comparisons belong in the popup",
+  );
+  card.dispatchEvent(new window.MouseEvent("pointerover", { bubbles: true }));
+  assert.equal(document.getElementById("hover-detail").hidden, false);
+  assert.ok(
+    document.getElementById("hover-detail").textContent.includes("YTD"),
+  );
+  await click('[data-popup="assets"]');
+  assert.equal(document.getElementById("detail-dialog").open, true);
+  assert.ok(
+    document
+      .getElementById("detail-body")
+      .textContent.includes("S/ 23,316.79 MM"),
+  );
+  await click("#detail-close");
+  await click("#info");
+  assert.ok(
+    document.getElementById("detail-body").textContent.includes("julio 2026"),
+  );
+  assert.ok(
+    document
+      .getElementById("detail-body")
+      .textContent.includes("variaciones de ratios en pb"),
+  );
+  await click('#detail-body [data-nav="health"]');
+  assert.equal(document.getElementById("detail-dialog").open, false);
+  await change("period", "2030-01");
+  assert.equal(document.getElementById("period").value, "2026-07-31");
+  await change("period", "2021-01");
+  assert.equal(document.getElementById("prev").disabled, true);
+  const before = requests.filter((p) => p === "./data/manifest.json").length;
+  await click("#refresh");
+  for (let i = 0; i < 100 && document.getElementById("refresh").disabled; i++)
+    await new Promise((r) => setTimeout(r, 10));
+  assert.equal(document.getElementById("refresh").disabled, false);
+  assert.equal(document.getElementById("detail-dialog").open, false);
+  assert.equal(
+    document.getElementById("period").value,
+    "2021-01-31",
+    "Refresh preserves historical selection",
+  );
+  assert.equal(
+    requests.filter((p) => p === "./data/manifest.json").length,
+    before + 1,
+  );
+  assert.match(document.getElementById("toast").textContent, /sin novedades/);
 });
 
 test("failed source request surfaces an explicit error without sample data", async () => {

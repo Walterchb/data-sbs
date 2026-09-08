@@ -1,12 +1,253 @@
 import { escape, format, month, num, units } from "./format.js";
 import { finite } from "./analytics.js";
 
-// Native SVG charts have no CDN/runtime dependency. Every point has a title;
-// the corresponding history table provides the complete accessible data.
+// ECharts matches TC Treasury; SVG remains available if the CDN is unavailable.
+const specifications = new Map();
+const mounted = new Map();
+let chartId = 0;
+export function clearCharts() {
+  for (const { chart, observer } of mounted.values()) {
+    observer?.disconnect();
+    chart.dispose();
+  }
+  mounted.clear();
+  specifications.clear();
+}
+const css = (name) =>
+  window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+export function chartOptions(points, unit, label, palette, mobile = false) {
+  const valid = points.filter((p) => finite(p.value));
+  const values = valid.map((p) => p.value),
+    last = points.at(-1)?.value;
+  const avg = values.reduce((a, b) => a + b, 0) / values.length,
+    max = Math.max(...values),
+    min = Math.min(...values);
+  const reference = (name, value, color) => ({
+    name,
+    yAxis: value,
+    lineStyle: { color, type: "dashed", width: 1.25, opacity: 0.78 },
+    label: { show: false },
+  });
+  const refs = [
+    reference("Prom", avg, palette.avg),
+    reference("Máx", max, palette.green),
+    reference("Mín", min, palette.amber),
+  ];
+  if (finite(last)) refs.unshift(reference("Último", last, palette.ink));
+  return {
+    animationDuration: 540,
+    textStyle: { fontFamily: 'Manrope, "Segoe UI", Arial, sans-serif' },
+    grid: {
+      left: mobile ? 10 : 14,
+      right: mobile ? 10 : 18,
+      top: 48,
+      bottom: 66,
+      containLabel: true,
+    },
+    tooltip: {
+      trigger: "axis",
+      confine: true,
+      axisPointer: {
+        type: "line",
+        lineStyle: { color: palette.muted, width: 1, opacity: 0.55 },
+      },
+      backgroundColor: palette.tooltip,
+      borderColor: palette.border,
+      textStyle: { color: "#fff", fontWeight: 500 },
+      formatter: (params) => {
+        const p = Array.isArray(params) ? params[0] : params,
+          point = points[p.dataIndex];
+        return `<strong>${escape(month(point.date, true))}</strong><br>${escape(label)}: <b>${format(point.value, unit)}</b>${point.effective && point.effective !== point.date ? `<br>Declarado: ${escape(month(point.effective))}` : ""}<br>Prom: ${format(avg, unit)}<br>Máx: ${format(max, unit)}<br>Mín: ${format(min, unit)}`;
+      },
+    },
+    toolbox: {
+      right: 12,
+      top: 7,
+      itemSize: 14,
+      itemGap: 9,
+      iconStyle: { borderColor: palette.muted },
+      feature: {
+        dataZoom: {
+          yAxisIndex: "none",
+          title: { zoom: "Zoom", back: "Atrás" },
+        },
+        restore: { title: "Restaurar" },
+        saveAsImage: {
+          title: "Descargar",
+          pixelRatio: 3,
+          backgroundColor: palette.panel,
+          name: "SBS_" + label.replace(/[^a-z0-9]/gi, "_"),
+        },
+      },
+    },
+    dataZoom: [
+      { type: "inside", throttle: 60, zoomOnMouseWheel: "ctrl" },
+      {
+        type: "slider",
+        height: 22,
+        bottom: 18,
+        borderColor: palette.line,
+        fillerColor: "rgba(0,163,181,.20)",
+        handleStyle: { color: palette.navy },
+        textStyle: { color: palette.muted, fontWeight: 500, fontSize: 10 },
+        backgroundColor: palette.soft,
+      },
+    ],
+    xAxis: {
+      type: "category",
+      data: points.map((p) => p.date),
+      boundaryGap: false,
+      axisLabel: {
+        color: palette.muted,
+        fontWeight: 500,
+        fontSize: 10,
+        margin: 13,
+        hideOverlap: true,
+        formatter: (value) => month(value),
+      },
+      axisLine: { lineStyle: { color: palette.line } },
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: "value",
+      position: mobile ? "left" : "right",
+      scale: true,
+      axisLabel: {
+        color: palette.muted,
+        formatter: (v) => num(unit.endsWith("THOUSAND") ? v / 1000 : v),
+        fontSize: 10,
+        margin: mobile ? 6 : 8,
+        hideOverlap: true,
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: palette.grid } },
+    },
+    series: [
+      {
+        name: label,
+        type: "line",
+        data: points.map((p) => (finite(p.value) ? p.value : null)),
+        connectNulls: false,
+        smooth: true,
+        showSymbol: false,
+        symbol: "circle",
+        symbolSize: 6,
+        lineStyle: {
+          width: 1.25,
+          color: "#1c7ff2",
+          shadowBlur: 2,
+          shadowColor: "rgba(28,127,242,.12)",
+        },
+        areaStyle: {
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: "rgba(0,163,181,.43)" },
+              { offset: 0.56, color: "rgba(0,163,181,.205)" },
+              { offset: 1, color: "rgba(0,163,181,.045)" },
+            ],
+          },
+        },
+        emphasis: {
+          focus: "series",
+          lineStyle: { width: 1.65 },
+          itemStyle: {
+            color: palette.panel,
+            borderColor: "#1c7ff2",
+            borderWidth: 2,
+          },
+        },
+        markLine: { silent: true, symbol: "none", precision: 2, data: refs },
+        markPoint: {
+          symbol: "circle",
+          symbolSize: 8,
+          label: { show: false },
+          itemStyle: { color: palette.panel, borderWidth: 2 },
+          data: [
+            {
+              type: "max",
+              name: "Máx",
+              itemStyle: { borderColor: palette.green },
+            },
+            {
+              type: "min",
+              name: "Mín",
+              itemStyle: { borderColor: palette.amber },
+            },
+          ],
+        },
+      },
+    ],
+  };
+}
+export function mountCharts() {
+  if (!window.echarts) return;
+  const palette = {
+    navy: css("--navy3"),
+    ink: css("--ink"),
+    muted: css("--muted"),
+    line: css("--line"),
+    grid: css("--grid"),
+    panel: css("--panel"),
+    soft: css("--soft"),
+    green: css("--green"),
+    amber: css("--amber"),
+    avg: css("--purple"),
+    tooltip: css("--tooltip-bg"),
+    border: css("--tooltip-border"),
+  };
+  for (const [id, spec] of specifications) {
+    const node = document.getElementById(id);
+    if (!node) continue;
+    let entry = mounted.get(id);
+    if (!entry) {
+      node.hidden = false;
+      const chart = window.echarts.init(node, null, { renderer: "canvas" });
+      const observer = window.ResizeObserver
+        ? new window.ResizeObserver(() => {
+            chart.resize();
+            chart.setOption({
+              yAxis: { position: window.innerWidth <= 760 ? "left" : "right" },
+            });
+          })
+        : null;
+      observer?.observe(node);
+      entry = { chart, observer };
+      mounted.set(id, entry);
+    }
+    const zoom = entry.chart.getOption()?.dataZoom;
+    entry.chart.setOption(
+      chartOptions(
+        spec.points,
+        spec.unit,
+        spec.label,
+        palette,
+        window.innerWidth <= 760,
+      ),
+      true,
+    );
+    if (zoom?.length)
+      entry.chart.setOption({
+        dataZoom: zoom.map((z) => ({ start: z.start, end: z.end })),
+      });
+    node.previousElementSibling.hidden = true;
+  }
+}
+
 export function lineChart(points, unit, label) {
   const valid = points.filter((p) => finite(p.value));
   if (!valid.length)
     return '<div class="empty">No hay observaciones para este rango.</div>';
+  const id = `sbs-chart-${++chartId}`;
+  specifications.set(id, { points, unit, label });
   const W = 920,
     H = 270,
     L = 90,
@@ -54,7 +295,29 @@ export function lineChart(points, unit, label) {
         : "",
     )
     .join("");
-  return `<div class="chart-scroll"><svg class="line-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escape(label)}"><title>${escape(label)} · ${escape(units[unit] || unit)}</title>${grid}${marks}<path class="chart-line" d="${path.trim()}"/>${circles}</svg></div>`;
+  const segments = path.trim().split(/(?=M)/).filter(Boolean);
+  const area = segments
+    .map((segment) => {
+      const coords = [...segment.matchAll(/[ML]([\d.]+),([\d.]+)/g)];
+      return coords.length
+        ? `<path d="${segment}L${coords.at(-1)[1]},${H - B}L${coords[0][1]},${H - B}Z" fill="url(#${id}-fill)"/>`
+        : "";
+    })
+    .join("");
+  const values = valid.map((p) => p.value),
+    avg = values.reduce((a, b) => a + b, 0) / values.length;
+  const legend = [
+    ["Último", points.at(-1)?.value, "ink"],
+    ["Prom", avg, "purple"],
+    ["Máx", Math.max(...values), "green"],
+    ["Mín", Math.min(...values), "amber"],
+  ]
+    .map(
+      ([name, value, color]) =>
+        `<span class="legend-pill"><span class="legend-dot" style="background:var(--${color})"></span>${name}<strong>${format(value, unit)}</strong></span>`,
+    )
+    .join("");
+  return `<div class="treasury-chart"><div class="chart-legend">${legend}</div><div class="chart-fallback"><svg class="line-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escape(label)}"><title>${escape(label)} · ${escape(units[unit] || unit)}</title><defs><linearGradient id="${id}-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00a3b5" stop-opacity=".43"/><stop offset=".56" stop-color="#00a3b5" stop-opacity=".205"/><stop offset="1" stop-color="#00a3b5" stop-opacity=".045"/></linearGradient></defs>${grid}${marks}${area}<path class="chart-line" d="${path.trim()}"/>${circles}</svg></div><div id="${id}" class="chart-renderer" role="img" aria-label="${escape(label)} · gráfico interactivo" hidden></div></div>`;
 }
 export function spark(values) {
   const valid = values.filter(finite);
