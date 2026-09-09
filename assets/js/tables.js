@@ -75,13 +75,14 @@ export function accountTable(data, state) {
             : "leaf",
       !hasChildren && r.depth === 0 ? "total" : "",
       r.id === state.account ? "selected" : "",
+      ["balance:132", "income:79"].includes(r.id) ? "net-result" : "",
     ]
       .filter(Boolean)
       .join(" ");
     const expanded = Boolean(state.query.trim()) || !state.collapsed.has(r.id);
     const title =
       r.path.join(" › ") + (state.showReferences ? ` · ${r.reference}` : "");
-    const cell = `<td><div class="account-label" style="--depth:${r.depth}">${hasChildren ? `<button class="tree-toggle" data-collapse="${r.id}" aria-expanded="${expanded}" aria-label="${escape((expanded ? "Plegar " : "Expandir ") + r.label)}" ${state.query.trim() ? 'disabled title="La búsqueda muestra las coincidencias con sus padres"' : ""}><i class="fa-solid fa-chevron-${expanded ? "down" : "right"}" aria-hidden="true"></i></button>` : '<span class="tree-spacer" aria-hidden="true">↳</span>'}<div class="row-title"><button class="text-button" data-account="${r.id}" title="${escape(title)}">${escape(r.label)}</button>${state.showReferences ? `<small class="row-reference">${escape(r.reference)}</small>` : ""}</div></div></td>`;
+    const cell = `<td><div class="account-label" style="--depth:${r.depth}">${hasChildren ? `<button class="tree-toggle" data-collapse="${r.id}" aria-expanded="${expanded}" aria-label="${escape((expanded ? "Plegar " : "Expandir ") + r.label)}" ${state.query.trim() ? 'disabled title="La búsqueda muestra las coincidencias con sus padres"' : ""}><i class="fa-solid fa-chevron-${expanded ? "down" : "right"}" aria-hidden="true"></i></button>` : '<span class="tree-spacer" aria-hidden="true"><i class="fa-solid fa-circle"></i></span>'}<div class="row-title"><button class="text-button" data-account="${r.id}" title="${escape(title)}"><span class="cell-text">${escape(r.label)}</span></button>${state.showReferences ? `<small class="row-reference"><span class="cell-text">${escape(r.reference)}</span></small>` : ""}</div></div></td>`;
     const vals = history
       ? dates
           .map(
@@ -90,8 +91,12 @@ export function accountTable(data, state) {
           )
           .join("")
       : `<td class="number">${num(finite(v[0]) ? v[0] / 1000 : null)}</td><td class="number">${num(finite(v[1]) ? v[1] / 1000 : null)}</td><td class="number"><b>${num(finite(v[2]) ? v[2] / 1000 : null)}</b></td><td class="number">${num(delta === null ? null : delta / 1000)}</td><td class="number">${format(growth(v[2], annualIncome ? lastyear : prev), "PERCENT", true)}</td><td class="number">${annualIncome ? "—" : format(growth(v[2], lastyear), "PERCENT", true)}</td><td class="number">${format(ratio(v[2], parent), "PERCENT")}</td><td>${spark(months(state.date, 12).map((d) => data.periods.find((p) => p.date === d)?.values[r.id]?.[2] ?? null))}</td>`;
+    const cells = vals.replace(
+      /<td class="number">(.*?)<\/td>/g,
+      '<td class="number"><span class="cell-text">$1</span></td>',
+    );
     return {
-      html: `<tr class="${rowClass}" data-depth="${r.depth}" data-row="${r.id}" data-parent="${r.parent || ""}">${cell}${vals}</tr>`,
+      html: `<tr class="${rowClass}" data-depth="${r.depth}" data-row="${r.id}" data-parent="${r.parent || ""}">${cell}${cells}</tr>`,
       export: [
         state.date,
         r.reference,

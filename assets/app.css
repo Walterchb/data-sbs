@@ -913,16 +913,41 @@ td small {
   font-weight: 500;
   color: var(--muted);
 }
-.account-table .selected td {
-  box-shadow: inset 0 -1px var(--cyan);
-}
 .account-table .selected td:first-child {
-  box-shadow:
-    inset 3px 0 var(--cyan),
-    inset 0 -1px var(--cyan);
+  box-shadow: inset 3px 0 var(--cyan);
+}
+.account-table .selected .cell-text {
+  background: #e9bc0e;
+  color: #102033;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 1px 2px;
+}
+.account-table .cell-text {
+  display: inline;
 }
 .account-table tbody tr:not(.root):hover td {
   background: var(--selected);
+}
+.account-table .net-result td,
+.account-table .root.net-result td {
+  background: #e6f1f5;
+  color: var(--ink);
+  border-top: 3px double #08283f;
+  font-weight: 750;
+}
+.account-table .net-result .row-title > .text-button {
+  color: var(--ink);
+  font-weight: 750;
+}
+:root[data-theme="dark"] .account-table .net-result td {
+  background: #102e40;
+  border-top-color: #75a8c3;
+}
+.account-table .tree-spacer .fa-circle {
+  font-size: 0.3rem;
+  vertical-align: middle;
+  opacity: 0.65;
 }
 .account-label {
   display: flex;

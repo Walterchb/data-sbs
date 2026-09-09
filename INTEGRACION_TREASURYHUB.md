@@ -1,4 +1,4 @@
-# Treasury Hub · actualización 5
+# Treasury Hub · actualización 6
 
 ## Instalación
 
@@ -10,6 +10,7 @@ Este paquete actualiza el proyecto conciliado `data-sbs-ultra.zip` e incluye las
 - `assets/js/charts.js`
 - `assets/js/data.js`
 - `assets/js/tables.js`
+- `tests/analytics.test.mjs`
 - `tests/dom.test.mjs`
 - `tests/refresh.test.mjs`
 
@@ -19,16 +20,12 @@ Este `index.html` es el módulo Información Financiera SBS de `data-sbs`. No re
 
 ## Cambios de esta revisión
 
-- Cuentas SBS abre con «Jerarquía SBS», las ramas plegadas y las referencias B-2201/F9 ocultas. Los encabezados y totales del nivel superior permanecen visibles.
-- «Mostrar referencias» / «Ocultar referencias» controla las referencias técnicas en todas las filas, también en las vistas históricas. Las referencias se mantienen en la exportación.
-- «Expandir todo» cambia a «Plegar todo» al expandir. Actúa sobre el estado financiero seleccionado. Las flechas de cada rubro permiten recorrer la jerarquía por niveles.
-- Filas compactas, sin la segunda línea técnica por defecto; los botones de cuenta tienen altura mínima de 24 px y el relleno vertical de las celdas es de 4 px. Las tendencias se reducen a 18 px de alto.
-- Totales y grupos superiores en azul, principales con un color diferenciado, niveles intermedios con peso medio y hojas con texto más suave e indentación consistente. La selección se marca sin borrar el formato del nivel.
-- Los órdenes por saldo y movimiento ordenan dentro de cada nivel, conservando padres e hijos juntos. El orden predeterminado sigue siendo la jerarquía SBS original.
-- La búsqueda muestra temporalmente coincidencias y sus padres, incluso si estaban plegados. Las flechas quedan deshabilitadas durante la búsqueda para evitar indicar un plegado que oculta coincidencias; «Plegar todo» limpia la búsqueda y restaura la vista resumida. Al borrar la búsqueda manualmente se conserva el plegado anterior.
-- «Principales» abre los grupos superiores y limita el detalle a sus rubros inmediatos.
+- «Resultado Neto del Ejercicio» tiene un formato diferenciado en balance y resultados: fondo propio, texto destacado y doble línea superior.
+- Las subcuentas usan un pequeño punto de Font Awesome en lugar de «↳». Los grupos conservan los controles para expandir y plegar.
+- La fila seleccionada tiene el borde activo únicamente a la izquierda. El relleno #e9bc0e se aplica detrás del texto y las cifras, sin colorear todo el bloque, tanto en la vista mensual como en las históricas.
+- Se conserva el inicio con jerarquía SBS, ramas plegadas y referencias ocultas, además de las filas compactas, el botón Mostrar/Ocultar referencias y el control Expandir/Plegar todo.
 
-Se conservan los nombres, vínculos entre cuentas, cifras, unidades y fuentes oficiales del catálogo conciliado. No se agregan categorías contables nuevas a partir del ejemplo visual.
+Se conservan los nombres, vínculos entre cuentas, cifras, unidades y fuentes oficiales del catálogo conciliado.
 
 ## Funciones conservadas
 

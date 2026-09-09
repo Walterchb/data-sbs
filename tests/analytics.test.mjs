@@ -108,7 +108,7 @@ test("tree table retains latest date and missing MN is a dash", () => {
     tableView: "snapshot",
     account: "balance:9",
   });
-  assert.ok(result.html.includes(">—</td>"));
+  assert.ok(result.html.includes('>—</span></td>'));
   assert.ok(result.rows.some((r) => r[0] === "2026-07"));
   assert.ok(!result.html.includes("undefined"));
 });
