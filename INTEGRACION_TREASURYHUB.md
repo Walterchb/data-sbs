@@ -1,4 +1,4 @@
-# Treasury Hub · actualización 6
+# Treasury Hub · actualización 7
 
 ## Instalación
 
@@ -20,10 +20,11 @@ Este `index.html` es el módulo Información Financiera SBS de `data-sbs`. No re
 
 ## Cambios de esta revisión
 
-- «Resultado Neto del Ejercicio» tiene un formato diferenciado en balance y resultados: fondo propio, texto destacado y doble línea superior.
-- Las subcuentas usan un pequeño punto de Font Awesome en lugar de «↳». Los grupos conservan los controles para expandir y plegar.
-- La fila seleccionada tiene el borde activo únicamente a la izquierda. El relleno #e9bc0e se aplica detrás del texto y las cifras, sin colorear todo el bloque, tanto en la vista mensual como en las históricas.
-- Se conserva el inicio con jerarquía SBS, ramas plegadas y referencias ocultas, además de las filas compactas, el botón Mostrar/Ocultar referencias y el control Expandir/Plegar todo.
+- Fuentes ya no aparece en la navegación principal. Se accede desde Información → Ver fechas por fuente; se conservan la vista y sus enlaces oficiales.
+- El encabezado del detalle de Cuentas SBS muestra «Julio 2026 · Saldo al cierre» o «Julio 2026 · Acumulado enero al mes de corte», según la fecha y cuenta seleccionadas. Debajo aparece la ruta jerárquica de la cuenta, con separadores de Font Awesome.
+- Los valores de detalle usan el mismo diseño de tarjetas que las estadísticas: borde superior #08283f, esquinas rectas, fondo y tipografía consistentes, y dos columnas en móvil.
+- Las notas debajo de los gráficos conservan las aclaraciones de unidades y comparabilidad, sin enlaces al archivo SBS.
+- Se mantienen las mejoras anteriores: jerarquía SBS plegada por defecto, referencias ocultas, filas compactas, resultado neto diferenciado y selección con borde izquierdo y resaltado amarillo detrás del texto y las cifras.
 
 Se conservan los nombres, vínculos entre cuentas, cifras, unidades y fuentes oficiales del catálogo conciliado.
 

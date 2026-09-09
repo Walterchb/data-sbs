@@ -159,7 +159,9 @@ test("all views and controls render with real data and no JS errors", async () =
     assert.equal(document.getElementById("error").hidden, true);
   }
   await click('[data-peer="bcp"]');
-  await click('[data-nav="health"]');
+  assert.equal(document.querySelector('#navigation [data-nav="health"]'), null);
+  await click("#info");
+  await click('#detail-body [data-nav="health"]');
   assert.ok(document.body.textContent.includes("0 errores"));
   assert.equal(
     new Set([...document.querySelectorAll("[id]")].map((n) => n.id)).size,

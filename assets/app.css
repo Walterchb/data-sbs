@@ -759,7 +759,8 @@ main {
   padding-top: 10px;
   margin-top: 6px;
 }
-.stat-card {
+.stat-card,
+.detail-values > div {
   display: grid;
   gap: 5px;
   min-width: 0;
@@ -769,7 +770,8 @@ main {
   border-top: 2px solid #08283f;
   border-radius: 0;
 }
-.stat-label {
+.stat-label,
+.detail-values > div > small {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -782,7 +784,8 @@ main {
 .stat-label i {
   color: var(--navy3);
 }
-.stat-card b {
+.stat-card b,
+.detail-values b {
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
   font-weight: 650;
@@ -1011,25 +1014,30 @@ td small {
   min-width: 850px;
 }
 .breadcrumbs {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: var(--muted);
-  margin: 0 0 10px;
+  margin-top: 5px;
   display: flex;
+  align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.breadcrumbs i {
+  font-size: 0.5rem;
+}
+.breadcrumbs [aria-current] {
+  color: var(--ink);
+  font-weight: 650;
 }
 .detail-values {
-  display: flex;
-  gap: 22px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 8px;
   margin-bottom: 12px;
 }
 .detail-values > div {
-  display: grid;
-  font-size: 0.82rem;
-}
-.detail-values b {
-  font-size: 1.1rem;
+  align-content: start;
 }
 .movements-list {
   list-style: none;
@@ -1600,18 +1608,18 @@ dialog::backdrop {
   td {
     padding: 8px;
   }
-  .stats {
+  .stats,
+  .detail-values {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 7px;
   }
-  .stat-card {
+  .stat-card,
+  .detail-values > div {
     padding: 9px;
   }
-  .stat-card b {
+  .stat-card b,
+  .detail-values b {
     font-size: 0.8rem;
-  }
-  .detail-values {
-    gap: 12px;
   }
   .movement-top {
     flex-direction: column;
@@ -1788,7 +1796,8 @@ dialog::backdrop {
     font-size: 0.68rem;
     padding: 5px 7px;
   }
-  .stat-label {
+  .stat-label,
+  .detail-values > div > small {
     font-size: 0.58rem;
   }
   .chart-tip-row {

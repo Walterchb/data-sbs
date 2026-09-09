@@ -107,8 +107,8 @@ window.addEventListener("storage", (event) => {
 const heading = (title, description, controls = "") =>
   `<div class="page-head"><div><h1>${title}</h1><p>${description}</p></div>${controls}</div>`;
 const notice = (text) => `<div class="notice">${e(text)}</div>`;
-const panel = (title, sub, body, controls = "") =>
-  `<section class="panel"><div class="panel-head"><div class="panel-title"><span class="title-icon">${icon(NAV_ICONS[state.view] || "chart-line")}</span><div><h2>${e(title)}</h2>${sub ? `<p>${e(sub)}</p>` : ""}</div></div>${controls}</div><div class="panel-body">${body}</div></section>`;
+const panel = (title, sub, body, controls = "", subtitleHtml = "") =>
+  `<section class="panel"><div class="panel-head"><div class="panel-title"><span class="title-icon">${icon(NAV_ICONS[state.view] || "chart-line")}</span><div><h2>${e(title)}</h2>${subtitleHtml || (sub ? `<p>${e(sub)}</p>` : "")}</div></div>${controls}</div><div class="panel-body">${body}</div></section>`;
 function sourceLink(url, text = "Ver archivo SBS ↗") {
   if (!/^https:\/\//.test(url || "")) return e(text);
   return `<a href="${e(url)}" target="_blank" rel="noopener noreferrer">${e(text)}</a>`;
@@ -727,10 +727,11 @@ function accountDetail() {
     childrenHtml = `<p class="source-note">Mayores cambios entre sus componentes (${row.kind === "ytd" ? "YTD YoY" : "MoM"}): ${diffs.map((r) => `<button class="text-button" data-account="${r.id}">${e(r.label)} ${format(r.delta, "PEN_THOUSAND", true)}</button>`).join(" · ") || "Sin comparativo"}.</p>`;
   }
   return panel(
-    row.label,
-    `${row.reference} · ${month(state.date)} · ${row.kind === "ytd" ? "acumulado enero al mes de corte" : "saldo al cierre"}`,
-    `<div class="breadcrumbs">${row.path.map((x, i) => (i === row.path.length - 1 ? `<span>${e(x)}</span>` : `<span>${e(x)} ›</span>`)).join("")}</div><div class="detail-values"><div><small>Saldo seleccionado</small><b>${format(v, unit)}</b></div>${comp}${parent ? `<div><small>Participación en ${e(parent.label)}</small><b>${format(ratio(v, p?.values[parent.id]?.[2]), "PERCENT")}</b></div>` : ""}${row.group === "Activo" || row.group === "Pasivo" ? `<div><small>Sobre total ${row.group.toLowerCase()}</small><b>${format(ratio(v, p?.values[row.group === "Activo" ? "balance:59" : "balance:124"]?.[2]), "PERCENT")}</b></div>` : ""}</div>${lineChart(series, unit, row.label)}${statStrip(series, unit, row.kind !== "ytd", row.kind === "ytd")}${childrenHtml}<p class="source-note">${sourceLink(p.source_url)} · ME expresada en soles; no equivale a dólares. ${row.kind === "ytd" ? "El flujo mensual es la diferencia de acumulados; enero inicia un nuevo año." : ""}</p>`,
+    `${month(state.date, true).replace(/^./, (letter) => letter.toLocaleUpperCase("es"))} · ${row.kind === "ytd" ? "Acumulado enero al mes de corte" : "Saldo al cierre"}`,
+    "",
+    `<div class="detail-values"><div><small>Saldo seleccionado</small><b>${format(v, unit)}</b></div>${comp}${parent ? `<div><small>Participación en ${e(parent.label)}</small><b>${format(ratio(v, p?.values[parent.id]?.[2]), "PERCENT")}</b></div>` : ""}${row.group === "Activo" || row.group === "Pasivo" ? `<div><small>Sobre total ${row.group.toLowerCase()}</small><b>${format(ratio(v, p?.values[row.group === "Activo" ? "balance:59" : "balance:124"]?.[2]), "PERCENT")}</b></div>` : ""}</div>${lineChart(series, unit, row.label)}${statStrip(series, unit, row.kind !== "ytd", row.kind === "ytd")}${childrenHtml}<p class="source-note">ME expresada en soles; no equivale a dólares. ${row.kind === "ytd" ? "El flujo mensual es la diferencia de acumulados; enero inicia un nuevo año." : ""}</p>`,
     rangeButtons(series, unit, row.label),
+    `<nav class="breadcrumbs" aria-label="Ruta de la cuenta">${row.path.map((label, i) => `${i ? icon("chevron-right") : ""}<span${i === row.path.length - 1 ? ' aria-current="location"' : ""}>${e(label)}</span>`).join("")}</nav>`,
   );
 }
 function tableParents() {
@@ -874,7 +875,7 @@ function reportView() {
     panel(
       metric?.label || "Serie histórica",
       `Archivo SBS de ${month(p.date)} · dato declarado a ${month(p.effective[state.reportMetric])}`,
-      `${lineChart(series, unit, metric?.label || "Serie")}${statStrip(series, unit)}<p class="source-note">${sourceLink(p.source_url)} · ${reportData.frequency === "quarterly" ? "Promedio diario trimestral. No es un saldo de cierre." : "Cada métrica conserva su unidad y fecha."}</p>`,
+      `${lineChart(series, unit, metric?.label || "Serie")}${statStrip(series, unit)}<p class="source-note">${reportData.frequency === "quarterly" ? "Promedio diario trimestral. No es un saldo de cierre." : "Cada métrica conserva su unidad y fecha."}</p>`,
       rangeButtons(series, unit, metric?.label || "Serie"),
     ) +
     `<section class="panel"><div class="panel-head"><h2>Detalle de la fuente</h2><div class="controls"><label class="sr-only" for="report-search">Buscar indicador</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar indicador, moneda o componente…"></div></div>${rows.length ? table : '<div class="empty">No hay indicadores que coincidan con la búsqueda.</div>'}<p class="footnote">Ratios: cambios en pb. Importes: cambios en %. Múltiplos: diferencias en veces. No se calculan comparaciones sin el periodo exacto.</p></section>`
@@ -1045,7 +1046,7 @@ function peersView() {
         `<table><thead><tr><th>Banco / referencia</th><th class="number">${e(config.label)}</th><th class="number">${unit === "PERCENT" ? "YoY · pb" : "YoY"}</th>${shareAllowed ? '<th class="number">Participación sistema</th>' : ""}</tr></thead><tbody>${rows.map((r) => `<tr class="${r.slug === "banbif" ? "peer-highlight" : ""}"><td>${e(r.name)}</td><td class="number">${format(r.value, unit)}</td><td class="number">${warning ? "—" : deltaCell(r.value, r.prior, unit, key)}</td>${shareAllowed ? `<td class="number">${format(ratio(r.value, system?.value), "PERCENT")}</td>` : ""}</tr>`).join("")}</tbody></table>`,
         "Comparación de bancos",
       ) +
-        `<p class="source-note">${sourceUrl ? sourceLink(sourceUrl) : "Sin fuente para el corte seleccionado."} · — indica dato o comparativo no disponible.</p>`,
+        `<p class="source-note">${sourceUrl ? "" : "Sin fuente para el corte seleccionado. "}— indica dato o comparativo no disponible.</p>`,
     )
   );
 }
@@ -1115,10 +1116,12 @@ async function render() {
     if (state.view === "peers" && peerReportCode(state.peerMetric))
       reportData = await Data.load(peerReportCode(state.peerMetric));
     if (id !== renderId) return;
-    $("navigation").innerHTML = NAV.map(
-      ([v, label]) =>
-        `<button class="nav-button" data-nav="${v}" ${v === state.view ? 'aria-current="page"' : ""}>${icon(NAV_ICONS[v])}${label}</button>`,
-    ).join("");
+    $("navigation").innerHTML = NAV.filter(([view]) => view !== "health")
+      .map(
+        ([v, label]) =>
+          `<button class="nav-button" data-nav="${v}" ${v === state.view ? 'aria-current="page"' : ""}>${icon(NAV_ICONS[v])}${label}</button>`,
+      )
+      .join("");
     $("period").value = calendarDate(state.date);
     const i = overview.periods.findIndex((p) => p.date === state.date);
     $("prev").disabled = i <= 0;
