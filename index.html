@@ -91,48 +91,50 @@
     </header>
     <div class="workspace">
       <main id="main">
-        <div class="analysis-toolbar">
-          <div class="commandbar">
-            <div>
-              <div class="period-controls">
-                <button
-                  id="prev"
-                  aria-label="Periodo anterior"
-                  title="Periodo anterior"
-                >
-                  <i
-                    class="fa-solid fa-caret-left"
-                    aria-hidden="true"
-                  ></i></button
-                ><label class="sr-only" for="period">Periodo SBS</label
-                ><span class="date-picker-wrap"
-                  ><input
-                    id="period"
-                    type="date"
-                    disabled
-                    aria-label="Seleccionar fecha SBS" /><i
-                    class="fa-regular fa-calendar-days date-fa"
-                    aria-hidden="true"
-                  ></i></span
-                ><button
-                  id="next"
-                  aria-label="Periodo siguiente"
-                  title="Periodo siguiente"
-                >
-                  <i
-                    class="fa-solid fa-caret-right"
-                    aria-hidden="true"
-                  ></i></button
-                ><button id="last">Último</button>
+        <div class="analysis-toolbar-dock">
+          <div class="analysis-toolbar">
+            <div class="commandbar">
+              <div>
+                <div class="period-controls">
+                  <button
+                    id="prev"
+                    aria-label="Periodo anterior"
+                    title="Periodo anterior"
+                  >
+                    <i
+                      class="fa-solid fa-caret-left"
+                      aria-hidden="true"
+                    ></i></button
+                  ><label class="sr-only" for="period">Periodo SBS</label
+                  ><span class="date-picker-wrap"
+                    ><input
+                      id="period"
+                      type="date"
+                      disabled
+                      aria-label="Seleccionar fecha SBS" /><i
+                      class="fa-regular fa-calendar-days date-fa"
+                      aria-hidden="true"
+                    ></i></span
+                  ><button
+                    id="next"
+                    aria-label="Periodo siguiente"
+                    title="Periodo siguiente"
+                  >
+                    <i
+                      class="fa-solid fa-caret-right"
+                      aria-hidden="true"
+                    ></i></button
+                  ><button id="last">Último</button>
+                </div>
               </div>
             </div>
+            <nav
+              id="navigation"
+              class="section-nav"
+              aria-label="Secciones del análisis"
+            ></nav>
+            <div id="account-controls" class="account-controls" hidden></div>
           </div>
-          <nav
-            id="navigation"
-            class="section-nav"
-            aria-label="Secciones del análisis"
-          ></nav>
-          <div id="account-controls" class="account-controls" hidden></div>
         </div>
         <div id="error" class="notice error" role="alert" hidden></div>
         <div id="content" tabindex="-1" aria-busy="true">

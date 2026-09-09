@@ -1,4 +1,4 @@
-# Treasury Hub · actualización 8
+# Treasury Hub · actualización 9
 
 ## Instalación
 
@@ -20,13 +20,12 @@ Este `index.html` es el módulo Información Financiera SBS de `data-sbs`. No re
 
 ## Cambios de esta revisión
 
-- Resultado Neto del Ejercicio usa fondo #08283f y texto #66beff en ambos temas. Se conserva el resaltado amarillo de texto y cifras al seleccionar la fila.
-- Los selectores Estado y Vista se encuentran dentro de analysis-toolbar y aparecen únicamente en Cuentas SBS.
-- La barra de análisis permanece fija debajo del encabezado durante el desplazamiento. Su posición se adapta a la altura real del encabezado; tiene un fondo opaco que también cubre los márgenes para evitar que el contenido se vea por detrás. En móvil, Estado y Vista se distribuyen en dos columnas.
-- El botón de copia de la serie muestra «¡Copiado!» debajo de los botones, en un espacio reservado. El mensaje no cambia la altura ni desplaza la tabla o el modal.
-- Se conservan las mejoras anteriores de navegación, encabezados con fecha y breadcrumbs, tarjetas de detalle, notas de fuente, jerarquía plegada y selección de filas.
+- Se restaura el diseño original de analysis-toolbar: fondo, bordes, esquinas, sombra y relleno.
+- En escritorio, Estado y Vista se integran a la derecha de la navegación en la misma fila y a la misma altura que el control de fecha. No se añade una segunda fila ni un separador. Si falta ancho, la barra permite desplazamiento horizontal.
+- Una envoltura fija con fondo opaco conserva el comportamiento al desplazar sin modificar el diseño de la barra. En móvil se mantiene la distribución adaptada.
+- Se conservan el color del resultado neto y el aviso «¡Copiado!» sin desplazamiento del modal, además de las mejoras anteriores.
 
-Se conservan los nombres, vínculos entre cuentas, cifras, unidades y fuentes oficiales del catálogo conciliado.
+Los datos y la lógica de cálculo no cambian.
 
 ## Funciones conservadas
 

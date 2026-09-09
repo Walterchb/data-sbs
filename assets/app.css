@@ -316,10 +316,15 @@ main {
   margin: 0 auto;
   padding: 14px 18px 24px;
 }
-.analysis-toolbar {
+.analysis-toolbar-dock {
   position: sticky;
   top: var(--topbar-height, 64px);
   z-index: 19;
+  background: var(--bg);
+  margin-inline: -18px;
+  padding: 1px 18px;
+}
+.analysis-toolbar {
   display: grid;
   grid-template-columns: 310px minmax(0, 1fr);
   align-items: center;
@@ -332,14 +337,22 @@ main {
   padding: 10px 12px;
   margin-bottom: 10px;
 }
+.analysis-toolbar:has(.account-controls:not([hidden])) {
+  grid-template-columns: 310px minmax(180px, 1fr) auto;
+  overflow-x: auto;
+}
 .account-controls {
-  grid-column: 1 / -1;
-  border-top: 1px solid var(--line);
-  padding-top: 8px;
+  min-width: 0;
 }
 .account-controls .controls {
   justify-content: flex-end;
+  flex-wrap: nowrap;
 }
+.account-controls select {
+  height: 34px;
+  min-height: 34px;
+}
+
 .commandbar {
   min-width: 0;
 }
@@ -1495,7 +1508,7 @@ dialog::backdrop {
   }
   .analysis-toolbar {
     display: block;
-    background: var(--panel);
+    background: transparent;
     border: 0;
     box-shadow: none;
     padding: 0;
@@ -1831,17 +1844,10 @@ dialog::backdrop {
   }
 }
 
-.analysis-toolbar::before {
-  content: "";
-  position: absolute;
-  inset: -1px -18px;
-  background: var(--panel);
-  z-index: -1;
-  border-bottom: 1px solid var(--line);
-}
 @media (max-width: 760px) {
-  .analysis-toolbar::before {
-    inset-inline: -12px;
+  .analysis-toolbar-dock {
+    margin-inline: -12px;
+    padding-inline: 12px;
   }
   .account-controls {
     padding: 8px 0;
@@ -1860,7 +1866,7 @@ dialog::backdrop {
   }
 }
 @media print {
-  .analysis-toolbar {
+  .analysis-toolbar-dock {
     position: static;
   }
 }
