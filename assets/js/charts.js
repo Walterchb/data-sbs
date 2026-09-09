@@ -59,8 +59,11 @@ export function chartOptions(points, unit, label, palette, mobile = false) {
       textStyle: { color: "#fff", fontWeight: 500 },
       formatter: (params) => {
         const p = Array.isArray(params) ? params[0] : params,
-          point = points[p.dataIndex];
-        return `<strong>${escape(month(point.date, true))}</strong><br>${escape(label)}: <b>${format(point.value, unit)}</b>${point.effective && point.effective !== point.date ? `<br>Declarado: ${escape(month(point.effective))}` : ""}<br>Prom: ${format(avg, unit)}<br>Máx: ${format(max, unit)}<br>Mín: ${format(min, unit)}`;
+          point = points[p?.dataIndex];
+        if (!point) return "";
+        const row = (name, value, color) =>
+          `<div class="chart-tip-row"><span class="chart-tip-name"><i style="background:${color}"></i>${escape(name)}</span><b>${format(value, unit)}</b></div>`;
+        return `<div class="chart-tip-date">${escape(month(point.date, true).toLocaleUpperCase("es"))}</div>${row(label, point.value, "#1c7ff2")}${point.effective && point.effective !== point.date ? `<div class="chart-tip-note">Declarado: ${escape(month(point.effective).toLocaleUpperCase("es"))}</div>` : ""}${row("Prom", avg, palette.avg || "#635bff")}${row("Máx", max, palette.green || "#13966b")}${row("Mín", min, palette.amber || "#c17a18")}`;
       },
     },
     toolbox: {

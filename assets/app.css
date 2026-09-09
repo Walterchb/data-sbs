@@ -766,17 +766,8 @@ main {
   padding: 11px 12px;
   background: var(--soft);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  border-top: 2px solid var(--stat-tone, var(--cyan));
-}
-.stat-card[data-tone="amber"] {
-  --stat-tone: var(--amber);
-}
-.stat-card[data-tone="green"] {
-  --stat-tone: var(--green);
-}
-.stat-card[data-tone="purple"] {
-  --stat-tone: var(--purple);
+  border-top: 2px solid #08283f;
+  border-radius: 0;
 }
 .stat-label {
   display: flex;
@@ -789,7 +780,7 @@ main {
   font-weight: 650;
 }
 .stat-label i {
-  color: var(--stat-tone, var(--cyan));
+  color: var(--navy3);
 }
 .stat-card b {
   font-size: 0.9rem;
@@ -1181,7 +1172,7 @@ dialog::backdrop {
   gap: 6px;
   border: 1px solid var(--line);
   background: var(--soft);
-  border-radius: 5px;
+  border-radius: 0;
   padding: 5px 9px;
   font-size: 0.72rem;
   font-weight: 560;
@@ -1624,5 +1615,99 @@ dialog::backdrop {
   }
   body {
     background: #fff;
+  }
+}
+
+.detail-actions {
+  float: right;
+  display: flex;
+  gap: 6px;
+  margin-left: 10px;
+  margin-bottom: 8px;
+}
+.detail-actions .detail-close {
+  float: none;
+  flex: 0 0 28px;
+}
+.copy-status:empty {
+  display: none;
+}
+.copy-status {
+  clear: both;
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+.clipboard-buffer {
+  position: fixed;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.range {
+  align-items: center;
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.range button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.range .series-button {
+  margin-left: 3px;
+  font-size: 0.7rem;
+}
+.chart-tip-date {
+  font-weight: 650;
+  color: #76dbe5;
+  letter-spacing: 0.055em;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+.chart-tip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin: 6px 0;
+  font-size: 12px;
+}
+.chart-tip-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  white-space: normal;
+}
+.chart-tip-name i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+}
+.chart-tip-row b {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.chart-tip-note {
+  font-size: 11px;
+  color: #a9c5d8;
+}
+@media (max-width: 760px) {
+  .range .series-button {
+    font-size: 0.68rem;
+    padding: 5px 7px;
+  }
+  .stat-label {
+    font-size: 0.58rem;
+  }
+  .chart-tip-row {
+    font-size: 11px;
+    gap: 10px;
+  }
+  .chart-tip-name {
+    max-width: 150px;
   }
 }

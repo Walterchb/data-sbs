@@ -169,14 +169,27 @@
       class="detail-dialog"
       aria-labelledby="detail-title"
     >
-      <button
-        id="detail-close"
-        class="detail-close"
-        type="button"
-        aria-label="Cerrar detalle"
-      >
-        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-      </button>
+      <div class="detail-actions">
+        <button
+          id="series-copy"
+          class="detail-close"
+          type="button"
+          title="Copiar datos para Excel"
+          aria-label="Copiar datos para Excel"
+          hidden
+        >
+          <i class="fa-regular fa-copy" aria-hidden="true"></i>
+        </button>
+        <button
+          id="detail-close"
+          class="detail-close"
+          type="button"
+          aria-label="Cerrar detalle"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <p id="series-copy-status" class="copy-status" role="status"></p>
       <div id="detail-body"></div>
     </dialog>
     <div id="toast" role="status" class="toast" hidden></div>

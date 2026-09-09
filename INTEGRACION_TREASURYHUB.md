@@ -1,4 +1,4 @@
-# Treasury Hub · actualización 3
+# Treasury Hub · actualización 4
 
 ## Instalación
 
@@ -18,12 +18,12 @@ Este `index.html` es el módulo Información Financiera SBS de `data-sbs`. No re
 
 ## Cambios de esta revisión
 
-1. Se retira «FECHA SBS». El selector y las pestañas quedan alineados en una fila en escritorio. En móvil se mantienen las dos filas.
-2. Las tarjetas KPI aprovechan todo el ancho interior: título e icono arriba, cifra alineada a la izquierda y unidad/variación repartidas abajo. Se reduce su altura mínima de 104 a 88 px en escritorio; en móvil, de 98 a 88 px.
-3. Los títulos del detalle aparecen en mayúsculas y cian claro sobre el fondo azul marino.
-4. Se retiran los títulos y valores duplicados encima de los gráficos. La etiqueta «Último» pasa a «Selección», que corresponde al punto final del rango mostrado; si falta ese dato, muestra un guion.
-5. Los stats mantienen sus cálculos y se presentan como mini tarjetas. «Ver valores de la serie» abre un modal con las observaciones del rango, unidades y fechas declaradas por la fuente, cuando difieren. Tiene desplazamiento interno, cierre con botón/Escape y retorno del foco al botón de origen.
-6. El botón de información abre su modal solo mediante clic o activación por teclado. Se elimina «Cómo se actualiza» de esa ventana. Las tarjetas KPI siguen mostrando detalle al pasar el mouse y al tocar.
+1. Stats sin esquinas redondeadas y con borde superior único #08283f.
+2. Mínimo y máximo permanecen en la leyenda del gráfico. Las mini tarjetas muestran cambio del rango (absoluto; en pb para ratios), periodos al alza, CAGR cuando corresponde y observaciones. La utilidad acumulada usa comparaciones interanuales para evitar mezclar diciembre con enero. Los periodos sin base válida se excluyen del recuento; los conflictos entre fecha del archivo y fecha declarada suspenden las nuevas comparaciones.
+3. Etiquetas de la leyenda sin bordes redondeados. Al seleccionar un punto, el tooltip muestra el indicador con un marcador del color de su línea; promedio, máximo y mínimo llevan también sus colores. El mes aparece en mayúsculas y cian claro.
+4. «Ver valores de la serie» está junto a «Máx.» en la fila del rango. Su modal tiene un botón de copia a la izquierda de cerrar. Copia periodo, indicador, valor y periodo declarado como columnas separadas por tabulaciones, con dos decimales y sin separadores de miles ni símbolos monetarios. Los importes están en millones y los ratios conservan su unidad indicada en la cabecera. El separador decimal sigue el idioma del navegador; las celdas sin valor quedan vacías. Pega en Excel con Ctrl+V.
+
+La copia requiere permiso del navegador para escribir en el portapapeles. Si no está disponible la API moderna se intenta la copia compatible; ante un bloqueo se muestra un mensaje y la tabla sigue disponible para selección manual.
 
 ## Funciones conservadas
 

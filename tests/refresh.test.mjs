@@ -19,6 +19,11 @@ test("TC chart options retain null gaps, monetary units, gradient and mobile axe
     option.tooltip.formatter([{ dataIndex: 0 }]),
     /S\/ 1,500\.00 MM/,
   );
+  const tip = option.tooltip.formatter([{ dataIndex: 0 }]);
+  assert.match(tip, /ENERO 2026/);
+  assert.match(tip, /#1c7ff2/);
+  assert.match(tip, /Activos/);
+  assert.match(tip, /chart-tip-date/);
   assert.equal(option.dataZoom[1].type, "slider");
 });
 

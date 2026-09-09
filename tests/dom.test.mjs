@@ -186,6 +186,12 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   );
   assert.ok(document.querySelectorAll(".stat-card").length >= 3);
   const seriesButton = document.querySelector("[data-series]");
+  assert.equal(seriesButton.previousElementSibling.dataset.range, "0");
+  assert.equal(seriesButton.parentElement.className, "range");
+  assert.ok(!document.querySelector(".stats").textContent.includes("Mínimo"));
+  assert.ok(
+    document.querySelector(".stats").textContent.includes("Cambio del rango"),
+  );
   const seriesId = seriesButton.dataset.series;
   await click(`[data-series="${seriesId}"]`);
   assert.equal(document.getElementById("detail-dialog").open, true);
@@ -197,6 +203,25 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   assert.equal(document.querySelectorAll("#detail-body tbody tr").length, 24);
   assert.ok(
     document.getElementById("detail-body").textContent.includes("Jul 2026"),
+  );
+  let copied = "";
+  Object.defineProperty(window.navigator, "clipboard", {
+    configurable: true,
+    value: {
+      writeText: async (value) => {
+        copied = value;
+      },
+    },
+  });
+  assert.equal(document.getElementById("series-copy").hidden, false);
+  await click("#series-copy");
+  assert.equal(copied.split("\r\n").length, 25);
+  assert.match(copied, /Periodo\tIndicador\tValor \(S\/ MM\)/);
+  assert.match(copied, /2026-07\tCréditos brutos\t15692\.39\t2026-07/);
+  assert.ok(!copied.includes("15,692"));
+  assert.match(
+    document.getElementById("series-copy-status").textContent,
+    /Copiado/,
   );
   await click("#detail-close");
   assert.equal(document.activeElement, seriesButton);
