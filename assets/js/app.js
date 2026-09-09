@@ -133,12 +133,21 @@ function rangePoints(points, end = state.date) {
 }
 function statStrip(points, unit, allowCagr = true) {
   const s = stats(points, unit);
-  return s
-    ? `<div class="stats"><div><small>Mínimo del rango</small><b>${format(s.min.value, unit)}</b><small>${month(s.min.date)}</small></div><div><small>Máximo del rango</small><b>${format(s.max.value, unit)}</b><small>${month(s.max.date)}</small></div>${allowCagr && s.cagr !== null ? `<div><small>CAGR del rango</small><b>${format(s.cagr, "PERCENT", true)}</b><small>Tasa anual compuesta</small></div>` : ""}<div><small>Observaciones</small><b>${s.count}</b><small>Sin interpolar faltantes</small></div></div>`
-    : "";
+  if (!s) return "";
+  const card = (label, value, note, name, tone) =>
+    `<div class="stat-card" data-tone="${tone}"><span class="stat-label">${icon(name)}${label}</span><b>${value}</b><small>${note}</small></div>`;
+  return `<div class="stats" aria-label="Estadísticas del rango">${card("Mínimo", format(s.min.value, unit), month(s.min.date), "arrow-down", "amber")}${card("Máximo", format(s.max.value, unit), month(s.max.date), "arrow-up", "green")}${allowCagr && s.cagr !== null ? card("CAGR", format(s.cagr, "PERCENT", true), "Tasa anual compuesta", "chart-line", "purple") : ""}${card("Observaciones", s.count, "Sin interpolar faltantes", "calendar-days", "cyan")}</div>`;
 }
-function historyDisclosure(points, unit) {
-  return `<details class="help"><summary>Ver valores de la serie</summary>${wrapTable(`<table><thead><tr><th>Periodo</th><th class="number">Valor</th></tr></thead><tbody>${points.map((p) => `<tr><td>${month(p.date)}${p.effective && p.effective !== p.date ? `<small>Declarado: ${month(p.effective)}</small>` : ""}</td><td class="number">${format(p.value, unit)}</td></tr>`).join("")}</tbody></table>`, "Valores de la serie", true)}</details>`;
+const seriesDetails = new Map();
+let seriesDetailId = 0;
+function historyDisclosure(points, unit, label = "Serie seleccionada") {
+  const id = String(++seriesDetailId);
+  seriesDetails.set(id, { points, unit, label });
+  return `<div class="series-action"><button type="button" class="series-button" data-series="${id}" aria-haspopup="dialog">${icon("table-list")} Ver valores de la serie ${icon("arrow-up-right-from-square")}</button></div>`;
+}
+function seriesContent(id) {
+  const { points, unit, label } = seriesDetails.get(id);
+  return `<h2 id="detail-title">VALORES DE LA SERIE</h2><p class="series-subtitle">${e(label)} · ${e(units[unit] || unit)} · ${points.length ? `${month(points[0].date)} – ${month(points.at(-1).date)}` : "Sin observaciones"}</p>${wrapTable(`<table><thead><tr><th>Periodo</th><th class="number">Valor · ${e(units[unit] || unit)}</th></tr></thead><tbody>${points.map((p) => `<tr><td>${month(p.date)}${p.effective && p.effective !== p.date ? `<small>Declarado: ${month(p.effective)}</small>` : ""}</td><td class="number">${format(p.value, unit)}</td></tr>`).join("")}</tbody></table>`, "Valores de la serie", true)}`;
 }
 function metricSeries(key) {
   return rangePoints(
@@ -210,7 +219,7 @@ function kpi(key) {
 function detailContent(key, modal = false) {
   const titleId = modal ? ' id="detail-title"' : "";
   if (key === "info")
-    return `<h2${titleId}>Información del corte</h2><div class="detail-lead"><strong>${state.date === manifest.latest_period ? "Último balance disponible" : "Corte histórico"} · ${month(state.date, true)}</strong></div><p>Importes en S/ MM · ratios en % · variaciones de ratios en pb.</p><p>Último balance disponible: ${month(manifest.latest_period, true)}.</p><p>${health.errors} errores · ${health.warnings} advertencias. Las fechas pueden variar por fuente.</p><p id="last-checked">${lastChecked ? `Última comprobación: ${lastChecked}.` : ""}</p><button class="detail-link" data-nav="health">Ver fechas por fuente ${icon("arrow-right")}</button><details class="update-help"><summary>Cómo se actualiza</summary><p>Actualizar comprueba los datos publicados. También se comprueban cada cinco minutos con la página visible y al regresar después de ese intervalo.</p><p>La descarga desde SBS se ejecuta automáticamente en GitHub Actions.</p><a href="https://github.com/Walterchb/data-sbs/actions/workflows/sync-hub.yml" target="_blank" rel="noopener noreferrer">Abrir proceso de descarga ${icon("arrow-up-right-from-square")}</a></details>`;
+    return `<h2${titleId}>Información del corte</h2><div class="detail-lead"><strong>${state.date === manifest.latest_period ? "Último balance disponible" : "Corte histórico"} · ${month(state.date, true)}</strong></div><p>Importes en S/ MM · ratios en % · variaciones de ratios en pb.</p><p>Último balance disponible: ${month(manifest.latest_period, true)}.</p><p>${health.errors} errores · ${health.warnings} advertencias. Las fechas pueden variar por fuente.</p><p id="last-checked">${lastChecked ? `Última comprobación: ${lastChecked}.` : ""}</p><button class="detail-link" data-nav="health">Ver fechas por fuente ${icon("arrow-right")}</button>`;
   const config = METRICS[key],
     m = current()?.metrics[key],
     date = m?.date || state.date,
@@ -230,7 +239,7 @@ function detailContent(key, modal = false) {
       return `<div class="detail-comparison"><div><b>${name}</b><small>vs. ${month(base)}</small></div><div>${deltaCell(value, previous, unit, key)}<small>${unit === "PERCENT" ? "Puntos básicos" : finite(value) && finite(previous) ? format(value - previous, unit, true) : "Sin base comparable"}</small></div><div><small>Base</small><b>${format(previous, unit)}</b></div></div>`;
     })
     .join("");
-  return `<h2${titleId}>${e(config.label)}</h2><div class="detail-lead"><strong>${format(value, unit)}</strong><span>${month(date, true)}</span></div>${rows}<p>${config.kind === "ytd" ? "Acumulado desde enero. La comparación corresponde al mismo mes del año anterior." : key === "npl" ? "Cartera vencida y en cobranza judicial / créditos brutos. Variaciones en puntos básicos." : "Las comparaciones usan periodos exactos; una base ausente se muestra con guion."}</p><p>Fuente: ${e(m?.source || "Sin dato")}${m?.warning ? ` · ${e(m.warning)}` : ""}</p>${config.row ? `<button class="detail-link" data-drill="${config.row}">Explorar rubro ${icon("arrow-right")}</button>` : `<button class="detail-link" data-key="${key}">Explorar indicador ${icon("arrow-right")}</button>`}`;
+  return `<h2${titleId}>${e(config.label.toLocaleUpperCase("es"))}</h2><div class="detail-lead"><strong>${format(value, unit)}</strong><span>${month(date, true)}</span></div>${rows}<p>${config.kind === "ytd" ? "Acumulado desde enero. La comparación corresponde al mismo mes del año anterior." : key === "npl" ? "Cartera vencida y en cobranza judicial / créditos brutos. Variaciones en puntos básicos." : "Las comparaciones usan periodos exactos; una base ausente se muestra con guion."}</p><p>Fuente: ${e(m?.source || "Sin dato")}${m?.warning ? ` · ${e(m.warning)}` : ""}</p>${config.row ? `<button class="detail-link" data-drill="${config.row}">Explorar rubro ${icon("arrow-right")}</button>` : `<button class="detail-link" data-key="${key}">Explorar indicador ${icon("arrow-right")}</button>`}`;
 }
 let hoverTimer, popupTrigger;
 let refreshInFlight = false,
@@ -251,6 +260,7 @@ function bindDetails() {
     const target = event.target.closest("[data-popup]");
     if (
       !target ||
+      target.dataset.popup === "info" ||
       target.contains(event.relatedTarget) ||
       !manifest ||
       event.pointerType === "touch" ||
@@ -285,8 +295,18 @@ function bindDetails() {
     hoverTimer = setTimeout(hideHover, 180);
   });
   document.addEventListener("click", (event) => {
+    const seriesTarget = event.target.closest("[data-series]");
+    if (seriesTarget && seriesDetails.has(seriesTarget.dataset.series)) {
+      hideHover();
+      popupTrigger = seriesTarget;
+      dialog.classList.add("series-dialog");
+      $("detail-body").innerHTML = seriesContent(seriesTarget.dataset.series);
+      dialog.showModal();
+      return;
+    }
     const target = event.target.closest("[data-popup]");
     if (!target || !manifest) return;
+    dialog.classList.remove("series-dialog");
     hideHover();
     popupTrigger = target;
     $("detail-body").innerHTML = detailContent(target.dataset.popup, true);
@@ -476,7 +496,7 @@ function overviewView() {
       config.kind === "ytd"
         ? "Resultados acumulados del año; no comparar diciembre con enero."
         : "Selecciona una magnitud para ver su evolución.",
-      `<div class="chart-caption"><span>${e(config.label)}</span><strong>${format(current()?.metrics[state.metric]?.value, unitOf(state.metric))}</strong></div>${lineChart(series, unitOf(state.metric), config.label)}${statStrip(series, unitOf(state.metric), config.kind !== "ytd")}${historyDisclosure(series, unitOf(state.metric))}`,
+      `${lineChart(series, unitOf(state.metric), config.label)}${statStrip(series, unitOf(state.metric), config.kind !== "ytd")}${historyDisclosure(series, unitOf(state.metric), config.label)}`,
       `<div class="controls"><label class="sr-only" for="trend-metric">Métrica de tendencia</label><select id="trend-metric">${Object.entries(
         METRICS,
       )
@@ -621,7 +641,7 @@ function accountDetail() {
   return panel(
     row.label,
     `${row.reference} · ${month(state.date)} · ${row.kind === "ytd" ? "acumulado enero al mes de corte" : "saldo al cierre"}`,
-    `<div class="breadcrumbs">${row.path.map((x, i) => (i === row.path.length - 1 ? `<span>${e(x)}</span>` : `<span>${e(x)} ›</span>`)).join("")}</div><div class="detail-values"><div><small>Saldo seleccionado</small><b>${format(v, unit)}</b></div>${comp}${parent ? `<div><small>Participación en ${e(parent.label)}</small><b>${format(ratio(v, p?.values[parent.id]?.[2]), "PERCENT")}</b></div>` : ""}${row.group === "Activo" || row.group === "Pasivo" ? `<div><small>Sobre total ${row.group.toLowerCase()}</small><b>${format(ratio(v, p?.values[row.group === "Activo" ? "balance:59" : "balance:124"]?.[2]), "PERCENT")}</b></div>` : ""}</div>${lineChart(series, unit, row.label)}${statStrip(series, unit, row.kind !== "ytd")}${childrenHtml}<p class="source-note">${sourceLink(p.source_url)} · ME expresada en soles; no equivale a dólares. ${row.kind === "ytd" ? "El flujo mensual es la diferencia de acumulados; enero inicia un nuevo año." : ""}</p>${historyDisclosure(series, unit)}`,
+    `<div class="breadcrumbs">${row.path.map((x, i) => (i === row.path.length - 1 ? `<span>${e(x)}</span>` : `<span>${e(x)} ›</span>`)).join("")}</div><div class="detail-values"><div><small>Saldo seleccionado</small><b>${format(v, unit)}</b></div>${comp}${parent ? `<div><small>Participación en ${e(parent.label)}</small><b>${format(ratio(v, p?.values[parent.id]?.[2]), "PERCENT")}</b></div>` : ""}${row.group === "Activo" || row.group === "Pasivo" ? `<div><small>Sobre total ${row.group.toLowerCase()}</small><b>${format(ratio(v, p?.values[row.group === "Activo" ? "balance:59" : "balance:124"]?.[2]), "PERCENT")}</b></div>` : ""}</div>${lineChart(series, unit, row.label)}${statStrip(series, unit, row.kind !== "ytd")}${childrenHtml}<p class="source-note">${sourceLink(p.source_url)} · ME expresada en soles; no equivale a dólares. ${row.kind === "ytd" ? "El flujo mensual es la diferencia de acumulados; enero inicia un nuevo año." : ""}</p>${historyDisclosure(series, unit, row.label)}`,
     rangeButtons(),
   );
 }
@@ -744,7 +764,7 @@ function reportView() {
     panel(
       metric?.label || "Serie histórica",
       `Archivo SBS de ${month(p.date)} · dato declarado a ${month(p.effective[state.reportMetric])}`,
-      `<div class="chart-caption"><span>${e(units[unit] || unit)}</span><strong>${format(p.values[state.reportMetric], unit)}</strong></div>${lineChart(series, unit, metric?.label || "Serie")}${statStrip(series, unit)}<p class="source-note">${sourceLink(p.source_url)} · ${reportData.frequency === "quarterly" ? "Promedio diario trimestral. No es un saldo de cierre." : "Cada métrica conserva su unidad y fecha."}</p>${historyDisclosure(series, unit)}`,
+      `${lineChart(series, unit, metric?.label || "Serie")}${statStrip(series, unit)}<p class="source-note">${sourceLink(p.source_url)} · ${reportData.frequency === "quarterly" ? "Promedio diario trimestral. No es un saldo de cierre." : "Cada métrica conserva su unidad y fecha."}</p>${historyDisclosure(series, unit, metric?.label || "Serie")}`,
       rangeButtons(),
     ) +
     `<section class="panel"><div class="panel-head"><h2>Detalle de la fuente</h2><div class="controls"><label class="sr-only" for="report-search">Buscar indicador</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar indicador, moneda o componente…"></div></div>${rows.length ? table : '<div class="empty">No hay indicadores que coincidan con la búsqueda.</div>'}<p class="footnote">Ratios: cambios en pb. Importes: cambios en %. Múltiplos: diferencias en veces. No se calculan comparaciones sin el periodo exacto.</p></section>`
@@ -995,6 +1015,7 @@ async function render() {
     $("next").disabled = i >= overview.periods.length - 1;
     closeDetails();
     clearCharts();
+    seriesDetails.clear();
     $("content").innerHTML = {
       overview: overviewView,
       movements: movementsView,
@@ -1269,7 +1290,7 @@ function derivedView() {
     panel(
       config.label,
       month(state.date),
-      `<div class="chart-caption"><span>Calculado con datos SBS</span><strong>${format(m?.value, unit)}</strong></div>${lineChart(series, unit, config.label)}${statStrip(series, unit, false)}${historyDisclosure(series, unit)}`,
+      `${lineChart(series, unit, config.label)}${statStrip(series, unit, false)}${historyDisclosure(series, unit, config.label)}`,
       rangeButtons(),
     ) +
     panel(

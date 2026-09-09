@@ -160,6 +160,7 @@ test("search by parent, empty results, and historical earliest date", async () =
 test("compact cards reveal details, date bounds hold, and refresh is direct", async () => {
   await click('[data-nav="overview"]');
   await click("#last");
+  await click('[data-range="24"]');
   const card = document.querySelector('[data-popup="assets"]');
   assert.ok(
     !card.textContent.includes("YTD"),
@@ -177,8 +178,41 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
       .getElementById("detail-body")
       .textContent.includes("S/ 23,316.79 MM"),
   );
+  assert.equal(document.getElementById("detail-title").textContent, "ACTIVOS");
   await click("#detail-close");
+  assert.ok(!document.querySelector(".chart-caption"));
+  assert.ok(
+    document.querySelector(".chart-legend").textContent.includes("Selección"),
+  );
+  assert.ok(document.querySelectorAll(".stat-card").length >= 3);
+  const seriesButton = document.querySelector("[data-series]");
+  const seriesId = seriesButton.dataset.series;
+  await click(`[data-series="${seriesId}"]`);
+  assert.equal(document.getElementById("detail-dialog").open, true);
+  assert.equal(
+    document.getElementById("detail-title").textContent,
+    "VALORES DE LA SERIE",
+  );
+  assert.ok(document.querySelector("#detail-body table"));
+  assert.equal(document.querySelectorAll("#detail-body tbody tr").length, 24);
+  assert.ok(
+    document.getElementById("detail-body").textContent.includes("Jul 2026"),
+  );
+  await click("#detail-close");
+  assert.equal(document.activeElement, seriesButton);
+  const info = document.getElementById("info");
+  info.dispatchEvent(new window.MouseEvent("pointerover", { bubbles: true }));
+  assert.equal(
+    document.getElementById("hover-detail").hidden,
+    true,
+    "Info opens only on click",
+  );
   await click("#info");
+  assert.ok(
+    !document
+      .getElementById("detail-body")
+      .textContent.includes("Cómo se actualiza"),
+  );
   assert.ok(
     document.getElementById("detail-body").textContent.includes("julio 2026"),
   );

@@ -36,7 +36,7 @@ export function chartOptions(points, unit, label, palette, mobile = false) {
     reference("Máx", max, palette.green),
     reference("Mín", min, palette.amber),
   ];
-  if (finite(last)) refs.unshift(reference("Último", last, palette.ink));
+  if (finite(last)) refs.unshift(reference("Selección", last, palette.ink));
   return {
     animationDuration: 540,
     textStyle: { fontFamily: 'Manrope, "Segoe UI", Arial, sans-serif' },
@@ -307,7 +307,7 @@ export function lineChart(points, unit, label) {
   const values = valid.map((p) => p.value),
     avg = values.reduce((a, b) => a + b, 0) / values.length;
   const legend = [
-    ["Último", points.at(-1)?.value, "ink"],
+    ["Selección", points.at(-1)?.value, "ink"],
     ["Prom", avg, "purple"],
     ["Máx", Math.max(...values), "green"],
     ["Mín", Math.min(...values), "amber"],

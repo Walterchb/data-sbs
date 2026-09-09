@@ -343,7 +343,7 @@ main {
   display: grid;
   grid-template-columns: 34px minmax(128px, 170px) 34px 54px;
   gap: 7px;
-  margin-top: 7px;
+  margin-top: 0;
   align-items: center;
   width: 100%;
   max-width: 100%;
@@ -483,7 +483,7 @@ main {
 }
 .kpi-grid {
   display: grid;
-  grid-template-columns: 1.15fr repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 10px;
 }
@@ -495,10 +495,13 @@ main {
   padding: 12px;
   position: relative;
   min-width: 0;
-  min-height: 104px;
+  min-height: 88px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+  justify-items: stretch;
   align-content: space-between;
-  gap: 7px;
+  gap: 6px;
   text-align: left;
   color: var(--ink);
   cursor: help;
@@ -750,18 +753,66 @@ main {
   fill: none;
 }
 .stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 22px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  font-size: 0.82rem;
-}
-.stats div {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 8px;
+  padding-top: 10px;
+  margin-top: 6px;
 }
-.stats small {
-  font-size: 0.75rem;
+.stat-card {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 11px 12px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  border-top: 2px solid var(--stat-tone, var(--cyan));
+}
+.stat-card[data-tone="amber"] {
+  --stat-tone: var(--amber);
+}
+.stat-card[data-tone="green"] {
+  --stat-tone: var(--green);
+}
+.stat-card[data-tone="purple"] {
+  --stat-tone: var(--purple);
+}
+.stat-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.63rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 650;
+}
+.stat-label i {
+  color: var(--stat-tone, var(--cyan));
+}
+.stat-card b {
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  white-space: nowrap;
+  letter-spacing: -0.025em;
+}
+.stat-card small {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+.series-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+.series-button {
+  font-size: 0.72rem;
+  min-height: 32px;
+  background: var(--soft);
+  color: var(--ink);
+  gap: 7px;
 }
 .table-wrap {
   overflow: auto;
@@ -1036,16 +1087,6 @@ td small {
   max-width: 100%;
   width: 100%;
 }
-.chart-caption {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-  font-size: 0.82rem;
-}
-.chart-caption strong {
-  font-size: 1.1rem;
-}
 .checkboxes {
   display: flex;
   gap: 12px;
@@ -1206,7 +1247,9 @@ dialog::backdrop {
 .detail-dialog h2 {
   font-size: 0.88rem;
   font-weight: 650;
-  color: #fff;
+  color: #76dbe5;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   padding-right: 24px;
   margin: 0 0 12px;
 }
@@ -1289,18 +1332,28 @@ dialog::backdrop {
   min-height: 28px;
   padding: 0;
 }
-.update-help {
-  margin-top: 12px;
-  color: #a9c5d8;
-  font-size: 0.7rem;
+.detail-dialog.series-dialog {
+  width: min(660px, calc(100vw - 28px));
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line2);
 }
-.update-help summary {
-  cursor: pointer;
+.series-dialog h2 {
+  color: var(--accent);
 }
-.update-help a {
-  display: inline-block;
-  margin-top: 10px;
-  color: #a7dcea;
+.series-dialog .series-subtitle {
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+.series-dialog .table-wrap.bounded {
+  max-height: min(60dvh, 520px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.series-dialog .detail-close {
+  background: var(--soft);
+  color: var(--ink);
+  border-color: var(--line2);
 }
 #refresh.is-loading .fa-solid {
   animation: refresh-spin 0.8s linear infinite;
@@ -1371,7 +1424,7 @@ dialog::backdrop {
   .period-controls {
     grid-template-columns: 34px minmax(128px, 1fr) 34px 54px;
     gap: 7px;
-    margin-top: 7px;
+    margin-top: 0;
   }
   .section-nav {
     flex-wrap: nowrap;
@@ -1399,7 +1452,7 @@ dialog::backdrop {
   }
   .kpi {
     padding: 10px;
-    min-height: 98px;
+    min-height: 88px;
     cursor: pointer;
     gap: 7px;
   }
@@ -1468,13 +1521,18 @@ dialog::backdrop {
   td {
     padding: 8px;
   }
-  .stats,
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .stat-card {
+    padding: 9px;
+  }
+  .stat-card b {
+    font-size: 0.8rem;
+  }
   .detail-values {
     gap: 12px;
-  }
-  .chart-caption {
-    flex-direction: column;
-    gap: 4px;
   }
   .movement-top {
     flex-direction: column;
