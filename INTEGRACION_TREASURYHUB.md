@@ -1,4 +1,4 @@
-# Treasury Hub · actualización 7
+# Treasury Hub · actualización 8
 
 ## Instalación
 
@@ -20,11 +20,11 @@ Este `index.html` es el módulo Información Financiera SBS de `data-sbs`. No re
 
 ## Cambios de esta revisión
 
-- Fuentes ya no aparece en la navegación principal. Se accede desde Información → Ver fechas por fuente; se conservan la vista y sus enlaces oficiales.
-- El encabezado del detalle de Cuentas SBS muestra «Julio 2026 · Saldo al cierre» o «Julio 2026 · Acumulado enero al mes de corte», según la fecha y cuenta seleccionadas. Debajo aparece la ruta jerárquica de la cuenta, con separadores de Font Awesome.
-- Los valores de detalle usan el mismo diseño de tarjetas que las estadísticas: borde superior #08283f, esquinas rectas, fondo y tipografía consistentes, y dos columnas en móvil.
-- Las notas debajo de los gráficos conservan las aclaraciones de unidades y comparabilidad, sin enlaces al archivo SBS.
-- Se mantienen las mejoras anteriores: jerarquía SBS plegada por defecto, referencias ocultas, filas compactas, resultado neto diferenciado y selección con borde izquierdo y resaltado amarillo detrás del texto y las cifras.
+- Resultado Neto del Ejercicio usa fondo #08283f y texto #66beff en ambos temas. Se conserva el resaltado amarillo de texto y cifras al seleccionar la fila.
+- Los selectores Estado y Vista se encuentran dentro de analysis-toolbar y aparecen únicamente en Cuentas SBS.
+- La barra de análisis permanece fija debajo del encabezado durante el desplazamiento. Su posición se adapta a la altura real del encabezado; tiene un fondo opaco que también cubre los márgenes para evitar que el contenido se vea por detrás. En móvil, Estado y Vista se distribuyen en dos columnas.
+- El botón de copia de la serie muestra «¡Copiado!» debajo de los botones, en un espacio reservado. El mensaje no cambia la altura ni desplaza la tabla o el modal.
+- Se conservan las mejoras anteriores de navegación, encabezados con fecha y breadcrumbs, tarjetas de detalle, notas de fuente, jerarquía plegada y selección de filas.
 
 Se conservan los nombres, vínculos entre cuentas, cifras, unidades y fuentes oficiales del catálogo conciliado.
 

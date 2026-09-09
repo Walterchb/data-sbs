@@ -132,6 +132,7 @@
             class="section-nav"
             aria-label="Secciones del análisis"
           ></nav>
+          <div id="account-controls" class="account-controls" hidden></div>
         </div>
         <div id="error" class="notice error" role="alert" hidden></div>
         <div id="content" tabindex="-1" aria-busy="true">
@@ -188,8 +189,13 @@
         >
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
+        <p
+          id="series-copy-status"
+          class="copy-status"
+          role="status"
+          aria-live="polite"
+        ></p>
       </div>
-      <p id="series-copy-status" class="copy-status" role="status"></p>
       <div id="detail-body"></div>
     </dialog>
     <div id="toast" role="status" class="toast" hidden></div>

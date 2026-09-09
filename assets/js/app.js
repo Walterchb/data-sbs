@@ -19,6 +19,18 @@ import { lineChart, bars, clearCharts, mountCharts } from "./charts.js";
 import { accountTable, wrapTable } from "./tables.js";
 
 const $ = (id) => document.getElementById(id);
+const topbar = document.querySelector(".topbar");
+function syncToolbarOffset() {
+  document.documentElement.style.setProperty(
+    "--topbar-height",
+    `${topbar.getBoundingClientRect().height}px`,
+  );
+}
+syncToolbarOffset();
+if (window.ResizeObserver)
+  new window.ResizeObserver(syncToolbarOffset).observe(topbar);
+window.addEventListener("resize", syncToolbarOffset);
+
 let overview,
   health,
   manifest,
@@ -223,10 +235,9 @@ async function copySeries() {
       $("series-copy").focus();
       if (!ok) throw new Error("No clipboard");
     }
-    $("series-copy-status").textContent = "Copiado. Pega en Excel con Ctrl+V.";
+    $("series-copy-status").textContent = "¡Copiado!";
   } catch {
-    $("series-copy-status").textContent =
-      "No se pudo copiar. Selecciona los datos de la tabla para copiarlos.";
+    $("series-copy-status").textContent = "Error al copiar";
   }
 }
 function metricSeries(key) {
@@ -748,6 +759,18 @@ function tableExpanded() {
     tableParents().every((r) => !state.collapsed.has(r.id))
   );
 }
+function accountControls() {
+  return `<div class="controls"><label>Estado <select id="statement"><option value="balance" ${state.statement === "balance" ? "selected" : ""}>Balance</option><option value="income" ${state.statement === "income" ? "selected" : ""}>Resultados YTD</option></select></label><label>Vista <select id="table-view">${[
+    ["snapshot", "Actual"],
+    ["monthly", "12 meses"],
+    ["annual", "5 años · mismo mes"],
+  ]
+    .map(
+      ([v, t]) =>
+        `<option value="${v}" ${state.tableView === v ? "selected" : ""}>${t}</option>`,
+    )
+    .join("")}</select></label></div>`;
+}
 function balanceView() {
   if (!state.treeInitialized) {
     state.collapsed = new Set(
@@ -763,21 +786,10 @@ function balanceView() {
   }
   const result = accountTable(financial, state);
   exportRows = result.rows;
-  const controls = `<div class="controls"><label>Estado <select id="statement"><option value="balance" ${state.statement === "balance" ? "selected" : ""}>Balance</option><option value="income" ${state.statement === "income" ? "selected" : ""}>Resultados YTD</option></select></label><label>Vista <select id="table-view">${[
-    ["snapshot", "Actual"],
-    ["monthly", "12 meses"],
-    ["annual", "5 años · mismo mes"],
-  ]
-    .map(
-      ([v, t]) =>
-        `<option value="${v}" ${state.tableView === v ? "selected" : ""}>${t}</option>`,
-    )
-    .join("")}</select></label></div>`;
   return (
     heading(
       "Cuentas SBS",
       `Jerarquía del reporte B-2201 · ${month(state.date)} · selecciona cualquier cuenta para profundizar.`,
-      controls,
     ) +
     accountDetail() +
     `<section class="panel"><div class="panel-head"><h2>Balance y resultados, por rubro</h2><div class="controls"><label class="sr-only" for="search">Buscar rubro</label><input id="search" type="search" placeholder="Buscar cuenta o rubro…" value="${e(state.query)}"><label class="sr-only" for="table-sort">Orden</label><select id="table-sort"><option value="hierarchy" ${state.sort === "hierarchy" ? "selected" : ""}>Jerarquía SBS</option><option value="impact" ${state.sort === "impact" ? "selected" : ""}>Movimiento · por nivel</option><option value="value" ${state.sort === "value" ? "selected" : ""}>Saldo · por nivel</option></select><button id="main-only" aria-pressed="${state.mainOnly}">Principales</button><button id="show-references" aria-pressed="${state.showReferences}">${icon("code")} ${state.showReferences ? "Ocultar referencias" : "Mostrar referencias"}</button><button id="expand-all" aria-expanded="${tableExpanded()}">${icon(tableExpanded() ? "compress" : "expand")} ${tableExpanded() ? "Plegar todo" : "Expandir todo"}</button></div></div>${result.html}<p class="footnote">${state.statement === "income" ? "Resultados acumulados YTD. La comparación principal es el mismo mes del año anterior." : "MN y ME están expresadas en soles. Las participaciones usan el padre directo; no sumar subtotales e hijos."}</p><details class="help"><summary>Búsqueda, códigos y comparabilidad</summary><p>La búsqueda encuentra nombres, palabras parciales, categorías, padres y referencias como F9. B-2201 publica rubros agregados y no incluye códigos del plan contable como 1101: esos códigos no se inventan ni se presentan como disponibles. Las filas con nombres repetidos conservan una identidad y ruta distintas. Al buscar se mantienen visibles sus padres.</p></details></section>`
@@ -1137,6 +1149,9 @@ async function render() {
       peers: peersView,
       health: healthView,
     }[state.view]();
+    $("account-controls").hidden = state.view !== "balance";
+    $("account-controls").innerHTML =
+      state.view === "balance" ? accountControls() : "";
     mountCharts();
     urlState();
   } catch (err) {

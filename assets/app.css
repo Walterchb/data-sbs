@@ -317,6 +317,9 @@ main {
   padding: 14px 18px 24px;
 }
 .analysis-toolbar {
+  position: sticky;
+  top: var(--topbar-height, 64px);
+  z-index: 19;
   display: grid;
   grid-template-columns: 310px minmax(0, 1fr);
   align-items: center;
@@ -328,6 +331,14 @@ main {
   box-shadow: var(--shadow);
   padding: 10px 12px;
   margin-bottom: 10px;
+}
+.account-controls {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.account-controls .controls {
+  justify-content: flex-end;
 }
 .commandbar {
   min-width: 0;
@@ -929,23 +940,22 @@ td small {
 .account-table .cell-text {
   display: inline;
 }
-.account-table tbody tr:not(.root):hover td {
+.account-table tbody tr:not(.root):not(.net-result):hover td {
   background: var(--selected);
 }
 .account-table .net-result td,
 .account-table .root.net-result td {
-  background: #e6f1f5;
-  color: var(--ink);
+  background: #08283f;
+  color: #66beff;
   border-top: 3px double #08283f;
   font-weight: 750;
 }
-.account-table .net-result .row-title > .text-button {
-  color: var(--ink);
-  font-weight: 750;
+.account-table .net-result .row-reference {
+  color: #66beff;
 }
-:root[data-theme="dark"] .account-table .net-result td {
-  background: #102e40;
-  border-top-color: #75a8c3;
+.account-table .net-result .row-title > .text-button {
+  color: #66beff;
+  font-weight: 750;
 }
 .account-table .tree-spacer .fa-circle {
   font-size: 0.3rem;
@@ -1485,7 +1495,7 @@ dialog::backdrop {
   }
   .analysis-toolbar {
     display: block;
-    background: transparent;
+    background: var(--panel);
     border: 0;
     box-shadow: none;
     padding: 0;
@@ -1725,13 +1735,25 @@ dialog::backdrop {
   float: none;
   flex: 0 0 28px;
 }
-.copy-status:empty {
-  display: none;
+.series-dialog .detail-actions {
+  position: relative;
+  min-height: 50px;
+  align-items: flex-start;
 }
-.copy-status {
-  clear: both;
-  font-size: 0.7rem;
+.detail-dialog .copy-status {
+  position: absolute;
+  top: 31px;
+  right: 0;
+  width: 90px;
+  margin: 0;
+  line-height: 16px;
+  text-align: right;
+  font-size: 0.65rem;
   color: var(--accent);
+  pointer-events: none;
+}
+.copy-status:empty {
+  visibility: hidden;
 }
 .clipboard-buffer {
   position: fixed;
@@ -1806,5 +1828,39 @@ dialog::backdrop {
   }
   .chart-tip-name {
     max-width: 150px;
+  }
+}
+
+.analysis-toolbar::before {
+  content: "";
+  position: absolute;
+  inset: -1px -18px;
+  background: var(--panel);
+  z-index: -1;
+  border-bottom: 1px solid var(--line);
+}
+@media (max-width: 760px) {
+  .analysis-toolbar::before {
+    inset-inline: -12px;
+  }
+  .account-controls {
+    padding: 8px 0;
+  }
+  .account-controls .controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .account-controls label {
+    min-width: 0;
+  }
+  .account-controls select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+@media print {
+  .analysis-toolbar {
+    position: static;
   }
 }
