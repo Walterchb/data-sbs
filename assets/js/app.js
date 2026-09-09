@@ -39,6 +39,8 @@ const state = {
   sort: "hierarchy",
   mainOnly: false,
   collapsed: new Set(),
+  treeInitialized: false,
+  showReferences: false,
   moveMode: "mom",
   moveSort: "absolute",
   report: "B-2401",
@@ -731,7 +733,29 @@ function accountDetail() {
     rangeButtons(series, unit, row.label),
   );
 }
+function tableParents() {
+  return financial.catalog.filter(
+    (r) =>
+      r.statement === state.statement &&
+      r.group !== "Control" &&
+      financial.catalog.some((c) => c.parent === r.id),
+  );
+}
+function tableExpanded() {
+  return (
+    Boolean(state.query.trim()) ||
+    tableParents().every((r) => !state.collapsed.has(r.id))
+  );
+}
 function balanceView() {
+  if (!state.treeInitialized) {
+    state.collapsed = new Set(
+      financial.catalog
+        .filter((r) => financial.catalog.some((c) => c.parent === r.id))
+        .map((r) => r.id),
+    );
+    state.treeInitialized = true;
+  }
   if (!financial.catalog.some((r) => r.id === state.account)) {
     state.account = "balance:59";
     state.statement = "balance";
@@ -755,7 +779,7 @@ function balanceView() {
       controls,
     ) +
     accountDetail() +
-    `<section class="panel"><div class="panel-head"><h2>Balance y resultados, por rubro</h2><div class="controls"><label class="sr-only" for="search">Buscar rubro</label><input id="search" type="search" placeholder="Nombre, padre o referencia de fila…" value="${e(state.query)}"><label class="sr-only" for="table-sort">Orden</label><select id="table-sort"><option value="hierarchy" ${state.sort === "hierarchy" ? "selected" : ""}>Jerarquía SBS</option><option value="impact" ${state.sort === "impact" ? "selected" : ""}>Mayor movimiento MoM</option><option value="value" ${state.sort === "value" ? "selected" : ""}>Mayor saldo</option></select><button id="main-only" aria-pressed="${state.mainOnly}">Principales</button><button id="expand-all">Expandir todo</button></div></div>${result.html}<p class="footnote">${state.statement === "income" ? "Resultados acumulados YTD. La comparación principal es el mismo mes del año anterior." : "MN y ME están expresadas en soles. Las participaciones usan el padre directo; no sumar subtotales e hijos."}</p><details class="help"><summary>Búsqueda, códigos y comparabilidad</summary><p>La búsqueda encuentra nombres, palabras parciales, categorías, padres y referencias como F9. B-2201 publica rubros agregados y no incluye códigos del plan contable como 1101: esos códigos no se inventan ni se presentan como disponibles. Las filas con nombres repetidos conservan una identidad y ruta distintas. Al buscar se mantienen visibles sus padres.</p></details></section>`
+    `<section class="panel"><div class="panel-head"><h2>Balance y resultados, por rubro</h2><div class="controls"><label class="sr-only" for="search">Buscar rubro</label><input id="search" type="search" placeholder="Buscar cuenta o rubro…" value="${e(state.query)}"><label class="sr-only" for="table-sort">Orden</label><select id="table-sort"><option value="hierarchy" ${state.sort === "hierarchy" ? "selected" : ""}>Jerarquía SBS</option><option value="impact" ${state.sort === "impact" ? "selected" : ""}>Movimiento · por nivel</option><option value="value" ${state.sort === "value" ? "selected" : ""}>Saldo · por nivel</option></select><button id="main-only" aria-pressed="${state.mainOnly}">Principales</button><button id="show-references" aria-pressed="${state.showReferences}">${icon("code")} ${state.showReferences ? "Ocultar referencias" : "Mostrar referencias"}</button><button id="expand-all" aria-expanded="${tableExpanded()}">${icon(tableExpanded() ? "compress" : "expand")} ${tableExpanded() ? "Plegar todo" : "Expandir todo"}</button></div></div>${result.html}<p class="footnote">${state.statement === "income" ? "Resultados acumulados YTD. La comparación principal es el mismo mes del año anterior." : "MN y ME están expresadas en soles. Las participaciones usan el padre directo; no sumar subtotales e hijos."}</p><details class="help"><summary>Búsqueda, códigos y comparabilidad</summary><p>La búsqueda encuentra nombres, palabras parciales, categorías, padres y referencias como F9. B-2201 publica rubros agregados y no incluye códigos del plan contable como 1101: esos códigos no se inventan ni se presentan como disponibles. Las filas con nombres repetidos conservan una identidad y ruta distintas. Al buscar se mantienen visibles sus padres.</p></details></section>`
   );
 }
 function reportView() {
@@ -1232,10 +1256,20 @@ function bind() {
     }
     if (b.id === "main-only") {
       state.mainOnly = !state.mainOnly;
+      if (state.mainOnly)
+        for (const row of tableParents())
+          if (row.depth === 0) state.collapsed.delete(row.id);
+      render();
+    }
+    if (b.id === "show-references") {
+      state.showReferences = !state.showReferences;
       render();
     }
     if (b.id === "expand-all") {
-      state.collapsed.clear();
+      const fold = tableExpanded();
+      for (const row of tableParents())
+        fold ? state.collapsed.add(row.id) : state.collapsed.delete(row.id);
+      state.query = "";
       state.mainOnly = false;
       render();
     }

@@ -19,8 +19,7 @@ export function accountTable(data, state) {
   let catalog = data.catalog.filter(
     (r) => r.statement === state.statement && r.group !== "Control",
   );
-  catalog = filterTree(treeOrder(catalog), state.query, state.collapsed);
-  if (state.mainOnly) catalog = catalog.filter((r) => r.depth <= 1);
+
   if (state.sort === "impact")
     catalog.sort(
       (a, b) =>
@@ -39,6 +38,8 @@ export function accountTable(data, state) {
         (current?.values[b.id]?.[2] ?? -Infinity) -
         (current?.values[a.id]?.[2] ?? -Infinity),
     );
+  catalog = filterTree(treeOrder(catalog), state.query, state.collapsed);
+  if (state.mainOnly) catalog = catalog.filter((r) => r.depth <= 1);
   if (!catalog.length)
     return {
       html: '<div class="empty">No hay coincidencias. Prueba el nombre del rubro o su referencia de fila.</div>',
@@ -64,16 +65,23 @@ export function accountTable(data, state) {
       parent = current?.values[r.parent]?.[2];
     const hasChildren = data.catalog.some((c) => c.parent === r.id),
       delta = difference(v[2], annualIncome ? lastyear : prev);
-    const rowClass =
-      r.id === state.account
-        ? "selected"
-        : r.depth === 0 && r.statement === "balance"
-          ? "root"
+    const rowClass = [
+      r.depth === 0
+        ? "root"
+        : r.depth === 1
+          ? "section"
           : hasChildren
             ? "parent"
-            : "";
-    const title = `${r.path.join(" › ")} · ${r.reference}`;
-    const cell = `<td><div class="account-label" style="--depth:${state.sort === "hierarchy" ? r.depth : 0}">${hasChildren && state.sort === "hierarchy" ? `<button class="tree-toggle" data-collapse="${r.id}" aria-expanded="${!state.collapsed.has(r.id)}" aria-label="${escape((state.collapsed.has(r.id) ? "Expandir " : "Contraer ") + r.label)}">${state.collapsed.has(r.id) ? "▸" : "▾"}</button>` : '<span class="tree-spacer"></span>'}<div class="row-title"><button class="text-button" data-account="${r.id}" title="${escape(title)}">${escape(r.label)}</button><small>${escape(state.query || state.sort !== "hierarchy" ? r.path.slice(0, -1).join(" › ") : r.reference)}</small></div></div></td>`;
+            : "leaf",
+      !hasChildren && r.depth === 0 ? "total" : "",
+      r.id === state.account ? "selected" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const expanded = Boolean(state.query.trim()) || !state.collapsed.has(r.id);
+    const title =
+      r.path.join(" › ") + (state.showReferences ? ` · ${r.reference}` : "");
+    const cell = `<td><div class="account-label" style="--depth:${r.depth}">${hasChildren ? `<button class="tree-toggle" data-collapse="${r.id}" aria-expanded="${expanded}" aria-label="${escape((expanded ? "Plegar " : "Expandir ") + r.label)}" ${state.query.trim() ? 'disabled title="La búsqueda muestra las coincidencias con sus padres"' : ""}><i class="fa-solid fa-chevron-${expanded ? "down" : "right"}" aria-hidden="true"></i></button>` : '<span class="tree-spacer" aria-hidden="true">↳</span>'}<div class="row-title"><button class="text-button" data-account="${r.id}" title="${escape(title)}">${escape(r.label)}</button>${state.showReferences ? `<small class="row-reference">${escape(r.reference)}</small>` : ""}</div></div></td>`;
     const vals = history
       ? dates
           .map(
@@ -83,7 +91,7 @@ export function accountTable(data, state) {
           .join("")
       : `<td class="number">${num(finite(v[0]) ? v[0] / 1000 : null)}</td><td class="number">${num(finite(v[1]) ? v[1] / 1000 : null)}</td><td class="number"><b>${num(finite(v[2]) ? v[2] / 1000 : null)}</b></td><td class="number">${num(delta === null ? null : delta / 1000)}</td><td class="number">${format(growth(v[2], annualIncome ? lastyear : prev), "PERCENT", true)}</td><td class="number">${annualIncome ? "—" : format(growth(v[2], lastyear), "PERCENT", true)}</td><td class="number">${format(ratio(v[2], parent), "PERCENT")}</td><td>${spark(months(state.date, 12).map((d) => data.periods.find((p) => p.date === d)?.values[r.id]?.[2] ?? null))}</td>`;
     return {
-      html: `<tr class="${rowClass}">${cell}${vals}</tr>`,
+      html: `<tr class="${rowClass}" data-depth="${r.depth}" data-row="${r.id}" data-parent="${r.parent || ""}">${cell}${vals}</tr>`,
       export: [
         state.date,
         r.reference,

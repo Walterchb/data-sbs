@@ -81,6 +81,45 @@ test("all views and controls render with real data and no JS errors", async () =
   await click('[data-nav="movements"]');
   await change("move-sort", "percent");
   await click('[data-nav="balance"]');
+  assert.equal(document.getElementById("table-sort").value, "hierarchy");
+  assert.ok(
+    [...document.querySelectorAll(".account-table tbody tr")].every(
+      (row) => row.dataset.depth === "0",
+    ),
+  );
+  assert.equal(document.querySelectorAll(".row-reference").length, 0);
+  await click("#expand-all");
+  assert.match(
+    document.getElementById("expand-all").textContent,
+    /Plegar todo/,
+  );
+  assert.ok(document.querySelector('.account-table [data-row="balance:41"]'));
+  await click("#show-references");
+  assert.ok(document.querySelectorAll(".row-reference").length > 0);
+  await click("#show-references");
+  assert.equal(document.querySelectorAll(".row-reference").length, 0);
+  await change("table-sort", "value");
+  const ids = [...document.querySelectorAll(".account-table tbody tr")].map(
+    (row) => row.dataset.row,
+  );
+  for (const row of document.querySelectorAll(".account-table tbody tr"))
+    if (row.dataset.parent)
+      assert.ok(
+        ids.indexOf(row.dataset.parent) < ids.indexOf(row.dataset.row),
+        "Parent precedes child in sorted hierarchy",
+      );
+  await click("#expand-all");
+  assert.ok(
+    [...document.querySelectorAll(".account-table tbody tr")].every(
+      (row) => row.dataset.depth === "0",
+    ),
+  );
+  assert.match(
+    document.getElementById("expand-all").textContent,
+    /Expandir todo/,
+  );
+  await change("table-sort", "hierarchy");
+  await click("#expand-all");
   await click('[data-account="balance:41"]');
   assert.ok(document.body.textContent.includes("928.86"));
   await change("table-view", "annual");
