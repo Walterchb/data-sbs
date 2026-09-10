@@ -1,4 +1,4 @@
-# Treasury Hub · actualización 10
+# Treasury Hub · actualización 11
 
 ## Instalación
 
@@ -22,14 +22,13 @@ Este `index.html` es el módulo Información Financiera SBS de `data-sbs`. No re
 
 ## Cambios de esta revisión
 
-- Indicadores y riesgos → Capital incorpora una tabla comparativa de BanBif y la banca múltiple con patrimonio efectivo total, TIER 1, TIER 2 y la participación de cada nivel.
-- Son magnitudes calculadas con los APR y ratios del B-2402, identificadas como tales. Se conserva toda la precisión de origen y se redondea al mostrar: TIER 1 = APR × (TIER 1/APR) / 100; patrimonio efectivo = APR × RCG / 100; TIER 2 = patrimonio efectivo − TIER 1.
-- Cada nueva magnitud de BanBif tiene serie histórica, estadísticas, comparaciones por periodos exactos, modal de valores, copia para Excel y exportación CSV. El cálculo se actualiza con el corte seleccionado y las futuras publicaciones.
-- «Ver cálculo» explica las fórmulas y distingue el capital regulatorio del patrimonio contable. Los cálculos muestran — si faltan entradas, las fechas no coinciden o los valores son inconsistentes; no se rellenan periodos antiguos sin APR/TIER 1.
-- Junio de 2026: BanBif muestra patrimonio efectivo S/ 3,072.21 MM, TIER 1 S/ 2,227.47 MM, TIER 2 S/ 844.74 MM y participación TIER 1 de 72.50%; sistema: 76.76% de TIER 1.
-- Se conserva el diseño anterior, incluida la barra fija con Estado y Vista en la misma fila en escritorio.
+- Se elimina el panel separado «Composición del capital regulatorio · calculada».
+- Los datos oficiales y calculados se reúnen en «Datos SBS y magnitudes calculadas», con columnas BanBif, MoM, YTD, YoY, Banca múltiple y periodo declarado. Se conservan las fórmulas en «Ver cálculo» y las series históricas de BanBif.
+- YTD compara el valor con diciembre del año anterior al periodo declarado: variación porcentual para importes, puntos básicos para ratios y diferencia en veces para múltiplos. Si falta el corte exacto o existe una advertencia de fecha, se muestra —. La columna también está disponible en las demás tablas de fuentes regulatorias.
+- La exportación CSV incluye YTD y, en Capital, el valor del sistema. Las filas calculadas continúan identificadas como tales.
+- Se conserva el diseño anterior y la barra fija.
 
-Los archivos SBS originales y la conciliación no se modifican: los cálculos se agregan al cargar Capital.
+Los datos fuente SBS y las fórmulas de reconstrucción del capital no cambian.
 
 ## Funciones conservadas
 

@@ -149,12 +149,21 @@ test("all views and controls render with real data and no JS errors", async () =
     assert.ok(document.querySelector(".line-chart"), "Missing chart " + code);
     if (code === "B-2402") {
       await change("period", "2026-06");
-      const composition = document.querySelector(".capital-composition");
+      const composition = document.querySelector(".metric-table");
       assert.ok(composition.textContent.includes("72.50%"));
       assert.ok(composition.textContent.includes("76.76%"));
-      await click(
-        '.capital-composition [data-report-metric="calc:capital-tier1"]',
+      assert.equal(document.querySelector(".capital-composition"), null);
+      const tier1ShareRow = composition
+        .querySelector('[data-report-metric="calc:capital-tier1-share"]')
+        .closest("tr");
+      assert.equal(tier1ShareRow.cells[3].textContent, "+212.51 pb");
+
+      assert.ok(
+        [...composition.querySelectorAll("th")].some(
+          (th) => th.textContent === "YTD",
+        ),
       );
+      await click('.metric-table [data-report-metric="calc:capital-tier1"]');
       await click("[data-series]");
       assert.ok(
         document.getElementById("detail-body").textContent.includes("2,227.47"),
