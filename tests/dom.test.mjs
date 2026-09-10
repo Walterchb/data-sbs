@@ -177,6 +177,31 @@ test("all views and controls render with real data and no JS errors", async () =
       assert.ok(document.body.textContent.includes("10.23 MM"));
     await click('[data-range="60"]');
   }
+  await click('[data-report="concentration"]');
+  await change("period", "2026-06");
+  assert.ok(document.body.textContent.includes("88.02%"));
+  assert.equal(
+    document.querySelectorAll(".concentration-table tbody tr").length,
+    26,
+  );
+  await change("concentration-source", "B-2349");
+  assert.ok(document.body.textContent.includes("95.95%"));
+  await change("concentration-mode", "amount");
+  await change("concentration-chart", "regions");
+  assert.ok(document.querySelector(".comparison-svg rect"));
+  await click(
+    ".concentration-table tbody tr:nth-child(2) [data-concentration-region]",
+  );
+  assert.equal(document.getElementById("concentration-chart").value, "trend");
+  const bankToggle = document.querySelector('[data-concentration-bank="bbva"]');
+  bankToggle.checked = false;
+  bankToggle.dispatchEvent(new window.Event("change", { bubbles: true }));
+  await ready();
+  assert.equal(
+    document.querySelectorAll(".concentration-table thead th").length,
+    4,
+  );
+  await click("#last");
   await click('[data-nav="peers"]');
   for (const key of ["credits", "npl", "roe", "rcg", "rcl", "rfne"]) {
     await change("peer-metric", key);

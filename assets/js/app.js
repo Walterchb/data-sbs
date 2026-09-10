@@ -1,4 +1,5 @@
 import * as Data from "./data.js";
+import { concentrationView } from "./concentration.js";
 import { withCalculatedCapital } from "./capital.js";
 import { METRICS, NAV, MAIN, RATIOS, BANK_NAMES } from "./config.js";
 import { escape as e, format, month, num, csvCell, units } from "./format.js";
@@ -59,6 +60,11 @@ const state = {
   report: "B-2401",
   reportMetric: "",
   reportQuery: "",
+  concentrationSource: "B-2350",
+  concentrationRegion: "",
+  concentrationMode: "share",
+  concentrationChart: "trend",
+  concentrationBanks: ["bbva", "bcp_foreign", "system_foreign"],
   peerMetric: "credits",
   peerBanks: ["bcp", "bbva", "scotiabank", "interbank"],
   peerSource: "financial",
@@ -272,6 +278,10 @@ function urlState() {
   if (state.view === "reports") {
     p.set("report", state.report);
     if (state.reportMetric) p.set("metric", state.reportMetric);
+    if (state.report === "concentration") {
+      p.set("regional-source", state.concentrationSource);
+      p.set("region", state.concentrationRegion);
+    }
   }
   history.replaceState(null, "", "#" + p);
 }
@@ -284,9 +294,15 @@ function recoverUrl() {
     state.account = p.get("account");
     state.statement = state.account.split(":")[0];
   }
-  if (p.get("report") === "derived" || manifest.reports[p.get("report")])
+  if (
+    ["derived", "concentration"].includes(p.get("report")) ||
+    manifest.reports[p.get("report")]
+  )
     state.report = p.get("report");
   state.reportMetric = p.get("metric") || "";
+  if (["B-2349", "B-2350"].includes(p.get("regional-source")))
+    state.concentrationSource = p.get("regional-source");
+  state.concentrationRegion = p.get("region") || "";
 }
 
 function kpi(key) {
@@ -798,6 +814,18 @@ function balanceView() {
 }
 function reportView() {
   if (state.report === "derived") return derivedView();
+  if (state.report === "concentration") {
+    const result = concentrationView(reportData, state);
+    exportRows = result.rows;
+    return (
+      heading(
+        "Indicadores y riesgos",
+        "Concentración geográfica · Depósitos y créditos por región",
+      ) +
+      reportTabs() +
+      result.html
+    );
+  }
   const p = reportData.periods.filter((p) => p.date <= state.date).at(-1);
   if (!p)
     return (
@@ -908,10 +936,10 @@ function reportView() {
   );
 }
 function reportTabs() {
-  return `<div class="pillars" aria-label="Fuentes regulatorias"><button data-report="derived" aria-pressed="${state.report === "derived"}">Ratios de análisis</button>${Object.entries(
+  return `<div class="pillars" aria-label="Fuentes regulatorias"><button data-report="derived" aria-pressed="${state.report === "derived"}">Ratios de análisis</button><button data-report="concentration" aria-pressed="${state.report === "concentration"}">Concentración</button>${Object.entries(
     manifest.sources,
   )
-    .filter(([c]) => c !== "B-2201")
+    .filter(([c]) => !["B-2201", "B-2349", "B-2350"].includes(c))
     .map(
       ([c, s]) =>
         `<button data-report="${c}" aria-pressed="${c === state.report}">${e({ "B-2401": "Indicadores", "B-2336": "Sectores", "B-2402": "Capital", "B-2340": "Liquidez", "B-230809": "RCL", "B-234021": "RFNE", "B-2368": "Posición ME" }[c] || s.title)}</button>`,
@@ -1114,7 +1142,7 @@ function healthView() {
           `<details class="panel health-detail" ${d.status !== "OK" ? "open" : ""}><summary>${e(d.dataset)} · ${e(d.title)}</summary><p class="source-note">Unidad: ${e(d.unit)}. Moneda: ${e(d.currency)}.</p>${d.errors.length ? `<ul class="bad">${d.errors.map((w) => `<li>${e(w)}</li>`).join("")}</ul>` : ""}${d.warnings.length ? `<ul>${d.warnings.map((w) => `<li>${e(w)}</li>`).join("")}</ul>` : "<p>Validaciones automáticas sin observaciones.</p>"}${d.period_issues.length ? wrapTable(`<table><thead><tr><th>Archivo</th><th>Encabezado declarado</th></tr></thead><tbody>${d.period_issues.map((i) => `<tr><td>${month(i.date)}</td><td>${e(i.caption)}</td></tr>`).join("")}</tbody></table>`, "Discrepancias de periodo") : ""}${d.missing_periods.length ? `<p>Periodos faltantes: ${d.missing_periods.map((x) => month(x)).join(", ")}</p>` : ""}</details>`,
       )
       .join("") +
-    `<details class="panel help"><summary>Metodología, cobertura y controles</summary><p>Las cifras proceden de ocho reportes SBS. No se incorporan calificaciones ni cifras externas de clasificadoras. B-2201 incluye saldos de balance y resultados acumulados; B-2401 aporta ROE y ROA anualizados oficiales. El RFNE se convierte de proporción a porcentaje y se reconcilia con financiación disponible/requerida. El RCL es el promedio de ratios diarios del trimestre; no se sustituye por el cociente de saldos promedio.</p><p>Se validan estructura, duplicados, valores finitos, fechas, periodos faltantes, identidad de entidad, MN + ME, activo = pasivo + patrimonio, y el total oficial del sistema. Los controles de rezago consideran la periodicidad de cada fuente. Una advertencia exige interpretación; no es evidencia automática de un error contable.</p></details>`
+    `<details class="panel help"><summary>Metodología, cobertura y controles</summary><p>Las cifras proceden de los reportes SBS integrados. No se incorporan calificaciones ni cifras externas de clasificadoras. B-2201 incluye saldos de balance y resultados acumulados; B-2401 aporta ROE y ROA anualizados oficiales. El RFNE se convierte de proporción a porcentaje y se reconcilia con financiación disponible/requerida. El RCL es el promedio de ratios diarios del trimestre; no se sustituye por el cociente de saldos promedio.</p><p>Se validan estructura, duplicados, valores finitos, fechas, periodos faltantes, identidad de entidad, MN + ME, activo = pasivo + patrimonio, y el total oficial del sistema. Los controles de rezago consideran la periodicidad de cada fuente. Una advertencia exige interpretación; no es evidencia automática de un error contable.</p></details>`
   );
 }
 function peerReportCode(key) {
@@ -1138,7 +1166,13 @@ async function render() {
     if (["overview", "movements", "balance", "peers"].includes(state.view))
       financial = await Data.load("financial");
     if (state.view === "reports" && state.report !== "derived")
-      reportData = withCalculatedCapital(await Data.load(state.report));
+      reportData = withCalculatedCapital(
+        await Data.load(
+          state.report === "concentration"
+            ? state.concentrationSource
+            : state.report,
+        ),
+      );
     if (state.view === "peers" && peerReportCode(state.peerMetric))
       reportData = await Data.load(peerReportCode(state.peerMetric));
     if (id !== renderId) return;
@@ -1213,6 +1247,14 @@ function switchTheme() {
   } catch {}
 }
 function bind() {
+  document.addEventListener(
+    "toggle",
+    (event) => {
+      if (event.target.matches?.(".concentration-banks"))
+        state.concentrationBanksOpen = event.target.open;
+    },
+    true,
+  );
   document.addEventListener("click", (event) => {
     const b = event.target.closest("button");
     if (!b) return;
@@ -1250,6 +1292,12 @@ function bind() {
       state.reportMetric = "";
       state.reportQuery = "";
       state.view = "reports";
+      render();
+      return;
+    }
+    if (b.dataset.concentrationRegion) {
+      state.concentrationRegion = b.dataset.concentrationRegion;
+      state.concentrationChart = "trend";
       render();
       return;
     }
@@ -1317,8 +1365,29 @@ function bind() {
         "move-mode": "moveMode",
         "move-sort": "moveSort",
         "peer-metric": "peerMetric",
+        "concentration-source": "concentrationSource",
+        "concentration-region": "concentrationRegion",
+        "concentration-mode": "concentrationMode",
+        "concentration-chart": "concentrationChart",
       };
-    if (el.dataset.peer) {
+    if (el.dataset.concentrationBank) {
+      if (el.checked && state.concentrationBanks.length >= 5) {
+        el.checked = false;
+        toast("Selecciona hasta cinco bancos adicionales a BanBif.");
+        return;
+      }
+      state.concentrationBanks = el.checked
+        ? [
+            ...new Set([
+              ...state.concentrationBanks,
+              el.dataset.concentrationBank,
+            ]),
+          ]
+        : state.concentrationBanks.filter(
+            (b) => b !== el.dataset.concentrationBank,
+          );
+      render();
+    } else if (el.dataset.peer) {
       state.peerBanks = el.checked
         ? [...new Set([...state.peerBanks, el.dataset.peer])]
         : state.peerBanks.filter((b) => b !== el.dataset.peer);

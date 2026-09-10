@@ -113,7 +113,8 @@ def report_output(code,report):
             bank_values[bank]={metric_id(k):v for k,v in metrics.items() if metric_id(k) in catalog}
         periods.append({'date':p['date'][:7],'source_url':p['source_url'],'values':values,'effective':effective,
                         'keys':keys,'peers':bank_values,'warning':p.get('period_warning'),
-                        'source_caption':p.get('source_caption')})
+                        'source_caption':p.get('source_caption'),
+                        **({'entity_names':p.get('entity_names',{})} if code in ('B-2349','B-2350') else {})})
     return {'code':code,'title':SOURCES[code]['title'],'frequency':SOURCES[code]['frequency'],
             'catalog':list(catalog.values()),'periods':periods}
 
@@ -225,7 +226,7 @@ def build(db,output,today=None):
               'overview':'overview.json','financial':'financial.json','health':'data_health.json',
               'reports':{c:f'reports/{c}.json' for c in out},'sources':SOURCES}
     write(output/'manifest.json',manifest)
-    print('Files generated: 12 (including data health and manifest)')
+    print(f'Files generated: {len(out)+5} (including data health and manifest)')
     return report
 
 

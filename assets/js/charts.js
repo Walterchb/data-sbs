@@ -217,9 +217,12 @@ export function mountCharts() {
       const observer = window.ResizeObserver
         ? new window.ResizeObserver(() => {
             chart.resize();
-            chart.setOption({
-              yAxis: { position: window.innerWidth <= 760 ? "left" : "right" },
-            });
+            if (spec.kind !== "bar")
+              chart.setOption({
+                yAxis: {
+                  position: window.innerWidth <= 760 ? "left" : "right",
+                },
+              });
           })
         : null;
       observer?.observe(node);
@@ -228,13 +231,22 @@ export function mountCharts() {
     }
     const zoom = entry.chart.getOption()?.dataZoom;
     entry.chart.setOption(
-      chartOptions(
-        spec.points,
-        spec.unit,
-        spec.label,
-        palette,
-        window.innerWidth <= 760,
-      ),
+      spec.comparison
+        ? comparisonOptions(
+            spec.series,
+            spec.unit,
+            spec.label,
+            palette,
+            spec.kind,
+            window.innerWidth <= 760,
+          )
+        : chartOptions(
+            spec.points,
+            spec.unit,
+            spec.label,
+            palette,
+            window.innerWidth <= 760,
+          ),
       true,
     );
     if (zoom?.length)
@@ -343,4 +355,174 @@ export function spark(values) {
 export function bars(rows, unit) {
   const max = Math.max(1, ...rows.map((r) => Math.abs(r.value ?? 0)));
   return `<div class="bars">${rows.map((r) => `<div class="bar-row"><span>${escape(r.label)}</span><div class="bar-track"><i style="width:${Math.max(0, (Math.abs(r.value ?? 0) / max) * 100)}%"></i></div><strong>${format(r.value, unit)}</strong></div>`).join("")}</div>`;
+}
+
+export const BANK_COLORS = {
+  banbif: "#1c7ff2",
+  bbva: "#635bff",
+  bcp: "#c17a18",
+  bcp_foreign: "#c17a18",
+  interbank: "#13966b",
+  scotiabank: "#d74855",
+  system: "#66788d",
+  system_foreign: "#66788d",
+};
+export function comparisonOptions(
+  series,
+  unit,
+  label,
+  palette,
+  kind = "line",
+  mobile = false,
+) {
+  const baseline =
+    series.find((s) => s.points.some((p) => finite(p.value))) || series[0];
+  const options = chartOptions(baseline.points, unit, label, palette, mobile);
+  const categories = series[0].points.map((p) => p.date);
+  options.color = series.map((s) => s.color);
+  options.legend = {
+    type: "scroll",
+    top: 4,
+    left: 0,
+    right: 100,
+    textStyle: { color: palette.ink, fontSize: 11 },
+    icon: "roundRect",
+  };
+  options.grid.top = 52;
+  options.tooltip.formatter = (params) => {
+    const list = Array.isArray(params) ? params : [params],
+      index = list[0]?.dataIndex;
+    if (index === undefined) return "";
+    const title =
+      kind === "line" ? month(categories[index], true) : categories[index];
+    return `<div class="chart-tip-date">${escape(title.toLocaleUpperCase("es"))}</div>${series.map((s) => `<div class="chart-tip-row"><span class="chart-tip-name"><i style="background:${s.color}"></i>${escape(s.name)}</span><b>${format(s.points[index]?.value, unit)}</b></div>`).join("")}`;
+  };
+  options.series = series.map((s) => ({
+    name: s.name,
+    type: kind,
+    data: s.points.map((p) =>
+      finite(p.value)
+        ? unit.endsWith("THOUSAND")
+          ? p.value / 1000
+          : p.value
+        : null,
+    ),
+    connectNulls: false,
+    smooth: false,
+    showSymbol: false,
+    symbolSize: 5,
+    lineStyle: { width: s.slug === "banbif" ? 3 : 2, color: s.color },
+    itemStyle: { color: s.color },
+    ...(kind === "line"
+      ? {
+          areaStyle: {
+            opacity: s.slug === "banbif" ? 0.15 : 0.035,
+            color: {
+              type: "linear",
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: s.color },
+                { offset: 1, color: palette.panel },
+              ],
+            },
+          },
+        }
+      : { barMaxWidth: 14 }),
+    emphasis: { focus: "series" },
+  }));
+  options.xAxis.data = categories;
+  if (kind === "bar") {
+    options.xAxis = {
+      type: "value",
+      axisLabel: { color: palette.muted, fontSize: 10 },
+      splitLine: { lineStyle: { color: palette.grid } },
+    };
+    options.yAxis = {
+      type: "category",
+      data: categories,
+      inverse: true,
+      axisLabel: {
+        color: palette.ink,
+        fontSize: 11,
+        width: mobile ? 100 : 150,
+        overflow: "truncate",
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+    };
+    options.dataZoom = [];
+    options.grid.bottom = 20;
+    delete options.toolbox.feature.dataZoom;
+  }
+  return options;
+}
+export function comparisonChart(series, unit, label, kind = "line") {
+  const valid = series.flatMap((s) => s.points).filter((p) => finite(p.value));
+  if (!valid.length)
+    return '<div class="empty">No hay datos comparables para esta selección.</div>';
+  const id = `sbs-chart-${++chartId}`;
+  specifications.set(id, { comparison: true, series, unit, label, kind });
+  const width = 920,
+    height =
+      kind === "bar"
+        ? Math.max(
+            370,
+            series[0].points.length * (series.length * 12 + 22) + 50,
+          )
+        : 320;
+  const left = kind === "bar" ? 155 : 60,
+    right = 20,
+    top = 20,
+    bottom = 35;
+  const max = Math.max(...valid.map((p) => p.value), 0) || 1,
+    count = series[0].points.length;
+  const x = (i) => left + (i * (width - left - right)) / Math.max(count - 1, 1);
+  const y = (v) => height - bottom - (v / max) * (height - top - bottom);
+  let shapes = "";
+  for (const [bankIndex, s] of series.entries()) {
+    if (kind === "bar") {
+      const row = (height - top - bottom) / count,
+        bar = row / (series.length + 1);
+      shapes += s.points
+        .map((p, i) =>
+          finite(p.value)
+            ? `<rect x="${left}" y="${top + i * row + bankIndex * bar}" width="${(p.value / max) * (width - left - right)}" height="${Math.max(bar - 2, 2)}" fill="${s.color}"><title>${escape(s.name)} · ${escape(p.date)}: ${format(p.value, unit)}</title></rect>`
+            : "",
+        )
+        .join("");
+    } else {
+      let path = "",
+        open = false;
+      s.points.forEach((p, i) => {
+        if (!finite(p.value)) {
+          open = false;
+          return;
+        }
+        path += `${open ? "L" : "M"}${x(i).toFixed(2)},${y(p.value).toFixed(2)} `;
+        open = true;
+      });
+      shapes += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="${s.slug === "banbif" ? 3 : 2}"/>`;
+      shapes += s.points
+        .map((p, i) =>
+          finite(p.value)
+            ? `<circle cx="${x(i)}" cy="${y(p.value)}" r="2.3" fill="${s.color}"><title>${escape(s.name)} · ${escape(month(p.date))}: ${format(p.value, unit)}</title></circle>`
+            : "",
+        )
+        .join("");
+    }
+  }
+  const labels =
+    kind === "bar"
+      ? series[0].points
+          .map(
+            (p, i) =>
+              `<text x="${left - 8}" y="${top + (i * (height - top - bottom)) / count + 14}" text-anchor="end" font-size="12" fill="currentColor">${escape(p.date)}</text>`,
+          )
+          .join("")
+      : `<text x="${left}" y="${height - 8}" font-size="12" fill="currentColor">${month(series[0].points[0].date)}</text><text x="${width - right}" y="${height - 8}" text-anchor="end" font-size="12" fill="currentColor">${month(series[0].points.at(-1).date)}</text>`;
+  const legend = `<div class="comparison-legend">${series.map((s) => `<span><i style="background:${s.color}"></i>${escape(s.name)}</span>`).join("")}</div>`;
+  return `<div class="treasury-chart"><div class="chart-fallback">${legend}<svg class="comparison-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escape(label)}"><line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" stroke="currentColor" opacity=".2"/>${shapes}${labels}</svg></div><div id="${id}" class="chart-renderer" style="height:${height}px" role="img" aria-label="${escape(label)}" hidden></div></div>`;
 }

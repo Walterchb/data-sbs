@@ -46,5 +46,17 @@
     "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2368",
     "frequency": "monthly",
     "start_year": 2021
+  },
+  "B-2349": {
+    "title": "Estructura de los Créditos Directos por Departamento",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2349",
+    "frequency": "monthly",
+    "start_year": 2021
+  },
+  "B-2350": {
+    "title": "Estructura de los Depósitos por Departamento",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2350",
+    "frequency": "monthly",
+    "start_year": 2021
   }
 }
