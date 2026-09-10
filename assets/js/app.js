@@ -1,4 +1,5 @@
 import * as Data from "./data.js";
+import { CAPITAL_CALCULATED, withCalculatedCapital } from "./capital.js";
 import { METRICS, NAV, MAIN, RATIOS, BANK_NAMES } from "./config.js";
 import { escape as e, format, month, num, csvCell, units } from "./format.js";
 import {
@@ -795,6 +796,18 @@ function balanceView() {
     `<section class="panel"><div class="panel-head"><h2>Balance y resultados, por rubro</h2><div class="controls"><label class="sr-only" for="search">Buscar rubro</label><input id="search" type="search" placeholder="Buscar cuenta o rubro…" value="${e(state.query)}"><label class="sr-only" for="table-sort">Orden</label><select id="table-sort"><option value="hierarchy" ${state.sort === "hierarchy" ? "selected" : ""}>Jerarquía SBS</option><option value="impact" ${state.sort === "impact" ? "selected" : ""}>Movimiento · por nivel</option><option value="value" ${state.sort === "value" ? "selected" : ""}>Saldo · por nivel</option></select><button id="main-only" aria-pressed="${state.mainOnly}">Principales</button><button id="show-references" aria-pressed="${state.showReferences}">${icon("code")} ${state.showReferences ? "Ocultar referencias" : "Mostrar referencias"}</button><button id="expand-all" aria-expanded="${tableExpanded()}">${icon(tableExpanded() ? "compress" : "expand")} ${tableExpanded() ? "Plegar todo" : "Expandir todo"}</button></div></div>${result.html}<p class="footnote">${state.statement === "income" ? "Resultados acumulados YTD. La comparación principal es el mismo mes del año anterior." : "MN y ME están expresadas en soles. Las participaciones usan el padre directo; no sumar subtotales e hijos."}</p><details class="help"><summary>Búsqueda, códigos y comparabilidad</summary><p>La búsqueda encuentra nombres, palabras parciales, categorías, padres y referencias como F9. B-2201 publica rubros agregados y no incluye códigos del plan contable como 1101: esos códigos no se inventan ni se presentan como disponibles. Las filas con nombres repetidos conservan una identidad y ruta distintas. Al buscar se mantienen visibles sus padres.</p></details></section>`
   );
 }
+function capitalComposition(period) {
+  const system = period.peers?.system || {};
+  const table = wrapTable(
+    `<table class="capital-composition"><thead><tr><th>Magnitud calculada</th><th class="number">BanBif</th><th class="number">Banca múltiple</th></tr></thead><tbody>${CAPITAL_CALCULATED.map((metric) => `<tr><td><button class="text-button" data-report-metric="${metric.id}">${e(metric.label.replace(" (calculado)", ""))}</button></td><td class="number"><b>${format(period.values[metric.id], metric.unit)}</b></td><td class="number">${format(system[metric.id], metric.unit)}</td></tr>`).join("")}</tbody></table>`,
+    "Composición calculada del capital regulatorio",
+  );
+  return panel(
+    "Composición del capital regulatorio · calculada",
+    `${month(period.date, true)} · Importes en S/ MM · Participaciones en %`,
+    `${table}<p class="source-note">Selecciona una magnitud para ver la serie de BanBif. Los montos se reconstruyen con los ratios SBS; no corresponden al patrimonio contable.</p><details class="help"><summary>Ver cálculo</summary><p>TIER 1 = APR × (TIER 1/APR) ÷ 100. Patrimonio efectivo total = APR × RCG ÷ 100. TIER 2 = Patrimonio efectivo total − TIER 1. La participación de cada nivel es su monto dividido entre el patrimonio efectivo total × 100.</p><p>Fuente: B-2402. Se utiliza toda la precisión disponible y se redondea solo al mostrar. Se requiere APR y ambos ratios del mismo periodo para cada entidad; si faltan datos o hay una advertencia de fecha, se muestra —.</p></details>`,
+  );
+}
 function reportView() {
   if (state.report === "derived") return derivedView();
   const p = reportData.periods.filter((p) => p.date <= state.date).at(-1);
@@ -807,7 +820,10 @@ function reportView() {
   const currentIds = Object.keys(p.values);
   let catalog = reportData.catalog.filter((r) => currentIds.includes(r.id));
   if (!catalog.some((r) => r.id === state.reportMetric))
-    state.reportMetric = Object.values(p.keys)[0]?.id || catalog[0]?.id || "";
+    state.reportMetric =
+      state.report === "B-2402" && finite(p.values["calc:capital-tier1-share"])
+        ? "calc:capital-tier1-share"
+        : Object.values(p.keys)[0]?.id || catalog[0]?.id || "";
   const metric = catalog.find((r) => r.id === state.reportMetric),
     unit = metric?.unit || "PEN_THOUSAND";
   const prev = reportData.periods.find((q) => q.date === shift(p.date, -1)),
@@ -884,13 +900,14 @@ function reportView() {
           `${p.warning} Archivo: ${month(p.date)}. Encabezado: ${p.source_caption}. Se muestra el dato publicado, sin usarlo para alertas o comparaciones automáticas.`,
         )
       : "") +
+    (state.report === "B-2402" ? capitalComposition(p) : "") +
     panel(
       metric?.label || "Serie histórica",
       `Archivo SBS de ${month(p.date)} · dato declarado a ${month(p.effective[state.reportMetric])}`,
       `${lineChart(series, unit, metric?.label || "Serie")}${statStrip(series, unit)}<p class="source-note">${reportData.frequency === "quarterly" ? "Promedio diario trimestral. No es un saldo de cierre." : "Cada métrica conserva su unidad y fecha."}</p>`,
       rangeButtons(series, unit, metric?.label || "Serie"),
     ) +
-    `<section class="panel"><div class="panel-head"><h2>Detalle de la fuente</h2><div class="controls"><label class="sr-only" for="report-search">Buscar indicador</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar indicador, moneda o componente…"></div></div>${rows.length ? table : '<div class="empty">No hay indicadores que coincidan con la búsqueda.</div>'}<p class="footnote">Ratios: cambios en pb. Importes: cambios en %. Múltiplos: diferencias en veces. No se calculan comparaciones sin el periodo exacto.</p></section>`
+    `<section class="panel"><div class="panel-head"><h2>${state.report === "B-2402" ? "Datos SBS y magnitudes calculadas" : "Detalle de la fuente"}</h2><div class="controls"><label class="sr-only" for="report-search">Buscar indicador</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar indicador, moneda o componente…"></div></div>${rows.length ? table : '<div class="empty">No hay indicadores que coincidan con la búsqueda.</div>'}<p class="footnote">Ratios: cambios en pb. Importes: cambios en %. Múltiplos: diferencias en veces. No se calculan comparaciones sin el periodo exacto.</p></section>`
   );
 }
 function reportTabs() {
@@ -1124,7 +1141,7 @@ async function render() {
     if (["overview", "movements", "balance", "peers"].includes(state.view))
       financial = await Data.load("financial");
     if (state.view === "reports" && state.report !== "derived")
-      reportData = await Data.load(state.report);
+      reportData = withCalculatedCapital(await Data.load(state.report));
     if (state.view === "peers" && peerReportCode(state.peerMetric))
       reportData = await Data.load(peerReportCode(state.peerMetric));
     if (id !== renderId) return;

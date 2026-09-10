@@ -147,6 +147,21 @@ test("all views and controls render with real data and no JS errors", async () =
       "Report render error " + code,
     );
     assert.ok(document.querySelector(".line-chart"), "Missing chart " + code);
+    if (code === "B-2402") {
+      await change("period", "2026-06");
+      const composition = document.querySelector(".capital-composition");
+      assert.ok(composition.textContent.includes("72.50%"));
+      assert.ok(composition.textContent.includes("76.76%"));
+      await click(
+        '.capital-composition [data-report-metric="calc:capital-tier1"]',
+      );
+      await click("[data-series]");
+      assert.ok(
+        document.getElementById("detail-body").textContent.includes("2,227.47"),
+      );
+      await click("#detail-close");
+      await click("#last");
+    }
     if (code === "B-234021")
       assert.ok(document.body.textContent.includes("105.02%"));
     if (code === "B-2368")
