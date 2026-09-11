@@ -2000,15 +2000,23 @@ dialog::backdrop {
   outline-offset: 2px;
   border-radius: 5px;
 }
+/* Entity selection follows the page theme rather than KPI tooltip colors. */
 .entity-picker {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  max-width: 225px;
-  min-width: 120px;
+  gap: 7px;
+  min-width: 108px;
+  max-width: 215px;
+  height: 32px;
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  font-weight: 620;
+  line-height: 1.3;
+  color: var(--ink);
   text-align: left;
   background: var(--panel);
-  border-color: var(--line2);
+  border: 1px solid var(--line);
 }
 .entity-picker > span {
   flex: 1;
@@ -2016,95 +2024,125 @@ dialog::backdrop {
 }
 .entity-picker small {
   margin-left: 5px;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   color: var(--muted);
 }
 .entity-picker > .fa-chevron-down {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--muted);
 }
 .entity-dialog {
-  width: min(760px, calc(100vw - 24px));
-  max-height: 85dvh;
-  padding: 24px;
+  box-sizing: border-box;
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(720px, calc(100dvh - 40px));
+  overflow: auto;
+  padding: 22px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  color-scheme: inherit;
+}
+.entity-dialog::backdrop {
+  background: rgba(3, 16, 27, 0.42);
+  backdrop-filter: blur(3px);
 }
 .entity-dialog-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 18px;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
 }
 .entity-dialog-head h2 {
   margin: 0;
-  font-size: 1.15rem;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.4;
 }
 .entity-dialog-head p {
   color: var(--muted);
-  margin: 5px 0 0;
-  font-size: 0.875rem;
+  margin: 4px 0 0;
+  font-size: 0.8rem;
 }
 .entity-dialog-head button {
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  min-height: 30px;
+  width: 30px;
+  height: 30px;
   padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+.entity-dialog-head button:hover {
+  background: var(--soft);
+  color: var(--ink);
 }
 .entity-group-label {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--muted);
-  margin: 18px 0 9px;
+  margin: 16px 0 8px;
 }
 .entity-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 9px;
+  gap: 7px;
 }
 .entity-totals {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .entity-card {
-  position: relative;
   display: flex;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 9px;
   align-items: center;
   text-align: left;
-  padding: 13px 10px;
-  min-height: 64px;
+  padding: 10px;
+  min-height: 48px;
   height: auto;
   background: var(--panel);
+  color: var(--ink);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 5px;
   white-space: normal;
+  box-shadow: none;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
 .entity-card > span:nth-child(2) {
   min-width: 0;
   flex: 1;
 }
 .entity-card strong {
-  font-size: 0.875rem;
-  font-weight: 650;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
   display: block;
   overflow-wrap: anywhere;
 }
 .entity-card small {
   display: block;
   color: var(--muted);
-  font-size: 0.75rem;
-  margin-top: 4px;
-  line-height: 1.4;
+  font-size: 0.7rem;
+  margin-top: 3px;
+  line-height: 1.35;
 }
 .entity-card-icon {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 .entity-check {
   visibility: hidden;
   color: var(--cyan);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 .entity-card[aria-pressed="true"] {
   background: var(--selected);
@@ -2114,8 +2152,21 @@ dialog::backdrop {
 .entity-card[aria-pressed="true"] .entity-check {
   visibility: visible;
 }
+.entity-card[aria-pressed="true"] .entity-card-icon {
+  color: var(--cyan);
+}
 .entity-card:hover {
+  background: var(--soft);
+  border-color: var(--line2);
+}
+.entity-card[aria-pressed="true"]:hover {
+  background: var(--selected);
   border-color: var(--cyan);
+}
+.entity-card:focus-visible,
+.entity-picker:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 .composition-summary {
   display: grid;
@@ -2156,78 +2207,121 @@ dialog::backdrop {
 .legend-down {
   background: var(--red);
 }
-.composition-row {
-  padding: 12px 0;
+/* One shared column layout keeps the bars consecutive and the data on the right. */
+.composition-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  margin-top: 6px;
+}
+.composition-scroll:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.composition-table {
+  width: 100%;
+  min-width: 660px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.composition-col-label {
+  width: 17%;
+}
+.composition-col-plot {
+  width: 21%;
+}
+.composition-col-value {
+  width: 12%;
+}
+.composition-col-rate {
+  width: 9.5%;
+}
+.composition-table th,
+.composition-table td {
+  padding: 6px 5px;
+  border: 0;
   border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  text-align: right;
+  white-space: nowrap;
+  background: transparent;
+  color: inherit;
+  height: auto;
 }
-.composition-row-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: baseline;
+.composition-table thead th {
+  position: static;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--soft);
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
-.composition-row-head .text-button {
-  font-size: 0.875rem;
+.composition-table th:first-child {
   text-align: left;
-  line-height: 1.4;
+  padding-left: 0;
 }
-.composition-row-head > div {
-  text-align: right;
-  flex-shrink: 0;
+.composition-table .composition-plot-title {
+  text-align: center;
 }
-.composition-row-head b {
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
+.composition-table tbody th {
+  font-weight: 500;
 }
-.composition-row-head small {
+.composition-table .text-button {
   display: block;
-  color: var(--muted);
+  width: 100%;
+  min-height: 22px;
+  padding: 0;
+  text-align: left;
   font-size: 0.75rem;
-  margin-top: 3px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
 }
-.composition-changes {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin: 6px 0 8px;
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-}
-.composition-changes small {
-  font-size: inherit;
-  color: var(--muted);
-  margin-right: 4px;
-}
-.composition-bar-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 122px;
-  align-items: center;
-  gap: 10px;
-}
-.composition-bar-row > b {
-  text-align: right;
-  font-size: 0.75rem;
+.composition-table .composition-amount,
+.composition-table .composition-delta {
   font-weight: 650;
-  font-variant-numeric: tabular-nums;
+}
+.composition-table tbody tr:hover {
+  background: var(--soft);
+}
+.composition-table .change-up {
+  color: var(--green);
+}
+.composition-table .change-down {
+  color: var(--red);
+}
+.composition-table .composition-plot {
+  position: relative;
+}
+.composition-plot::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line2);
 }
 .diverging-track {
   position: relative;
-  height: 18px;
-  background: var(--soft);
-}
-.diverging-track::after {
-  content: "";
-  position: absolute;
-  top: -2px;
-  bottom: -2px;
-  left: 50%;
-  width: 1px;
-  background: var(--line2);
+  height: 16px;
+  background: transparent;
 }
 .diverging-fill {
   position: absolute;
   top: 3px;
   bottom: 3px;
+}
+@media (min-width: 761px) and (max-width: 1450px) {
+  .composition-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .diverging-fill.change-up {
   background: var(--green);
@@ -2250,8 +2344,9 @@ dialog::backdrop {
     gap: 8px;
   }
   .entity-card {
-    padding: 11px 8px;
+    padding: 10px 8px;
     gap: 7px;
+    min-height: 48px;
   }
   .entity-card-icon {
     display: none;
@@ -2264,9 +2359,6 @@ dialog::backdrop {
   }
   .composition-summary > :first-child b {
     font-size: 1.2rem;
-  }
-  .composition-changes {
-    gap: 10px;
   }
 }
 @media (max-width: 360px) {

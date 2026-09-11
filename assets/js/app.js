@@ -616,15 +616,20 @@ function composition(parent, label) {
       const left = r.delta < 0 ? 50 - width : 50;
       const deltaClass =
         r.delta > 0 ? "change-up" : r.delta < 0 ? "change-down" : "";
-      return `<div class="composition-row"><div class="composition-row-head"><button class="text-button" data-drill="${r.id}">${e(r.label)}</button><div><b>${format(r.value)}</b><small>${format(r.share, "PERCENT")} del total</small></div></div><div class="composition-changes">${modes.map(([key, name]) => `<span><small>${name}</small>${signed(r.changes[key])}</span>`).join("")}</div><div class="composition-bar-row"><div class="diverging-track" role="img" aria-label="${e(r.label)}: variación ${mode.toUpperCase()} ${format(r.delta, "PEN_THOUSAND", true)}"><span class="diverging-fill ${deltaClass}" style="left:${left}%;width:${width}%"></span></div><b class="${deltaClass}">${format(r.delta, "PEN_THOUSAND", true)}</b></div></div>`;
+      const amount = (value, signed = false) =>
+        finite(value)
+          ? `${signed && value > 0 ? "+" : ""}${num(value / 1000)}`
+          : "—";
+      return `<tr class="composition-row"><th scope="row"><button class="text-button" data-drill="${r.id}" title="${e(r.label)}">${e(r.label)}</button></th><td class="composition-plot"><div class="diverging-track" role="img" aria-label="${e(r.label)}: variación ${mode.toUpperCase()} ${format(r.delta, "PEN_THOUSAND", true)}"><span class="diverging-fill ${deltaClass}" style="left:${left}%;width:${width}%"></span></div></td><td class="composition-delta ${deltaClass}">${amount(r.delta, true)}</td><td class="composition-amount">${amount(r.value)}</td><td>${format(r.share, "PERCENT")}</td>${modes.map(([key]) => `<td>${signed(r.changes[key])}</td>`).join("")}</tr>`;
     })
     .join("");
+  const table = `<div class="composition-scroll" role="region" aria-label="${e(label)}: barras y datos" tabindex="0"><table class="composition-table"><colgroup><col class="composition-col-label"><col class="composition-col-plot"><col class="composition-col-value"><col class="composition-col-value"><col class="composition-col-rate"><col class="composition-col-rate"><col class="composition-col-rate"><col class="composition-col-rate"></colgroup><thead><tr><th scope="col">Rubro</th><th scope="col" class="composition-plot-title">Variación ${mode.toUpperCase()}</th><th scope="col">Δ S/ MM</th><th scope="col">Saldo S/ MM</th><th scope="col">Peso</th>${modes.map(([, name]) => `<th scope="col">${name}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
   return panel(
     label,
     `${month(state.date)} · ${parent === "balance:76" ? "Obligaciones con el público" : "Créditos vigentes"}`,
     finite(data.total)
       ? summary +
-          `<div class="composition-legend"><span>Variación ${mode.toUpperCase()} · vs. ${month(data.reference)} · S/ MM</span><span><i class="legend-up"></i>Aumento <i class="legend-down"></i>Disminución</span></div><div class="composition-rows">${rows || '<div class="empty">Sin saldos en los componentes.</div>'}</div><p class="source-note">${parent === "balance:76" ? "Incluye otras obligaciones; los depósitos del sistema financiero figuran fuera de este rubro. " : ""}Variaciones sobre periodos exactos. —: sin base comparable. <button class="text-button" data-drill="${parent}">Ver cuentas ${icon("arrow-right")}</button></p>`
+          `<div class="composition-legend"><span>Variación ${mode.toUpperCase()} · vs. ${month(data.reference)} · S/ MM</span><span><i class="legend-up"></i>Aumento <i class="legend-down"></i>Disminución</span></div>${rows ? table : '<div class="empty">Sin saldos en los componentes.</div>'}<p class="source-note">${parent === "balance:76" ? "Incluye otras obligaciones; los depósitos del sistema financiero figuran fuera de este rubro. " : ""}Variaciones sobre periodos exactos. —: sin base comparable. <button class="text-button" data-drill="${parent}">Ver cuentas ${icon("arrow-right")}</button></p>`
       : '<div class="empty">Sin datos para esta entidad y periodo.</div>',
     `<div class="range" role="group" aria-label="Base de variación de ${e(label)}">${modes.map(([key, name]) => `<button data-composition="${parent}" data-mode="${key}" aria-pressed="${key === mode}">${name}</button>`).join("")}</div>`,
   );
@@ -671,7 +676,7 @@ function overviewView() {
       "Las variaciones de ratios se muestran en puntos básicos. Haz clic para profundizar.",
       ratioTable(),
     ) +
-    `<div class="grid-two equal">${composition("balance:26", "¿Dónde están las colocaciones vigentes?")}${composition("balance:76", "¿Cómo se compone el fondeo del público?")}</div>`
+    `<div class="grid-two equal composition-grid">${composition("balance:26", "¿Dónde están las colocaciones vigentes?")}${composition("balance:76", "¿Cómo se compone el fondeo del público?")}</div>`
   );
 }
 function movementsView() {

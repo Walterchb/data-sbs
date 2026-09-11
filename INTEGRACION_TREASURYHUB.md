@@ -1,4 +1,11 @@
-# Treasury Hub · actualización 14
+# Treasury Hub · actualización 15
+
+## Cambios de esta revisión
+
+- Modal de entidades independiente del estilo de los detalles KPI: fondo, texto, tarjetas, bordes y selección responden a los tokens del tema claro/oscuro. Tarjetas más compactas y tipografía del botón principal igual a las pestañas (0.74 rem).
+- Composición en filas compactas con cabecera común: rubro, barra divergente, variación absoluta, saldo, participación y YoY/YTD/MoM. El eje cero queda alineado entre filas y las magnitudes están a la derecha. Las unidades se indican en la cabecera.
+- Los stats, cálculos, bases de comparación y datos se conservan. En pantallas intermedias los dos paneles se apilan; en móvil las columnas se consultan con desplazamiento horizontal dentro de cada bloque.
+- Comprobados los flujos existentes con 7 pruebas de navegación/composición y el validador del proyecto. No se ejecutó comprobación visual en navegador porque el ejecutable no estaba disponible.
 
 ## Instalación
 
