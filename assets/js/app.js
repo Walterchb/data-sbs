@@ -212,6 +212,11 @@ function seriesContent(id) {
 async function copySeries() {
   const data = seriesDetails.get(activeSeriesId);
   if (!data) return;
+  const monthEnd = (period) => {
+    const [year, month] = period.slice(0, 7).split("-").map(Number);
+    const day = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+  };
   const locale = window.navigator.language || "es-PE";
   const number = new Intl.NumberFormat(locale, {
     useGrouping: false,
@@ -231,14 +236,14 @@ async function copySeries() {
       "Entidad",
     ],
     ...data.points.map((p) => [
-      p.date,
+      monthEnd(p.date),
       data.label,
       finite(p.value)
         ? number.format(
             data.unit.endsWith("THOUSAND") ? p.value / 1000 : p.value,
           )
         : "",
-      p.effective || p.date,
+      monthEnd(p.effective || p.date),
       entityName(),
     ]),
   ];

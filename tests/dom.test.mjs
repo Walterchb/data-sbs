@@ -312,7 +312,7 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   await click("#series-copy");
   assert.equal(copied.split("\r\n").length, 25);
   assert.match(copied, /Periodo\tIndicador\tValor \(S\/ MM\)/);
-  assert.match(copied, /2026-07\tCréditos brutos\t15692\.39\t2026-07/);
+  assert.match(copied, /31\/07\/2026\tCréditos brutos\t15692\.39\t31\/07\/2026/);
   assert.ok(!copied.includes("15,692"));
   assert.match(
     document.getElementById("series-copy-status").textContent,

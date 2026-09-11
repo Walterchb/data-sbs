@@ -40,3 +40,7 @@ Los montos se muestran en S/ millones; el archivo fuente monetario está en mile
 Se agregan ambas fuentes a la configuración y al lector de Excel existente. Los dos archivos `data/supplemental/` contienen únicamente el histórico inicial de las fuentes nuevas y permiten validar la instalación sin reemplazar el histórico principal. Solo se usan si la fuente aún no existe en ese histórico. La siguiente sincronización incorpora esas fuentes al proceso habitual; los datos existentes permanecen como referencia principal.
 
 Si el workflow de sincronización existente está habilitado, el cambio en scripts/configuración dispara la actualización. También puede ejecutarse desde **Actions → Sincronizar BanBif Regulatory Hub → Run workflow**. El botón Actualizar de la web consulta la publicación disponible; las descargas SBS se ejecutan en Actions.
+
+## Actualización 17 · Copiar fechas a Excel
+
+El botón Copiar del modal de valores de la serie exporta las columnas Periodo y Periodo declarado en formato `dd/mm/aaaa`, usando el último día de cada mes. Por ejemplo: `31/07/2025`, `30/04/2026` y `29/02/2024` para un año bisiesto. Se mantienen los valores numéricos y las columnas existentes.
