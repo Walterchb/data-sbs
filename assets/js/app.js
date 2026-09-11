@@ -1,3 +1,4 @@
+import { structureModel } from "./structure.js";
 import { compositionData } from "./composition.js";
 import { selectReport, selectFinancial, selectOverview } from "./entities.js";
 import * as Data from "./data.js";
@@ -67,6 +68,9 @@ const state = {
   report: "B-2401",
   reportMetric: "",
   reportQuery: "",
+  structureSource: "B-2334",
+  structureStatus: "Total",
+  structureMetric: "Total",
   concentrationSource: "B-2350",
   concentrationRegion: "",
   concentrationMode: "share",
@@ -295,6 +299,11 @@ function urlState() {
   if (state.view === "reports") {
     p.set("report", state.report);
     if (state.reportMetric) p.set("metric", state.reportMetric);
+    if (state.report === "structure") {
+      p.set("structure-source", state.structureSource);
+      p.set("structure-status", state.structureStatus);
+      p.set("structure-metric", state.structureMetric);
+    }
     if (state.report === "concentration") {
       p.set("regional-source", state.concentrationSource);
       p.set("region", state.concentrationRegion);
@@ -314,11 +323,23 @@ function recoverUrl() {
     state.statement = state.account.split(":")[0];
   }
   if (
-    ["derived", "concentration"].includes(p.get("report")) ||
+    ["derived", "concentration", "structure"].includes(p.get("report")) ||
     manifest.reports[p.get("report")]
   )
     state.report = p.get("report");
   state.reportMetric = p.get("metric") || "";
+  if (["B-2334", "B-2344"].includes(p.get("structure-source")))
+    state.structureSource = p.get("structure-source");
+  if (
+    [
+      "Total",
+      "Vigentes",
+      "Refinanciados y reestructurados",
+      "Atrasados",
+    ].includes(p.get("structure-status"))
+  )
+    state.structureStatus = p.get("structure-status");
+  state.structureMetric = p.get("structure-metric") || "Total";
   if (["B-2349", "B-2350"].includes(p.get("regional-source")))
     state.concentrationSource = p.get("regional-source");
   state.concentrationRegion = p.get("region") || "";
@@ -862,6 +883,7 @@ function balanceView() {
 }
 function reportView() {
   if (state.report === "derived") return derivedView();
+  if (state.report === "structure") return structureView();
   if (state.report === "concentration") {
     const result = concentrationView(
       reportData,
@@ -989,11 +1011,117 @@ function reportView() {
     `<section class="panel"><div class="panel-head"><h2>${state.report === "B-2402" ? "Datos SBS y magnitudes calculadas" : "Detalle de la fuente"}</h2><div class="controls"><label class="sr-only" for="report-search">Buscar indicador</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar indicador, moneda o componente…"></div></div>${rows.length ? table : '<div class="empty">No hay indicadores que coincidan con la búsqueda.</div>'}<p class="footnote">YTD: variación frente a diciembre del año anterior. Ratios: cambios en pb. Importes: cambios en %. Múltiplos: diferencias en veces. No se calculan comparaciones sin el periodo exacto.</p>${state.report === "B-2402" ? `<details class="help"><summary>Ver cálculo</summary><p>TIER 1 = APR × (TIER 1/APR) ÷ 100. Patrimonio efectivo total = APR × RCG ÷ 100. TIER 2 = Patrimonio efectivo total − TIER 1. La participación de cada nivel es su monto dividido entre el patrimonio efectivo total × 100.</p><p>Fuente: B-2402. Se utiliza toda la precisión disponible y se redondea solo al mostrar. Se requiere APR y ambos ratios del mismo periodo para cada entidad; si faltan datos o hay una advertencia de fecha, se muestra —.</p></details>` : ""}</section>`
   );
 }
+function structureView() {
+  const m = structureModel(reportData, state);
+  state.structureMetric = m.selected;
+  const controls = `<div class="controls structure-controls"><label>Producto <select id="structure-source"><option value="B-2334" ${m.credit ? "selected" : ""}>Créditos · B-2334</option><option value="B-2344" ${!m.credit ? "selected" : ""}>Depósitos · B-2344</option></select></label>${m.credit ? `<label>Situación <select id="structure-status">${["Total", "Vigentes", "Refinanciados y reestructurados", "Atrasados"].map((v) => `<option ${v === state.structureStatus ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}</div>`;
+  const top =
+    heading(
+      "Indicadores",
+      `Estructura de créditos y depósitos · ${e(entityName())}`,
+    ) + reportTabs();
+  if (!m.period || !finite(m.total)) {
+    exportRows = [];
+    return (
+      top +
+      panel(
+        "Estructura",
+        "",
+        `<div class="empty">Sin datos de ${e(entityName())} para este corte y ámbito. ${["system", "bcp"].includes(state.entity) ? "Esta fuente incluye las sucursales del exterior; selecciona esa variante de la entidad." : ""}</div>`,
+        controls,
+      )
+    );
+  }
+  const change = (v) =>
+    `<span class="${v > 0 ? "change-up" : v < 0 ? "change-down" : ""}">${format(v, "PERCENT", true)}</span>`;
+  const summary = `<div class="composition-summary"><div class="stat-card"><span class="stat-label">Total · S/ MM</span><b>${num(m.total / 1000)}</b></div>${[
+    ["yoy", "YoY"],
+    ["ytd", "YTD"],
+    ["mom", "MoM"],
+  ]
+    .map(
+      ([k, n]) =>
+        `<div class="stat-card"><span class="stat-label">${n}</span><b>${change(m.changes[k])}</b></div>`,
+    )
+    .join("")}</div>`;
+  const all = [
+    { name: "Total", value: m.total, share: 100, changes: m.changes },
+    ...m.rows,
+  ];
+  exportRows = [
+    [
+      "fuente",
+      "periodo",
+      "situacion",
+      "componente",
+      "saldo_miles_soles",
+      "participacion_pct",
+      "yoy_pct",
+      "ytd_pct",
+      "mom_pct",
+      "origen_monto",
+    ],
+    ...all.map((r) => [
+      reportData.code,
+      m.period.date,
+      m.status,
+      r.name,
+      r.value,
+      r.share,
+      r.changes.yoy,
+      r.changes.ytd,
+      r.changes.mom,
+      !m.credit && r.name !== "Total"
+        ? "Total × participación SBS / 100"
+        : "SBS; agregados de situaciones/tipos cuando corresponde",
+    ]),
+  ];
+  const table = wrapTable(
+    `<table class="structure-table"><thead><tr><th>Componente</th><th class="number">Saldo · S/ MM</th><th class="number">Peso</th><th class="number">YoY</th><th class="number">YTD</th><th class="number">MoM</th></tr></thead><tbody>${all.map((r) => `<tr class="${r.child ? "structure-child" : ""} ${r.name === m.selected ? "structure-selected" : ""}"><th scope="row"><button class="text-button" data-structure-item="${e(r.name)}" aria-pressed="${r.name === m.selected}">${e(r.name)}</button></th><td class="number">${num(finite(r.value) ? r.value / 1000 : null)}</td><td class="number">${format(r.share, "PERCENT")}</td><td class="number">${change(r.changes.yoy)}</td><td class="number">${change(r.changes.ytd)}</td><td class="number">${change(r.changes.mom)}</td></tr>`).join("")}</tbody></table>`,
+    "Estructura por componente",
+    true,
+  );
+  const points = rangePoints(m.points);
+  const crossesClassification =
+    m.business &&
+    points[0]?.date < "2024-10" &&
+    points.at(-1)?.date >= "2024-10";
+  const comparablePoints = crossesClassification
+    ? points.filter((p) => p.date >= "2024-10")
+    : points;
+  const note = m.credit
+    ? "B-2334: los tipos agrupan sus situaciones. Consumo incluye revolvente y no revolvente; no sumar nuevamente el subtotal con sus dos componentes. Desde octubre de 2024 cambió la tipificación empresarial: las variaciones que cruzan ese corte se muestran con — en esas categorías."
+    : "B-2344: total y participaciones publicados por SBS. Montos por tipo calculados como total × participación / 100, con toda la precisión del archivo. Excluye Otras obligaciones e incluye depósitos del sistema financiero y organismos internacionales.";
+  return (
+    top +
+    panel(
+      m.credit ? "Estructura de créditos" : "Estructura de depósitos",
+      `${month(m.period.date)} · ${m.status}${m.period.date !== state.date ? " · Último dato anterior al corte" : ""}`,
+      (m.warning ? notice(m.warning) : "") +
+        summary +
+        table +
+        `<p class="source-note">${note}</p>`,
+      controls,
+    ) +
+    panel(
+      `Evolución · ${m.selected}`,
+      `${month(m.period.date)} · ${m.credit ? m.status : "Saldos calculados por tipo"}`,
+      lineChart(points, "PEN_THOUSAND", m.selected) +
+        statStrip(comparablePoints, "PEN_THOUSAND") +
+        (crossesClassification
+          ? '<p class="source-note">Cambio de clasificación SBS en octubre de 2024. Las estadísticas usan el tramo desde ese mes; la serie conserva todos los datos publicados.</p>'
+          : ""),
+      `<div class="controls"><label class="sr-only" for="structure-metric">Componente</label><select id="structure-metric">${all.map((r) => `<option ${r.name === m.selected ? "selected" : ""}>${e(r.name)}</option>`).join("")}</select>${rangeButtons(points, "PEN_THOUSAND", m.selected)}</div>`,
+    )
+  );
+}
 function reportTabs() {
-  return `<div class="pillars" aria-label="Fuentes regulatorias"><button data-report="derived" aria-pressed="${state.report === "derived"}">Ratios de análisis</button><button data-report="concentration" aria-pressed="${state.report === "concentration"}">Concentración</button>${Object.entries(
+  return `<div class="pillars" aria-label="Fuentes regulatorias"><button data-report="derived" aria-pressed="${state.report === "derived"}">Ratios de análisis</button><button data-report="structure" aria-pressed="${state.report === "structure"}">Estructura</button><button data-report="concentration" aria-pressed="${state.report === "concentration"}">Concentración</button>${Object.entries(
     manifest.sources,
   )
-    .filter(([c]) => !["B-2201", "B-2349", "B-2350"].includes(c))
+    .filter(
+      ([c]) => !["B-2201", "B-2349", "B-2350", "B-2334", "B-2344"].includes(c),
+    )
     .map(
       ([c, s]) =>
         `<button data-report="${c}" aria-pressed="${c === state.report}">${e({ "B-2401": "Indicadores", "B-2336": "Sectores", "B-2402": "Capital", "B-2340": "Liquidez", "B-230809": "RCL", "B-234021": "RFNE", "B-2368": "Posición ME" }[c] || s.title)}</button>`,
@@ -1308,7 +1436,9 @@ async function render() {
       code:
         state.report === "concentration"
           ? state.concentrationSource
-          : state.report,
+          : state.report === "structure"
+            ? state.structureSource
+            : state.report,
       peerCode: peerReportCode(state.peerMetric),
     };
     const reportCode =
@@ -1320,7 +1450,11 @@ async function render() {
     const [base, bundle, source] = await Promise.all([
       Data.load("financial"),
       Data.loadEntity(requested.entity),
-      reportCode ? Data.load(reportCode) : Promise.resolve(null),
+      reportCode
+        ? requested.report === "structure" && requested.view === "reports"
+          ? Data.loadStructure(reportCode)
+          : Data.load(reportCode)
+        : Promise.resolve(null),
     ]);
     if (id !== renderId) return;
     baseFinancial = base;
@@ -1509,6 +1643,11 @@ function bind() {
       render();
       return;
     }
+    if (b.dataset.structureItem) {
+      state.structureMetric = b.dataset.structureItem;
+      render();
+      return;
+    }
     if (b.dataset.reportMetric) {
       state.reportMetric = b.dataset.reportMetric;
       render();
@@ -1573,6 +1712,9 @@ function bind() {
         "move-mode": "moveMode",
         "move-sort": "moveSort",
         "peer-metric": "peerMetric",
+        "structure-source": "structureSource",
+        "structure-status": "structureStatus",
+        "structure-metric": "structureMetric",
         "concentration-source": "concentrationSource",
         "concentration-region": "concentrationRegion",
         "concentration-mode": "concentrationMode",
@@ -1610,6 +1752,7 @@ function bind() {
         }
         state.date = chosen;
       } else state[fields[el.id]] = el.value;
+      if (el.id === "structure-source") state.structureMetric = "Total";
       if (el.id === "statement") {
         state.account = el.value === "income" ? "income:79" : "balance:59";
         state.query = "";

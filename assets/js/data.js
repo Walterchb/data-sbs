@@ -1,3 +1,20 @@
+// Independently published supplemental reports avoid replacing the user's existing datasets.
+const structureCache = new Map();
+const structureCodes = new Set(["B-2334", "B-2344"]);
+export async function loadStructure(code) {
+  if (!structureCodes.has(code))
+    throw new Error("Fuente de estructura no válida.");
+  const data = await request(`./data/reports/${code}.json`);
+  if (
+    data.code !== code ||
+    !Array.isArray(data.periods) ||
+    !Array.isArray(data.catalog) ||
+    !data.version
+  )
+    throw new Error("Datos de estructura no válidos.");
+  structureCache.set(code, data);
+  return data;
+}
 const promises = new Map();
 let manifest;
 let activeEntityKey;
@@ -73,8 +90,28 @@ export async function refresh() {
   const previousManifest = manifest,
     previousCache = new Map(promises);
   try {
+    const stagedStructure = new Map();
+    let structureChanged = false;
+    for (const [code, previous] of structureCache) {
+      const next = await request(`./data/reports/${code}.json`, {
+        fresh: true,
+      });
+      if (
+        next.code !== code ||
+        !Array.isArray(next.periods) ||
+        !Array.isArray(next.catalog) ||
+        !next.version
+      )
+        throw new Error("Datos de estructura no válidos.");
+      stagedStructure.set(code, next);
+      if (next.version !== previous.version) structureChanged = true;
+    }
     const fresh = await request("./data/manifest.json", { fresh: true });
-    if (fresh.version === manifest.version) return false;
+    if (fresh.version === manifest.version) {
+      for (const [code, data] of stagedStructure)
+        structureCache.set(code, data);
+      return structureChanged;
+    }
     await Promise.all(
       [...loadedKeys].map(async (key) => {
         const path = resource(fresh, key);
@@ -88,6 +125,7 @@ export async function refresh() {
           throw new Error("La nueva publicación no superó la validación.");
       }),
     );
+    for (const [code, data] of stagedStructure) structureCache.set(code, data);
     manifest = fresh;
     entityPaths.clear();
     // Remove old payloads only after the complete candidate has passed.

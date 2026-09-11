@@ -217,6 +217,9 @@ def extract(raw,url,code,workbook,date):
     if code in ('B-2401','B-2336'):extract_columns(sheets,p,code)
     elif code in ('B-2340','B-2402','B-2368'):extract_rows(sheets,p,code)
     elif code in ('B-230809','B-234021'):extract_dedicated(sheets,p,code)
+    elif code in ('B-2334','B-2344'):
+        from structure_parser import extract_structure
+        extract_structure(sheets,p,code)
     elif code in ('B-2349','B-2350'):
         from regional_parser import extract_regions
         extract_regions(sheets,p,code)

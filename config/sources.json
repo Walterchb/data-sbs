@@ -58,5 +58,17 @@
     "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2350",
     "frequency": "monthly",
     "start_year": 2021
+  },
+  "B-2334": {
+    "title": "Créditos Directos según Tipo de Crédito y Situación",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2334",
+    "frequency": "monthly",
+    "start_year": 2021
+  },
+  "B-2344": {
+    "title": "Estructura de los Depósitos por Tipo y Empresa Bancaria",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2344",
+    "frequency": "monthly",
+    "start_year": 2021
   }
 }

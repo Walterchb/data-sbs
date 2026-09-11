@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from supplemental_data import with_supplemental_reports
 ROOT=Path(__file__).resolve().parents[1]
 
 class Page(HTMLParser):
@@ -31,7 +32,7 @@ def validate():
     if health['errors']:errors.append('Data health has errors')
     for key in ['overview','financial','health']:
         if manifest[key] not in data:errors.append('Missing manifest resource '+manifest[key])
-    f=data['financial.json'];o=data['overview.json'];hub=data['hub.json']
+    f=data['financial.json'];o=data['overview.json'];hub=with_supplemental_reports(data['hub.json'])
     expected=[p['date'][:7] for p in hub['financial']['periods']]
     if expected!=[p['date'] for p in f['periods']] or expected!=[p['date'] for p in o['periods']]:errors.append('Financial periods lost before frontend')
     if manifest['latest_period']!=max(expected):errors.append('Manifest latest period mismatch')

@@ -127,7 +127,8 @@ def main():
     ap.add_argument('--skip-build',action='store_true',help='For parser recovery only; does not publish derived files')
     args=ap.parse_args()
     if not 1<=args.workers<=8:ap.error('workers must be between 1 and 8')
-    target=ROOT/'data/hub.json';db=json.loads(target.read_text())
+    from supplemental_data import with_supplemental_reports
+    target=ROOT/'data/hub.json';db=with_supplemental_reports(json.loads(target.read_text()))
     before=json.dumps(db,sort_keys=True)
     db['reports']={k:v for k,v in db.get('reports',{}).items() if k in SOURCES and k!='B-2201'}
     db['meta']['version']=VERSION

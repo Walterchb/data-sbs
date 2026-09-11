@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 import sys
 from strict_parsers import norm, stable_label
+from supplemental_data import with_supplemental_reports
 
 ROOT=Path(__file__).resolve().parents[1]
 SCHEMA=json.loads((ROOT/'config/statement_schema.json').read_text())
@@ -129,6 +130,7 @@ def report_output(code,report):
         periods.append({'date':p['date'][:7],'source_url':p['source_url'],'values':values,'effective':effective,
                         'keys':keys,'peers':bank_values,'warning':p.get('period_warning'),
                         'source_caption':p.get('source_caption'),
+                        'peer_warnings':p.get('peer_warnings',{}),
                         'entity_names':p.get('entity_names',{}),
                         'peer_effective':{bank:{metric_id(k):v['effective_date'][:7] for k,v in metas.items()} for bank,metas in p.get('peer_meta',{}).items()},
                         'peer_captions':p.get('peer_captions',{})})
@@ -169,6 +171,7 @@ def inspect(code,periods,today,critical=False):
             for label,v in obs:
                 if not finite(v):errors.append('Valor no numérico: '+label)
                 if label not in p.get('metric_meta',{}):errors.append('Metadatos faltantes: '+label)
+            for bank,message in p.get('peer_warnings',{}).items():warnings.append(f'{p["date"][:7]} {bank}: {message}')
             if p.get('period_warning'):issues.append({'date':p['date'][:7],'message':p['period_warning'],'caption':p.get('source_caption')})
     if issues:warnings.append(f'{len(issues)} archivos con discrepancia de periodo en el encabezado')
     transitions=[]
@@ -189,6 +192,7 @@ def inspect(code,periods,today,critical=False):
 
 
 def build(db,output,today=None):
+    db=with_supplemental_reports(db)
     today=today or date.today();health=[];out={};financial=[]
     raw=db.get('financial',{}).get('periods',[])
     health.append(inspect('B-2201',raw,today,True))

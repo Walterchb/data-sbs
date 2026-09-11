@@ -532,6 +532,47 @@ test("rapid entity changes commit only the latest selection and failed loads nev
   await change("entity-select", "banbif");
 });
 
+test("structure tab responds to source, situation, date and exact entity scope", async () => {
+  await click('[data-nav="reports"]');
+  await click('[data-report="structure"]');
+  assert.ok(document.querySelector(".structure-table"));
+  assert.match(
+    document.querySelector(".structure-table tbody tr").textContent,
+    /15,692.39/,
+  );
+  await change("structure-status", "Atrasados");
+  assert.doesNotMatch(
+    document.querySelector(".structure-table tbody tr").textContent,
+    /15,692.39/,
+  );
+  await change("structure-source", "B-2344");
+  assert.equal(document.getElementById("structure-status"), null);
+  assert.match(
+    document.querySelector(".structure-table tbody tr").textContent,
+    /16,489.59/,
+  );
+  await click('[data-structure-item="Vista"]');
+  assert.equal(document.getElementById("structure-metric").value, "Vista");
+  await change("period", "2026-06");
+  assert.match(
+    document.querySelector(".structure-table tbody tr").textContent,
+    /15,926.99/,
+  );
+  await change("entity-select", "bbva");
+  assert.doesNotMatch(
+    document.querySelector(".structure-table tbody tr").textContent,
+    /15,926.99/,
+  );
+  await change("entity-select", "system");
+  assert.match(document.getElementById("content").textContent, /Sin datos/);
+  assert.equal(document.querySelector(".structure-table"), null);
+  await change("entity-select", "system_foreign");
+  assert.ok(document.querySelector(".structure-table"));
+  await change("entity-select", "banbif");
+  await change("period", "2026-07");
+  await click('[data-nav="overview"]');
+});
+
 test("failed source request surfaces an explicit error without sample data", async () => {
   // A new module load uses the cache; exercise the public request helper directly.
   const data = await import("../assets/js/data.js");
