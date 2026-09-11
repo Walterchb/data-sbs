@@ -1,5 +1,30 @@
 const promises = new Map();
 let manifest;
+let activeEntityKey;
+const entityPaths = new Map();
+function resource(m, key) {
+  return key.startsWith("entity:")
+    ? m.entities?.[key.slice(7)]?.path
+    : m[key] || m.reports[key];
+}
+export async function loadEntity(slug) {
+  if (activeEntityKey) loadedKeys.delete(activeEntityKey);
+  activeEntityKey = slug === "banbif" ? null : `entity:${slug}`;
+  if (!activeEntityKey) return null;
+  const key = activeEntityKey;
+  const data = await load(key);
+  if (data.entity !== slug)
+    throw new Error("La fuente no corresponde a la entidad seleccionada.");
+  const path = `./data/${resource(manifest, key)}?v=${manifest.version}`;
+  entityPaths.delete(key);
+  entityPaths.set(key, path);
+  while (entityPaths.size > 4) {
+    const oldest = entityPaths.keys().next().value;
+    promises.delete(entityPaths.get(oldest));
+    entityPaths.delete(oldest);
+  }
+  return data;
+}
 const loadedKeys = new Set(["overview", "health", "financial"]);
 export async function request(path, { fresh = false } = {}) {
   const key = path;
@@ -33,7 +58,7 @@ export async function initialize() {
 }
 export async function load(key) {
   loadedKeys.add(key);
-  const path = manifest[key] || manifest.reports[key];
+  const path = resource(manifest, key);
   if (!path) throw new Error(`Fuente no configurada: ${key}.`);
   const result = await request(`./data/${path}?v=${manifest.version}`);
   if (key !== "health" && result.version !== manifest.version)
@@ -52,7 +77,7 @@ export async function refresh() {
     if (fresh.version === manifest.version) return false;
     await Promise.all(
       [...loadedKeys].map(async (key) => {
-        const path = fresh[key] || fresh.reports[key];
+        const path = resource(fresh, key);
         if (!path) throw new Error(`Fuente no configurada: ${key}.`);
         const data = await request(`./data/${path}?v=${fresh.version}`, {
           fresh: true,
@@ -64,6 +89,7 @@ export async function refresh() {
       }),
     );
     manifest = fresh;
+    entityPaths.clear();
     // Remove old payloads only after the complete candidate has passed.
     for (const key of promises.keys())
       if (

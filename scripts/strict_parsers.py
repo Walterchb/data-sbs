@@ -78,6 +78,7 @@ def add(p, bank, label, value, unit, sheet, row, col, effective=None):
     metrics = p['peer_metrics'].setdefault(bank,{})
     if label in metrics: raise ValueError(f'Duplicate metric {bank}: {label}')
     metrics[label] = float(value)
+    p.setdefault('peer_meta',{}).setdefault(bank,{})[label] = {'unit':unit,'effective_date':effective or p['date']}
     if bank == 'banbif':
         p['banbif_metrics'][label] = float(value)
         p['metric_meta'][label] = {'unit':unit, 'sheet':sheet, 'row':row, 'column':col,
@@ -169,6 +170,7 @@ def extract_dedicated(sheets,p,code):
             months={'ENERO':1,'FEBRERO':2,'MARZO':3,'ABRIL':4,'MAYO':5,'JUNIO':6,'JULIO':7,'AGOSTO':8,'SETIEMBRE':9,'SEPTIEMBRE':9,'OCTUBRE':10,'NOVIEMBRE':11,'DICIEMBRE':12}
             m=re.search(r' A (\w+) DE (\d{4})',norm(caption))
             if m and m[1] in months:effective=end_month(int(m[2]),months[m[1]])
+            p.setdefault('peer_captions',{})[bank]=caption
             if bank=='banbif':
                 p['source_caption']=caption
                 if effective!=p['date']:p['period_warning']='El trimestre del encabezado difiere del periodo del archivo SBS; confirmar con la fuente.'
@@ -272,6 +274,7 @@ def extract_financial(raw, url, workbook, date):
                  'financial_income':val('income','INGRESOS FINANCIEROS'),'admin_expenses':val('income','GASTOS ADMINISTRATIVOS')}
         if summary['total_assets'] is None:raise ValueError('B-2201 missing total assets: '+name)
         p['peers'].append(summary)
+        p.setdefault('entity_statements',{})[bank]=statements
         if bank=='banbif':p['banbif']=statements
     if not p['banbif']:raise ValueError('B-2201 missing BanBif')
     return p

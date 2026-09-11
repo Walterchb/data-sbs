@@ -1,59 +1,57 @@
-# Treasury Hub · actualización 12
+# Treasury Hub · actualización 13
 
 ## Instalación
 
-Este paquete actualiza el proyecto conciliado `data-sbs-ultra.zip` e incluye las adaptaciones anteriores de la interfaz.
+Este paquete actualiza el proyecto conciliado `data-sbs-ultra.zip` e incluye los cambios anteriores.
 
-**Descomprime el ZIP y sube todos sus archivos a tu repositorio, respetando las carpetas y reemplazando los existentes.** Esta revisión incluye interfaz, datos, configuración, scripts y pruebas. No basta con reemplazar HTML y CSS.
+**Descomprime el ZIP y sube todos sus archivos al repositorio, respetando las carpetas y reemplazando los existentes.** También incluye datos y scripts: reemplazar únicamente el HTML o JavaScript deja incompleto el selector.
 
-- `index.html` y `assets/`: interfaz y nueva pestaña Concentración.
-- `data/`: publicación completa y coherente de 14 archivos JSON, incluidos los dos reportes regionales.
-- `config/sources.json`: incorporación de B-2349 y B-2350 a la actualización mensual.
-- `scripts/`: lectura y validación de los reportes regionales y generación de datos.
-- `tests/`: pruebas y archivos de ejemplo necesarios para la validación en GitHub.
+Conserva los demás archivos del proyecto. El workflow de sincronización incluido incorpora la publicación de `data/entities/`. Tras publicar, recarga con Ctrl+F5 si el navegador conserva la versión anterior.
 
-Conserva los demás archivos del proyecto y los workflows existentes. GitHub Actions utiliza las nuevas fuentes de la configuración automáticamente. No es necesario subir cachés ni instalar dependencias nuevas. Después de publicar, recarga con Ctrl+F5 si el navegador conserva la versión anterior.
+## Selector global de entidad
 
-Este `index.html` es el módulo Información Financiera SBS de `data-sbs`. No reemplaza la página de TC Contable.
+El nuevo desplegable aparece al principio de la navegación, usando la misma fila, controles y desplazamiento horizontal existentes. BanBif sigue seleccionado al abrir la herramienta sin una selección guardada en el enlace.
 
-## Concentración
+Las 24 opciones corresponden a identidades publicadas en el histórico, incluidos bancos que no tienen datos en todos los meses y variantes de cobertura:
 
-En **Indicadores y riesgos → Concentración** puedes:
+- Banco individual.
+- Banca múltiple de ámbito local.
+- Banca múltiple que incluye sucursales en el exterior.
+- BCP local y BCP con sucursales en el exterior.
 
-- Alternar depósitos (B-2350) y créditos directos (B-2349).
-- Elegir una región y comparar hasta seis series simultáneas, con BanBif siempre visible. La selección inicial incorpora BBVA, BCP y el sistema.
-- Consultar el porcentaje dentro de cada banco, el importe regional en S/ MM o la cuota del mercado regional. En cuota de mercado se omite la serie del sistema, que sería siempre 100%.
-- Ver la evolución mensual con rangos de 12, 24 y 60 meses o todo el histórico.
-- Comparar las diez regiones con mayor peso para BanBif en barras agrupadas y consultar las 26 geografías en la tabla. Al seleccionar una región en la tabla se abre su evolución.
-- Exportar la comparación completa de regiones y bancos mediante el botón CSV.
+Al cambiar de entidad se actualizan Panorama, Qué cambió, Cuentas SBS, Indicadores y riesgos, Capital calculado, Concentración y la referencia destacada en Comparar bancos. La fecha, el rubro, la búsqueda, la vista de tabla y el rango elegidos se conservan. La selección se incluye en el enlace y en las exportaciones CSV y las series copiadas.
 
-Los dos reportes incluyen 67 cortes mensuales, desde enero de 2021 hasta julio de 2026. El periodo consultado respeta el selector general de fecha. Los huecos de información se mantienen como datos ausentes.
+La estructura, las tarjetas, los gráficos, las tablas y la barra fija conservan el diseño previo. No se incorporan nuevos reportes ni pestañas en esta revisión.
 
-Se conserva el diseño de la herramienta, con colores por banco, degradados, leyenda y etiquetas que identifican cada serie, además de controles adaptados al móvil.
+## Datos y alcance
 
-## Interpretación de los datos
+Se incorporan los balances y estados de resultados completos por entidad, con MN, ME y total, a partir de las columnas originales de B-2201. Se conservan 67 cortes mensuales, enero de 2021 a julio de 2026. Los resultados son acumulados desde enero; los saldos corresponden al cierre. Una entidad que todavía no estaba publicada en un mes muestra ausencia de datos, no ceros ni datos de BanBif.
 
-La SBS publica la distribución porcentual por departamento y un total por entidad en miles de soles. El importe regional se calcula como total del mismo reporte × porcentaje / 100; para mostrar S/ MM se divide entre 1.000. La cuota de mercado se calcula como importe regional del banco / importe regional del sistema × 100.
+Los reportes regulatorios utilizan las observaciones de la entidad seleccionada. En los reportes con hojas por banco se conservan sus fechas declaradas. La tabla de RFNE también permite mostrar las métricas que existen para otras entidades aunque no existan para BanBif.
 
-Los importes regionales se identifican como calculados. No se mezclan los totales regionales con los del balance, porque su cobertura puede diferir. Se mantiene la cobertura de la fuente, incluidas sucursales en el exterior cuando corresponde; Lima, Callao y exterior permanecen separados. La distribución corresponde al criterio de oficinas del Anexo 10, no necesariamente al domicilio o riesgo económico final del cliente.
+Las variantes local y con sucursales en el exterior se mantienen separadas. Si una fuente solo publica una de ellas, elegir la otra muestra un aviso de falta de datos para ese ámbito. Por ejemplo, para los indicadores B-2401 y los reportes regionales se puede consultar el total que incluye sucursales en el exterior; Capital B-2402 utiliza el total que identifica su propia fuente. No se empalman variantes automáticamente.
 
-Las tarjetas resumen muestran la concentración de BanBif en la región, el importe calculado, su variación YTD en puntos básicos y la diferencia frente al sistema. YTD utiliza diciembre del año anterior y requiere ese corte exacto.
+La comparación de bancos conserva las demás entidades como referencias y destaca la seleccionada. En los indicadores financieros derivados del balance, la referencia del sistema respeta el ámbito seleccionado. En Concentración, las tarjetas y la clasificación de regiones corresponden a la entidad elegida, que permanece fija entre las series comparadas.
 
-## Funciones conservadas
+El botón de información y Fuentes y calidad siguen describiendo la publicación y sus controles generales. Sus recuentos de observaciones son los de referencia del proceso SBS, no un nuevo recuento de la entidad seleccionada.
 
-- Tabla de cuentas SBS con jerarquía inicial plegada, referencias ocultables, selección y resultado neto diferenciados, y barra fija de análisis.
-- Capital con datos SBS y magnitudes calculadas en una sola tabla, fórmulas y columnas MoM, YTD y YoY.
-- Gráficos y ventanas de detalle, copia de series sin desplazamientos, modo oscuro y botón de información.
-- Actualización directa y comprobación periódica de la publicación disponible, conservando la selección histórica.
+Los valores anteriores de BanBif en `financial.json` y `overview.json` permanecen idénticos, salvo el identificador de publicación.
 
-Los datos de las fuentes anteriores se mantienen; únicamente cambia su identificador de publicación para incorporar los nuevos reportes de forma coherente. ECharts, Manrope y Font Awesome siguen utilizando los servicios externos de la interfaz existente.
+## Rendimiento y comportamiento
+
+- Los estados completos adicionales se cargan bajo demanda por entidad; el navegador no descarga `hub.json` ni todos los bancos al iniciar.
+- Cada paquete de entidad contiene su histórico de cuentas y resumen, sin duplicar los catálogos ni las comparaciones compartidas. Los paquetes típicos ocupan aproximadamente 0.6–0.7 MB sin compresión.
+- Se conservan en memoria hasta cuatro paquetes adicionales recientes. Volver a uno de ellos evita otra descarga; el navegador puede conservar también su caché HTTP.
+- Si se cambia rápidamente de entidad, únicamente la última selección puede actualizar la vista.
+- Mientras se carga otra entidad se ocultan las cifras anteriores. Si falla la carga se muestra un error y se permite reintentar navegando o con Actualizar.
+- La actualización de la publicación comprueba la entidad activa y las fuentes utilizadas; no vuelve a descargar todos los bancos que se hayan visitado.
 
 ## Verificación
 
-- 19 pruebas JavaScript superadas, incluidas navegación, gráficos comparativos, cálculos regionales, fechas y ausencia de datos. Las pruebas afectadas se repitieron tras el ajuste final de la cuota de mercado.
-- 20 pruebas Python superadas, incluida la lectura de archivos SBS reales y controles de estructura y conciliación regional.
-- Validador de publicación correcto: 14 JSON, 67 periodos financieros y 9 reportes adicionales.
-- Ambos reportes regionales completos y sin errores de salud; se conservan las ocho advertencias previas de otras fuentes.
-- Comprobación de que los nueve archivos de datos anteriores mantienen su contenido, salvo la versión de publicación.
+23 pruebas JavaScript superadas: cálculos, navegación, detalles, copia, actualización, cambio global, ámbitos separados, periodos sin datos, cambios rápidos, errores y caché limitada.
 
-No se ha realizado comprobación visual en navegador real ni publicación en GitHub.
+21 pruebas Python superadas, incluyendo comprobación de los totales de todos los estados por entidad contra los totales bancarios originales de B-2201. Los balances y MN + ME se validan durante la compilación.
+
+Validación de entrega correcta: 38 archivos JSON, 67 periodos financieros y 9 reportes adicionales. Sin errores en la publicación; se conservan las ocho advertencias previas de las fuentes.
+
+No se ha publicado en GitHub ni realizado comprobación visual en un navegador real.

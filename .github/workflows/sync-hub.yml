@@ -71,7 +71,7 @@ jobs:
       - name: Publicar únicamente outputs validados
         run: |
           set -euo pipefail
-          git add data/hub.json data/manifest.json data/overview.json data/financial.json data/data_health.json data/reports/
+          git add data/hub.json data/manifest.json data/overview.json data/financial.json data/data_health.json data/reports/ data/entities/
           if git diff --cached --quiet; then
             echo "Datos sin cambios: no se crea commit."
             exit 0

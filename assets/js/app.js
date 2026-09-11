@@ -1,3 +1,4 @@
+import { selectReport, selectFinancial, selectOverview } from "./entities.js";
 import * as Data from "./data.js";
 import { concentrationView } from "./concentration.js";
 import { withCalculatedCapital } from "./capital.js";
@@ -33,7 +34,10 @@ if (window.ResizeObserver)
   new window.ResizeObserver(syncToolbarOffset).observe(topbar);
 window.addEventListener("resize", syncToolbarOffset);
 
-let overview,
+let baseOverview,
+  baseFinancial,
+  loadedEntity,
+  overview,
   health,
   manifest,
   financial,
@@ -43,6 +47,7 @@ let overview,
   toastTimer;
 const state = {
   view: "overview",
+  entity: "banbif",
   date: "",
   range: 24,
   metric: "credits",
@@ -70,6 +75,10 @@ const state = {
   peerSource: "financial",
 };
 const unitOf = (key) => METRICS[key]?.unit || "PEN_THOUSAND";
+const entityName = () =>
+  BANK_NAMES[state.entity] ||
+  manifest?.entities?.[state.entity]?.name ||
+  state.entity;
 const current = () => overview.periods.find((p) => p.date === state.date);
 const rangeButtons = (points, unit, label) =>
   `<div class="range" role="group" aria-label="Rango histórico">${[
@@ -192,7 +201,7 @@ function historyDisclosure(points, unit, label = "Serie seleccionada") {
 }
 function seriesContent(id) {
   const { points, unit, label } = seriesDetails.get(id);
-  return `<h2 id="detail-title">VALORES DE LA SERIE</h2><p class="series-subtitle">${e(label)} · ${e(units[unit] || unit)} · ${points.length ? `${month(points[0].date)} – ${month(points.at(-1).date)}` : "Sin observaciones"}</p>${wrapTable(`<table><thead><tr><th>Periodo</th><th class="number">Valor · ${e(units[unit] || unit)}</th></tr></thead><tbody>${points.map((p) => `<tr><td>${month(p.date)}${p.effective && p.effective !== p.date ? `<small>Declarado: ${month(p.effective)}</small>` : ""}</td><td class="number">${format(p.value, unit)}</td></tr>`).join("")}</tbody></table>`, "Valores de la serie", true)}`;
+  return `<h2 id="detail-title">VALORES DE LA SERIE</h2><p class="series-subtitle">${e(entityName())} · ${e(label)} · ${e(units[unit] || unit)} · ${points.length ? `${month(points[0].date)} – ${month(points.at(-1).date)}` : "Sin observaciones"}</p>${wrapTable(`<table><thead><tr><th>Periodo</th><th class="number">Valor · ${e(units[unit] || unit)}</th></tr></thead><tbody>${points.map((p) => `<tr><td>${month(p.date)}${p.effective && p.effective !== p.date ? `<small>Declarado: ${month(p.effective)}</small>` : ""}</td><td class="number">${format(p.value, unit)}</td></tr>`).join("")}</tbody></table>`, "Valores de la serie", true)}`;
 }
 async function copySeries() {
   const data = seriesDetails.get(activeSeriesId);
@@ -213,6 +222,7 @@ async function copySeries() {
       "Indicador",
       `Valor (${units[data.unit] || data.unit})`,
       "Periodo declarado",
+      "Entidad",
     ],
     ...data.points.map((p) => [
       p.date,
@@ -223,6 +233,7 @@ async function copySeries() {
           )
         : "",
       p.effective || p.date,
+      entityName(),
     ]),
   ];
   const text = rows
@@ -273,7 +284,11 @@ function toast(message) {
   }, 3500);
 }
 function urlState() {
-  const p = new URLSearchParams({ view: state.view, date: state.date });
+  const p = new URLSearchParams({
+    view: state.view,
+    date: state.date,
+    entity: state.entity,
+  });
   if (state.view === "balance") p.set("account", state.account);
   if (state.view === "reports") {
     p.set("report", state.report);
@@ -287,6 +302,8 @@ function urlState() {
 }
 function recoverUrl() {
   const p = new URLSearchParams(location.hash.slice(1));
+  const saved = p.get("entity");
+  state.entity = saved && manifest.entities?.[saved] ? saved : "banbif";
   if (NAV.some((v) => v[0] === p.get("view"))) state.view = p.get("view");
   if (overview.periods.some((v) => v.date === p.get("date")))
     state.date = p.get("date");
@@ -327,7 +344,7 @@ function kpi(key) {
 function detailContent(key, modal = false) {
   const titleId = modal ? ' id="detail-title"' : "";
   if (key === "info")
-    return `<h2${titleId}>Información del corte</h2><div class="detail-lead"><strong>${state.date === manifest.latest_period ? "Último balance disponible" : "Corte histórico"} · ${month(state.date, true)}</strong></div><p>Importes en S/ MM · ratios en % · variaciones de ratios en pb.</p><p>Último balance disponible: ${month(manifest.latest_period, true)}.</p><p>${health.errors} errores · ${health.warnings} advertencias. Las fechas pueden variar por fuente.</p><p id="last-checked">${lastChecked ? `Última comprobación: ${lastChecked}.` : ""}</p><button class="detail-link" data-nav="health">Ver fechas por fuente ${icon("arrow-right")}</button>`;
+    return `<h2${titleId}>Información del corte</h2><div class="detail-lead"><strong>${state.date === manifest.latest_period ? "Último balance disponible" : "Corte histórico"} · ${month(state.date, true)}</strong></div><p>${e(entityName())}</p><p>Importes en S/ MM · ratios en % · variaciones de ratios en pb.</p><p>Último balance disponible: ${month(manifest.latest_period, true)}.</p><p>${health.errors} errores · ${health.warnings} advertencias. Las fechas pueden variar por fuente.</p><p id="last-checked">${lastChecked ? `Última comprobación: ${lastChecked}.` : ""}</p><button class="detail-link" data-nav="health">Ver fechas por fuente ${icon("arrow-right")}</button>`;
   const config = METRICS[key],
     m = current()?.metrics[key],
     date = m?.date || state.date,
@@ -480,7 +497,8 @@ async function runRefresh(manual = false) {
     const changed = await Data.refresh();
     if (changed) {
       const fresh = await Data.initialize();
-      ({ overview, health, manifest } = fresh);
+      ({ overview: baseOverview, health, manifest } = fresh);
+      overview = baseOverview;
       if (followLatest || !overview.periods.some((p) => p.date === state.date))
         state.date = manifest.latest_period;
       setPeriodBounds();
@@ -488,6 +506,7 @@ async function runRefresh(manual = false) {
       $("latest").textContent =
         `Último balance: ${month(manifest.latest_period)}.`;
     }
+    if (!changed && manual && !$("error").hidden) await render();
     lastChecked = new Intl.DateTimeFormat("es-PE", {
       hour: "2-digit",
       minute: "2-digit",
@@ -602,7 +621,7 @@ function overviewView() {
   return (
     heading(
       "Panorama financiero",
-      "Balance, resultados y movimientos relevantes de BanBif.",
+      `Balance, resultados y movimientos relevantes de ${e(entityName())}.`,
     ) +
     `<section class="kpi-grid" aria-label="Resumen financiero">${MAIN.map(kpi).join("")}</section>` +
     `<div class="grid-two">${panel(
@@ -815,7 +834,10 @@ function balanceView() {
 function reportView() {
   if (state.report === "derived") return derivedView();
   if (state.report === "concentration") {
-    const result = concentrationView(reportData, state);
+    const result = concentrationView(
+      reportData,
+      Object.assign(state, { entityName: entityName() }),
+    );
     exportRows = result.rows;
     return (
       heading(
@@ -832,6 +854,12 @@ function reportView() {
       heading("Indicadores y riesgos", "Fuentes regulatorias SBS") +
       reportTabs() +
       '<div class="empty">No hay observaciones disponibles hasta el corte seleccionado.</div>'
+    );
+  if (!Object.values(p.values).some(finite))
+    return (
+      heading("Indicadores y riesgos", e(entityName())) +
+      reportTabs() +
+      `<div class="empty">Sin datos de ${e(entityName())} en esta fuente para ${month(p.date)}. Se respeta el ámbito de la entidad seleccionada.</div>`
     );
   const currentIds = Object.keys(p.values);
   let catalog = reportData.catalog.filter((r) => currentIds.includes(r.id));
@@ -906,7 +934,7 @@ function reportView() {
     ]),
   ];
   const table = wrapTable(
-    `<table class="metric-table"><thead><tr><th>Indicador / magnitud</th><th class="number">${state.report === "B-2402" ? "BanBif" : "Valor"}</th><th class="number">MoM</th><th class="number" title="Variación frente a diciembre del año anterior">YTD</th><th class="number">YoY</th>${state.report === "B-2402" ? '<th class="number">Banca múltiple</th>' : ""}<th>Periodo declarado</th></tr></thead><tbody>${rows.map(({ r, date, prior, year, yearStart }) => `<tr class="${r.id === state.reportMetric ? "peer-highlight" : ""}"><td><button class="text-button" data-report-metric="${r.id}">${e(r.label)}</button></td><td class="number">${format(p.values[r.id], r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], prior, r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], yearStart, r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], year, r.unit)}</td>${state.report === "B-2402" ? `<td class="number">${format(p.peers?.system?.[r.id], r.unit)}</td>` : ""}<td>${month(date)}</td></tr>`).join("")}</tbody></table>`,
+    `<table class="metric-table"><thead><tr><th>Indicador / magnitud</th><th class="number">${state.report === "B-2402" ? e(entityName()) : "Valor"}</th><th class="number">MoM</th><th class="number" title="Variación frente a diciembre del año anterior">YTD</th><th class="number">YoY</th>${state.report === "B-2402" ? '<th class="number">Banca múltiple</th>' : ""}<th>Periodo declarado</th></tr></thead><tbody>${rows.map(({ r, date, prior, year, yearStart }) => `<tr class="${r.id === state.reportMetric ? "peer-highlight" : ""}"><td><button class="text-button" data-report-metric="${r.id}">${e(r.label)}</button></td><td class="number">${format(p.values[r.id], r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], prior, r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], yearStart, r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], year, r.unit)}</td>${state.report === "B-2402" ? `<td class="number">${format(p.peers?.system?.[r.id], r.unit)}</td>` : ""}<td>${month(date)}</td></tr>`).join("")}</tbody></table>`,
     "Datos regulatorios",
     true,
   );
@@ -975,7 +1003,11 @@ function peersView() {
       prior = financial.periods.find((p) => p.date === shift(date, -12));
     sourceUrl = p.source_url;
     rows = p.peers
-      .filter((b) => !["system_foreign", "bcp_foreign"].includes(b.slug))
+      .filter((b) =>
+        state.entity.endsWith("_foreign")
+          ? !["system", "bcp"].includes(b.slug)
+          : !["system_foreign", "bcp_foreign"].includes(b.slug),
+      )
       .map((b) => ({
         slug: b.slug,
         name: BANK_NAMES[b.slug] || b.name,
@@ -987,7 +1019,17 @@ function peersView() {
       }));
     const aggregate = (period) => {
       const banks =
-        period?.peers.filter((b) => state.peerBanks.includes(b.slug)) || [];
+        period?.peers
+          .filter(
+            (b) =>
+              state.peerBanks.includes(b.slug) ||
+              (state.entity.endsWith("_foreign") &&
+                b.slug === "bcp_foreign" &&
+                state.peerBanks.includes("bcp")),
+          )
+          ?.filter(
+            (b) => !(state.entity.endsWith("_foreign") && b.slug === "bcp"),
+          ) || [];
       if (banks.length !== state.peerBanks.length || !banks.length) return null;
       if (PEER_FINANCIAL[key]) {
         const vals = banks.map((b) => b[PEER_FINANCIAL[key]]);
@@ -1008,8 +1050,7 @@ function peersView() {
       value: aggregate(p),
       prior: aggregate(prior),
     });
-    note =
-      "Sistema: total oficial B-2201, ámbito local. El grupo suma importes y calcula ratios sobre numeradores y denominadores agregados. Los cambios del universo bancario pueden afectar el crecimiento.";
+    note = `Sistema: total oficial B-2201, ${state.entity.endsWith("_foreign") ? "incluye sucursales en el exterior" : "ámbito local"}. El grupo suma importes y calcula ratios sobre numeradores y denominadores agregados. Los cambios del universo bancario pueden afectar el crecimiento.`;
   } else {
     const r = reportData,
       p = r.periods.filter((p) => p.date <= date).at(-1);
@@ -1023,6 +1064,7 @@ function peersView() {
     rows = Object.entries(p?.peers || {})
       .filter(([slug]) =>
         [
+          state.entity,
           "banbif",
           "bbva",
           "bcp",
@@ -1071,12 +1113,16 @@ function peersView() {
       compare(r.value, r.prior, unit).value,
     ]),
   ];
-  const system = rows.find((r) => r.slug === "system");
+  const system = rows.find(
+    (r) =>
+      r.slug ===
+      (state.entity.endsWith("_foreign") ? "system_foreign" : "system"),
+  );
   const shareAllowed =
     isfinancial && key in PEER_FINANCIAL && key !== "net_income";
   return (
     heading(
-      "¿Cómo está BanBif frente a otros bancos?",
+      `¿Cómo está ${e(entityName())} frente a otros bancos?`,
       `${config.label} · ${month(date)}`,
       `<div class="controls"><label>Indicador <select id="peer-metric">${["assets", "credits", "deposits", "equity", "net_income", "npl", "coverage", "roe", "roa", "efficiency", "rcg", "liq_mn", "liq_me", "rcl", "rfne"].map((k) => `<option value="${k}" ${k === key ? "selected" : ""}>${e(METRICS[k].label)}</option>`).join("")}</select></label></div>`,
     ) +
@@ -1097,7 +1143,7 @@ function peersView() {
       "Bancos y referencia de sistema",
       "Los importes y ratios se ordenan de mayor a menor; el orden no implica una evaluación de riesgo.",
       wrapTable(
-        `<table><thead><tr><th>Banco / referencia</th><th class="number">${e(config.label)}</th><th class="number">${unit === "PERCENT" ? "YoY · pb" : "YoY"}</th>${shareAllowed ? '<th class="number">Participación sistema</th>' : ""}</tr></thead><tbody>${rows.map((r) => `<tr class="${r.slug === "banbif" ? "peer-highlight" : ""}"><td>${e(r.name)}</td><td class="number">${format(r.value, unit)}</td><td class="number">${warning ? "—" : deltaCell(r.value, r.prior, unit, key)}</td>${shareAllowed ? `<td class="number">${format(ratio(r.value, system?.value), "PERCENT")}</td>` : ""}</tr>`).join("")}</tbody></table>`,
+        `<table><thead><tr><th>Banco / referencia</th><th class="number">${e(config.label)}</th><th class="number">${unit === "PERCENT" ? "YoY · pb" : "YoY"}</th>${shareAllowed ? '<th class="number">Participación sistema</th>' : ""}</tr></thead><tbody>${rows.map((r) => `<tr class="${r.slug === state.entity ? "peer-highlight" : ""}"><td>${e(r.name)}</td><td class="number">${format(r.value, unit)}</td><td class="number">${warning ? "—" : deltaCell(r.value, r.prior, unit, key)}</td>${shareAllowed ? `<td class="number">${format(ratio(r.value, system?.value), "PERCENT")}</td>` : ""}</tr>`).join("")}</tbody></table>`,
         "Comparación de bancos",
       ) +
         `<p class="source-note">${sourceUrl ? "" : "Sin fuente para el corte seleccionado. "}— indica dato o comparativo no disponible.</p>`,
@@ -1132,7 +1178,7 @@ function healthView() {
       "Disponibilidad por dataset",
       "La fecha de publicación y el periodo declarado pueden ser diferentes.",
       wrapTable(
-        `<table><thead><tr><th>Dataset</th><th>Información hasta</th><th>Estado</th><th class="number">Periodos</th><th class="number">Observaciones BanBif</th><th>Periodicidad</th></tr></thead><tbody>${health.datasets.map((d) => `<tr><td>${sourceLink(d.source, d.title + " ↗")}<small>${e(d.dataset)}</small></td><td>${month(d.latest_observation_period || d.latest_period)}${d.latest_observation_period && d.latest_observation_period !== d.latest_period ? `<small>Archivo: ${month(d.latest_period)}</small>` : ""}</td><td><span class="status ${d.status}">${d.status}</span></td><td class="number">${d.periods}</td><td class="number">${d.rows.toLocaleString("en-US")}</td><td>${d.frequency === "quarterly" ? "Trimestral" : "Mensual"}</td></tr>`).join("")}</tbody></table>`,
+        `<table><thead><tr><th>Dataset</th><th>Información hasta</th><th>Estado</th><th class="number">Periodos</th><th class="number">Observaciones de referencia SBS</th><th>Periodicidad</th></tr></thead><tbody>${health.datasets.map((d) => `<tr><td>${sourceLink(d.source, d.title + " ↗")}<small>${e(d.dataset)}</small></td><td>${month(d.latest_observation_period || d.latest_period)}${d.latest_observation_period && d.latest_observation_period !== d.latest_period ? `<small>Archivo: ${month(d.latest_period)}</small>` : ""}</td><td><span class="status ${d.status}">${d.status}</span></td><td class="number">${d.periods}</td><td class="number">${d.rows.toLocaleString("en-US")}</td><td>${d.frequency === "quarterly" ? "Trimestral" : "Mensual"}</td></tr>`).join("")}</tbody></table>`,
         "Estado de las fuentes",
       ),
     ) +
@@ -1157,31 +1203,92 @@ function peerReportCode(key) {
     rfne: "B-234021",
   }[key];
 }
+function renderNavigation() {
+  const navigation = $("navigation");
+  if (!$("entity-select")) {
+    navigation.innerHTML =
+      `<label class="sr-only" for="entity-select">Entidad financiera</label><select id="entity-select" class="entity-picker" aria-label="Entidad financiera"></select>` +
+      NAV.filter(([v]) => v !== "health")
+        .map(
+          ([v, label]) =>
+            `<button class="nav-button" data-nav="${v}">${icon(NAV_ICONS[v])}${label}</button>`,
+        )
+        .join("");
+  }
+  const select = $("entity-select");
+  const options = manifest.entities || { banbif: { name: "BanBif" } };
+  const signature = Object.keys(options).join("|");
+  if (select.dataset.entities !== signature) {
+    select.innerHTML = Object.entries(options)
+      .sort(
+        ([a, av], [b, bv]) =>
+          (a === "banbif" ? -3 : a.startsWith("system") ? -2 : 0) -
+            (b === "banbif" ? -3 : b.startsWith("system") ? -2 : 0) ||
+          av.name.localeCompare(bv.name, "es"),
+      )
+      .map(
+        ([slug, value]) =>
+          `<option value="${e(slug)}">${e(BANK_NAMES[slug] || value.name)}</option>`,
+      )
+      .join("");
+    select.dataset.entities = signature;
+  }
+  select.value = state.entity;
+  select.title = entityName();
+  for (const button of navigation.querySelectorAll("[data-nav]")) {
+    if (button.dataset.nav === state.view)
+      button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+  }
+}
 async function render() {
   const id = ++renderId;
+  $("entity-brand").textContent = `${entityName()} · Treasury Hub`;
+  $("entity-footer").textContent = `${entityName()} · Treasury Hub`;
   exportRows = [];
   $("content").setAttribute("aria-busy", "true");
   $("error").hidden = true;
+  if (loadedEntity && loadedEntity !== state.entity) {
+    closeDetails();
+    clearCharts();
+    $("content").innerHTML =
+      `<div class="empty" role="status">Cargando ${e(entityName())}…</div>`;
+  }
   try {
-    if (["overview", "movements", "balance", "peers"].includes(state.view))
-      financial = await Data.load("financial");
-    if (state.view === "reports" && state.report !== "derived")
-      reportData = withCalculatedCapital(
-        await Data.load(
-          state.report === "concentration"
-            ? state.concentrationSource
-            : state.report,
-        ),
-      );
-    if (state.view === "peers" && peerReportCode(state.peerMetric))
-      reportData = await Data.load(peerReportCode(state.peerMetric));
+    const requested = {
+      entity: state.entity,
+      view: state.view,
+      report: state.report,
+      code:
+        state.report === "concentration"
+          ? state.concentrationSource
+          : state.report,
+      peerCode: peerReportCode(state.peerMetric),
+    };
+    const reportCode =
+      requested.view === "reports" && requested.report !== "derived"
+        ? requested.code
+        : requested.view === "peers"
+          ? requested.peerCode
+          : null;
+    const [base, bundle, source] = await Promise.all([
+      Data.load("financial"),
+      Data.loadEntity(requested.entity),
+      reportCode ? Data.load(reportCode) : Promise.resolve(null),
+    ]);
     if (id !== renderId) return;
-    $("navigation").innerHTML = NAV.filter(([view]) => view !== "health")
-      .map(
-        ([v, label]) =>
-          `<button class="nav-button" data-nav="${v}" ${v === state.view ? 'aria-current="page"' : ""}>${icon(NAV_ICONS[v])}${label}</button>`,
-      )
-      .join("");
+    baseFinancial = base;
+    loadedEntity = requested.entity;
+    financial = selectFinancial(base, bundle);
+    overview = selectOverview(baseOverview, bundle);
+    if (source)
+      reportData =
+        requested.report === "concentration" && requested.view === "reports"
+          ? source
+          : withCalculatedCapital(selectReport(source, requested.entity));
+    renderNavigation();
+    $("entity-brand").textContent = `${entityName()} · Treasury Hub`;
+    $("entity-footer").textContent = `${entityName()} · Treasury Hub`;
     $("period").value = calendarDate(state.date);
     const i = overview.periods.findIndex((p) => p.date === state.date);
     $("prev").disabled = i <= 0;
@@ -1189,14 +1296,21 @@ async function render() {
     closeDetails();
     clearCharts();
     seriesDetails.clear();
-    $("content").innerHTML = {
-      overview: overviewView,
-      movements: movementsView,
-      balance: balanceView,
-      reports: reportView,
-      peers: peersView,
-      health: healthView,
-    }[state.view]();
+    const unavailable =
+      ["overview", "movements", "balance"].includes(state.view) &&
+      !Object.keys(
+        financial.periods.find((p) => p.date === state.date)?.values || {},
+      ).length;
+    $("content").innerHTML = unavailable
+      ? `<div class="empty">No hay estados financieros de ${e(entityName())} para ${month(state.date)}. Selecciona otro periodo.</div>`
+      : {
+          overview: overviewView,
+          movements: movementsView,
+          balance: balanceView,
+          reports: reportView,
+          peers: peersView,
+          health: healthView,
+        }[state.view]();
     $("account-controls").hidden = state.view !== "balance";
     $("account-controls").innerHTML =
       state.view === "balance" ? accountControls() : "";
@@ -1226,13 +1340,22 @@ function exportCsv() {
     return;
   }
   const blob = new Blob(
-    ["\uFEFF" + exportRows.map((r) => r.map(csvCell).join(",")).join("\r\n")],
+    [
+      "\uFEFF" +
+        exportRows
+          .map((r, i) =>
+            [i ? entityName() : "entidad_seleccionada", ...r]
+              .map(csvCell)
+              .join(","),
+          )
+          .join("\r\n"),
+    ],
     { type: "text/csv;charset=utf-8" },
   );
   const url = URL.createObjectURL(blob),
     a = document.createElement("a");
   a.href = url;
-  a.download = `banbif-${state.view}-${state.date}.csv`;
+  a.download = `${state.entity}-${state.view}-${state.date}.csv`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   toast("CSV exportado con unidades y fechas.");
@@ -1247,6 +1370,14 @@ function switchTheme() {
   } catch {}
 }
 function bind() {
+  document.addEventListener("change", (event) => {
+    if (event.target.id !== "entity-select") return;
+    const next = event.target.value;
+    if (!manifest.entities?.[next] || next === state.entity) return;
+    state.entity = next;
+    render();
+  });
+
   document.addEventListener(
     "toggle",
     (event) => {
@@ -1373,7 +1504,7 @@ function bind() {
     if (el.dataset.concentrationBank) {
       if (el.checked && state.concentrationBanks.length >= 5) {
         el.checked = false;
-        toast("Selecciona hasta cinco bancos adicionales a BanBif.");
+        toast(`Selecciona hasta cinco bancos adicionales a ${entityName()}.`);
         return;
       }
       state.concentrationBanks = el.checked
@@ -1440,12 +1571,14 @@ function bind() {
 async function init(first = true) {
   try {
     const data = await Data.initialize();
-    ({ overview, health, manifest } = data);
+    ({ overview: baseOverview, health, manifest } = data);
+    overview = baseOverview;
     state.date = overview.periods.some((p) => p.date === state.date)
       ? state.date
       : manifest.latest_period;
     if (first) recoverUrl();
     setPeriodBounds();
+    renderNavigation();
     $("latest").textContent =
       `Último balance: ${month(manifest.latest_period)}.`;
     updateStatus();

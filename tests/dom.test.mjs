@@ -22,9 +22,15 @@ window.HTMLDialogElement.prototype.close = function () {
 window.matchMedia = () => ({ matches: true });
 const requests = [];
 let failPath = "";
+let delayedPath = "",
+  releaseDelay;
 globalThis.fetch = async (path) => {
   requests.push(path);
   const relative = path.split("?")[0].replace(/^\.\//, "");
+  if (relative === delayedPath)
+    await new Promise((resolve) => {
+      releaseDelay = resolve;
+    });
   if (relative === failPath) return new Response("", { status: 503 });
   try {
     return new Response(await readFile(new URL(relative, root), "utf8"), {
@@ -358,6 +364,144 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
     before + 1,
   );
   assert.match(document.getElementById("toast").textContent, /sin novedades/);
+});
+
+test("global entity selection updates statements, ratios, capital, regions and historical gaps", async () => {
+  await change("period", "2026-06");
+  await click('[data-nav="overview"]');
+  assert.equal(document.getElementById("entity-select").value, "banbif");
+  assert.ok(document.querySelectorAll("#entity-select option").length > 20);
+  await change("entity-select", "system_foreign");
+  assert.match(
+    document.querySelector('[data-metric="assets"]').textContent,
+    /604,333.41/,
+  );
+  assert.match(
+    document.querySelector('[data-metric="credits"]').textContent,
+    /390,568.64/,
+  );
+  assert.match(
+    document.querySelector('[data-metric="net_income"]').textContent,
+    /8,498.95/,
+  );
+  assert.ok(location.hash.includes("entity=system_foreign"));
+  await click('[data-nav="balance"]');
+  await change("statement", "income");
+  await change("table-view", "annual");
+  await change("search", "GASTOS FINANCIEROS");
+  // Search uses input events; use the selected row directly for the detail panel.
+  document
+    .getElementById("search")
+    .dispatchEvent(new window.Event("input", { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 300));
+  await ready();
+  await click('[data-account="income:20"]');
+  assert.match(
+    document.querySelector(".detail-values").textContent,
+    /5,680.77/,
+  );
+  await change("entity-select", "bbva");
+  assert.equal(document.getElementById("statement").value, "income");
+  assert.equal(document.getElementById("table-view").value, "annual");
+  assert.ok(
+    !document.querySelector(".detail-values").textContent.includes("5,680.77"),
+  );
+  await click('[data-nav="reports"]');
+  await click('[data-report="B-2401"]');
+  assert.ok(!document.querySelector("#content .empty"));
+  await change("entity-select", "system_foreign");
+  assert.match(document.querySelector(".metric-table").textContent, /182.53%/);
+  await click('[data-report="B-2402"]');
+  await change("entity-select", "system");
+  assert.match(document.querySelector(".metric-table").textContent, /76.76%/);
+  await change("entity-select", "bcp");
+  await click('[data-report="B-2401"]');
+  assert.match(
+    document.getElementById("content").textContent,
+    /Sin datos de BCP/,
+  );
+  await change("entity-select", "bcp_foreign");
+  assert.ok(document.querySelector(".metric-table"));
+  await click('[data-report="concentration"]');
+  assert.match(
+    document.querySelector(".concentration-stats").textContent,
+    /BCP/,
+  );
+  assert.equal(
+    document.querySelector('[data-concentration-bank="bcp_foreign"]').disabled,
+    true,
+  );
+  await change("entity-select", "system");
+  assert.match(
+    document.getElementById("content").textContent,
+    /Sin datos regionales/,
+  );
+  await change("entity-select", "system_foreign");
+  assert.ok(document.querySelector(".concentration-table"));
+  await click('[data-nav="peers"]');
+  await change("peer-metric", "credits");
+  assert.match(
+    document.querySelector("tr.peer-highlight").textContent,
+    /390,568.64/,
+  );
+  await change("entity-select", "efectiva");
+  await click('[data-nav="overview"]');
+  await change("period", "2021-01");
+  assert.match(
+    document.getElementById("content").textContent,
+    /No hay estados financieros/,
+  );
+  assert.ok(!document.querySelector(".kpi-grid"));
+  await change("period", "2026-06");
+  assert.ok(document.querySelector(".kpi-grid"));
+  await change("entity-select", "bbva");
+  const before = requests.filter((p) =>
+    p.includes("entities/bbva.json"),
+  ).length;
+  await change("entity-select", "banbif");
+  await change("entity-select", "bbva");
+  assert.equal(
+    requests.filter((p) => p.includes("entities/bbva.json")).length,
+    before,
+  );
+  await change("entity-select", "banbif");
+  await change("period", "2026-07");
+  assert.equal(errors.length, 0, errors.join("\n"));
+});
+
+test("rapid entity changes commit only the latest selection and failed loads never show stale figures", async () => {
+  const selected = document.getElementById("entity-select");
+  delayedPath = "data/entities/citibank.json";
+  selected.value = "citibank";
+  selected.dispatchEvent(new window.Event("change", { bubbles: true }));
+  for (let i = 0; i < 50 && !releaseDelay; i++)
+    await new Promise((r) => setTimeout(r, 5));
+  assert.ok(releaseDelay);
+  assert.ok(
+    !document.querySelector(".kpi-grid"),
+    "Old entity hidden during loading",
+  );
+  await change("entity-select", "banbif");
+  releaseDelay();
+  delayedPath = "";
+  await new Promise((r) => setTimeout(r, 30));
+  assert.equal(document.getElementById("entity-select").value, "banbif");
+  assert.match(
+    document.querySelector('[data-metric="assets"]').textContent,
+    /23,316.79/,
+  );
+  failPath = "data/entities/gnb.json";
+  await change("entity-select", "gnb");
+  assert.match(document.getElementById("error").textContent, /503/);
+  assert.ok(!document.querySelector(".kpi-grid"));
+  failPath = "";
+  await click("#refresh");
+  for (let i = 0; i < 100 && document.getElementById("refresh").disabled; i++)
+    await new Promise((r) => setTimeout(r, 10));
+  await ready();
+  assert.ok(document.querySelector(".kpi-grid"));
+  assert.equal(document.getElementById("entity-select").value, "gnb");
+  await change("entity-select", "banbif");
 });
 
 test("failed source request surfaces an explicit error without sample data", async () => {

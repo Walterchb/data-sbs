@@ -92,8 +92,8 @@ export const BANK_NAMES = {
   bbva: "BBVA",
   scotiabank: "Scotiabank",
   interbank: "Interbank",
-  system: "Sistema · ámbito local",
-  system_foreign: "Sistema · incluye sucursales exterior",
+  system: "Banca múltiple · ámbito local",
+  system_foreign: "Banca múltiple · incluye sucursales exterior",
 };
 export const MAIN = [
   "assets",

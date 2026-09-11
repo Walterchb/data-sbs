@@ -46,6 +46,15 @@ def validate():
             if not set(p['values']).issubset(ids):errors.append('Unknown report metric '+code)
     for dataset in [f,o]:
         if dataset['version']!=manifest['version']:errors.append('Mixed financial versions')
+    for slug,meta in manifest.get('entities',{}).items():
+        entity=data.get(meta['path'])
+        if not entity or entity.get('entity')!=slug or entity.get('version')!=manifest['version']:
+            errors.append('Missing or mixed entity '+slug);continue
+        if slug=='banbif':continue
+        if [p['date'] for p in entity['financial']]!=expected:errors.append('Entity periods lost '+slug)
+        for p in entity['financial']:
+            source=next(x for x in hub['financial']['periods'] if x['date'][:7]==p['date'])
+            if bool(p['values'])!=bool(source.get('entity_statements',{}).get(slug)):errors.append('Entity availability mismatch '+slug)
     ids={r['id'] for r in f['catalog']}
     for r in f['catalog']:
         if r['parent'] and r['parent'] not in ids:errors.append('Orphan account '+r['id'])

@@ -83,7 +83,7 @@ def synchronize(db, args):
                 d=f'{y}-{m:02d}-{calendar.monthrange(y,m)[1]}'
                 old=existing.get(d)
                 recent=(now.year-y)*12+now.month-m<=3
-                if args.refresh_all or not old or old.get('parser_version')!=VERSION or recent:dates.append(d)
+                if args.refresh_all or not old or old.get('parser_version')!=VERSION or recent or (code=='B-2201' and not old.get('entity_statements')) or (code in ('B-230809','B-234021') and not old.get('peer_meta')):dates.append(d)
         summaries[code]={'existing':existing,'errors':[],'missing':[],'updated':0}
         tasks.extend((code,d) for d in dates)
     with ThreadPoolExecutor(max_workers=args.workers) as pool:

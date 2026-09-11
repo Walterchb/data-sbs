@@ -61,6 +61,8 @@ const nameOf = (slug, names) =>
   names[slug] ||
   slug;
 export function concentrationView(report, state) {
+  const primary = state.entity || "banbif";
+  const primaryName = nameOf(primary, {});
   const code = state.concentrationSource,
     isDeposits = code === "B-2350";
   const period = report.periods.filter((p) => p.date <= state.date).at(-1);
@@ -70,9 +72,19 @@ export function concentrationView(report, state) {
       html: `<div class="controls">${baseControls}</div><div class="empty">No hay datos regionales para el corte seleccionado.</div>`,
       rows: [],
     };
+  if (!period.peers?.[primary] || !Object.keys(period.peers[primary]).length)
+    return {
+      html: `<div class="controls">${baseControls}</div><div class="empty">Sin datos regionales de ${e(state.entityName || primaryName)} para este corte y ámbito.</div>`,
+      rows: [],
+    };
   const regions = report.catalog.filter(
-    (r) => r.unit === "PERCENT" && r.id in period.values,
+    (r) => r.unit === "PERCENT" && r.id in period.peers[primary],
   );
+  if (!regions.length)
+    return {
+      html: `<div class="controls">${baseControls}</div><div class="empty">Sin distribución regional para la entidad seleccionada.</div>`,
+      rows: [],
+    };
   if (!regions.some((r) => r.id === state.concentrationRegion))
     state.concentrationRegion =
       regions.find((r) => r.label === "Lima")?.id || regions[0]?.id;
@@ -87,10 +99,12 @@ export function concentrationView(report, state) {
   ];
   for (const p of report.periods.filter((p) => p.date <= period.date))
     Object.assign(names, p.entity_names);
-  const selected = [...new Set(["banbif", ...state.concentrationBanks])].filter(
+  const selected = [...new Set([primary, ...state.concentrationBanks])].filter(
     (slug) =>
       available.includes(slug) &&
-      (state.concentrationMode !== "market" || !slug.startsWith("system")),
+      (state.concentrationMode !== "market" ||
+        !slug.startsWith("system") ||
+        slug === primary),
   );
   const banks = selected.map((slug) => ({
     slug,
@@ -125,11 +139,11 @@ export function concentrationView(report, state) {
     .join(
       "",
     )}</select></label><label>Gráfico <select id="concentration-chart"><option value="trend" ${state.concentrationChart === "trend" ? "selected" : ""}>Evolución de la región</option><option value="regions" ${state.concentrationChart === "regions" ? "selected" : ""}>Comparar regiones</option></select></label></div>`;
-  const bankControls = `<details class="concentration-banks" ${state.concentrationBanksOpen ? "open" : ""}><summary>Bancos a comparar · ${banks.map((b) => e(b.name)).join(" / ")}</summary><div class="checkboxes">${available.map((slug) => `<label><input type="checkbox" data-concentration-bank="${slug}" ${selected.includes(slug) ? "checked" : ""} ${slug === "banbif" || (mode === "market" && slug.startsWith("system")) ? "disabled" : ""}>${e(nameOf(slug, names))}</label>`).join("")}</div><small>Hasta seis series; BanBif permanece como referencia.</small></details>`;
+  const bankControls = `<details class="concentration-banks" ${state.concentrationBanksOpen ? "open" : ""}><summary>Bancos a comparar · ${banks.map((b) => e(b.name)).join(" / ")}</summary><div class="checkboxes">${available.map((slug) => `<label><input type="checkbox" data-concentration-bank="${slug}" ${selected.includes(slug) ? "checked" : ""} ${slug === primary || (mode === "market" && slug.startsWith("system")) ? "disabled" : ""}>${e(nameOf(slug, names))}</label>`).join("")}</div><small>Hasta seis series; ${e(state.entityName || primaryName)} permanece como referencia.</small></details>`;
   const ranked = [...regions].sort(
     (a, b) =>
-      (regionValue(report, period, "banbif", b.id, "share") ?? -1) -
-      (regionValue(report, period, "banbif", a.id, "share") ?? -1),
+      (regionValue(report, period, primary, b.id, "share") ?? -1) -
+      (regionValue(report, period, primary, a.id, "share") ?? -1),
   );
   const chartRegions = ranked.slice(0, 10);
   const series =
@@ -159,17 +173,17 @@ export function concentrationView(report, state) {
   const title =
     state.concentrationChart === "trend"
       ? `${regionName} · ${modeLabel}`
-      : `10 regiones con mayor peso en BanBif · ${modeLabel}`;
+      : `10 regiones con mayor peso en ${state.entityName || primaryName} · ${modeLabel}`;
   const december = report.periods.find(
     (p) => p.date === `${Number(period.date.slice(0, 4)) - 1}-12`,
   );
-  const share = regionValue(report, period, "banbif", region.id, "share"),
-    prior = regionValue(report, december, "banbif", region.id, "share");
+  const share = regionValue(report, period, primary, region.id, "share"),
+    prior = regionValue(report, december, primary, region.id, "share");
   const sys = period.peers.system_foreign ? "system_foreign" : "system";
   const systemShare = regionValue(report, period, sys, region.id, "share");
   const stat = (label, value) =>
     `<div class="stat-card"><span class="stat-label">${label}</span><b>${value}</b></div>`;
-  const cards = `<div class="stats concentration-stats">${stat(`BanBif · ${e(regionName)}`, format(share, "PERCENT"))}${stat("Importe regional calculado", format(regionValue(report, period, "banbif", region.id, "amount"), "PEN_THOUSAND"))}${stat("Cambio de concentración YTD", format(finite(share) && finite(prior) ? (share - prior) * 100 : null, "BP", true))}${stat("Diferencia frente al sistema", format(finite(share) && finite(systemShare) ? (share - systemShare) * 100 : null, "BP", true))}</div>`;
+  const cards = `<div class="stats concentration-stats">${stat(`${e(state.entityName || primaryName)} · ${e(regionName)}`, format(share, "PERCENT"))}${stat("Importe regional calculado", format(regionValue(report, period, primary, region.id, "amount"), "PEN_THOUSAND"))}${stat("Cambio de concentración YTD", format(finite(share) && finite(prior) ? (share - prior) * 100 : null, "BP", true))}${stat("Diferencia frente al sistema", format(finite(share) && finite(systemShare) ? (share - systemShare) * 100 : null, "BP", true))}</div>`;
   const table = wrapTable(
     `<table class="concentration-table"><thead><tr><th>Región / departamento</th>${banks.map((b) => `<th class="number"><span style="color:${b.color}">■</span> ${e(b.name)}</th>`).join("")}</tr></thead><tbody>${ranked.map((r) => `<tr class="${r.id === region.id ? "peer-highlight" : ""}"><td><button class="text-button" data-concentration-region="${r.id}">${e(r.label)}</button></td>${banks.map((b) => `<td class="number">${format(regionValue(report, period, b.slug, r.id, mode), unit)}</td>`).join("")}</tr>`).join("")}</tbody></table>`,
     "Datos regionales comparados",

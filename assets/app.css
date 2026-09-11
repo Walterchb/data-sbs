@@ -1960,3 +1960,17 @@ dialog::backdrop {
     width: 100%;
   }
 }
+
+/* Entity selector uses the existing navigation row and control styling. */
+.entity-picker {
+  flex: 0 0 auto;
+  max-width: 225px;
+  min-width: 145px;
+  height: 34px;
+  min-height: 34px;
+  font: inherit;
+}
+#content[aria-busy="true"] {
+  pointer-events: none;
+  opacity: 0.65;
+}

@@ -98,6 +98,9 @@ def report_output(code,report):
     for p in report.get('periods',[]):
         if p.get('parser_version')!='5.0':continue
         values={};effective={};keys={};bank_values={}
+        all_meta=dict(p.get('metric_meta',{}))
+        for metas in p.get('peer_meta',{}).values():
+            for label,meta in metas.items():all_meta.setdefault(label,meta)
         for label,value in p['banbif_metrics'].items():
             meta=p.get('metric_meta',{}).get(label)
             if not meta:raise ValueError(f'{code}: missing unit or provenance: {label}')
@@ -109,12 +112,18 @@ def report_output(code,report):
                 if re.search(pattern,norm(label)):
                     if key in keys:raise ValueError(f'{code}: ambiguous key metric {key}')
                     keys[key]={'value':value,'date':effective[mid],'source':code,'id':mid}
+        for label,meta in all_meta.items():
+            mid=metric_id(label)
+            catalog.setdefault(mid,{'id':mid,'label':label,'unit':meta['unit'],'kind':'ratio' if meta['unit']=='PERCENT' else 'stock'})
+            effective.setdefault(mid,meta['effective_date'][:7])
         for bank,metrics in p.get('peer_metrics',{}).items():
             bank_values[bank]={metric_id(k):v for k,v in metrics.items() if metric_id(k) in catalog}
         periods.append({'date':p['date'][:7],'source_url':p['source_url'],'values':values,'effective':effective,
                         'keys':keys,'peers':bank_values,'warning':p.get('period_warning'),
                         'source_caption':p.get('source_caption'),
-                        **({'entity_names':p.get('entity_names',{})} if code in ('B-2349','B-2350') else {})})
+                        'entity_names':p.get('entity_names',{}),
+                        'peer_effective':{bank:{metric_id(k):v['effective_date'][:7] for k,v in metas.items()} for bank,metas in p.get('peer_meta',{}).items()},
+                        'peer_captions':p.get('peer_captions',{})})
     return {'code':code,'title':SOURCES[code]['title'],'frequency':SOURCES[code]['frequency'],
             'catalog':list(catalog.values()),'periods':periods}
 
@@ -217,7 +226,13 @@ def build(db,output,today=None):
             if p:
                 for k,v in p['keys'].items():keys[k]={**v,'file_date':p['date'],'warning':p.get('warning')}
         overview.append({'date':f['date'],'metrics':keys,'peers':f['peers']})
-    version=hashlib.sha256(encode({'financial':financial,'reports':out}).encode()).hexdigest()[:16]
+    from entity_data import compile_entities
+    try:entities=compile_entities(raw,financial,out,CONFIG)
+    except (ValueError,KeyError,TypeError) as exc:
+        health[0]["errors"].append(str(exc));health[0]["status"]="ERROR"
+        report["errors"]+=1;write(output/"data_health.json",report)
+        return report
+    version=hashlib.sha256(encode({'financial':financial,'reports':out,'entities':entities}).encode()).hexdigest()[:16]
     shared={'schema_version':1,'version':version}
     write(output/'financial.json',{**shared,'catalog':financial_catalog(),'periods':financial})
     for c,r in out.items():write(output/'reports'/f'{c}.json',{**shared,**r})
@@ -225,8 +240,13 @@ def build(db,output,today=None):
     manifest={**shared,'latest_period':financial[-1]['date'],'generated_at':db['meta'].get('generated_at'),
               'overview':'overview.json','financial':'financial.json','health':'data_health.json',
               'reports':{c:f'reports/{c}.json' for c in out},'sources':SOURCES}
+    manifest['entities']={}
+    for slug,bundle in entities.items():
+        path=f'entities/{slug}.json'
+        write(output/path,{**shared,**bundle})
+        manifest['entities'][slug]={'name':bundle['name'],'path':path}
     write(output/'manifest.json',manifest)
-    print(f'Files generated: {len(out)+5} (including data health and manifest)')
+    print(f'Files generated: {len(out)+5+len(entities)} (including data health and manifest)')
     return report
 
 
