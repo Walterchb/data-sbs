@@ -44,3 +44,11 @@ Si el workflow de sincronización existente está habilitado, el cambio en scrip
 ## Actualización 17 · Copiar fechas a Excel
 
 El botón Copiar del modal de valores de la serie exporta las columnas Periodo y Periodo declarado en formato `dd/mm/aaaa`, usando el último día de cada mes. Por ejemplo: `31/07/2025`, `30/04/2026` y `29/02/2024` para un año bisiesto. Se mantienen los valores numéricos y las columnas existentes.
+
+## Actualización 18 · Nombres SBS en exportaciones
+
+Las descargas CSV incorporan `entidad_seleccionada_sbs`. En Comparar y Concentración también se agrega `banco_sbs` para cada banco de la fila. La copia de series a Excel incluye `Entidad SBS`. Se recupera el nombre del reporte correspondiente al periodo, conservando la distinción entre ámbito local y sucursales del exterior. Los grupos calculados no se presentan como bancos oficiales. Los nombres cortos de la interfaz se mantienen.
+
+## Actualización 19 · Nombres de archivos sin tildes
+
+Las descargas de gráficos convierten las letras acentuadas a letras sin tilde y agrupan los separadores. Ejemplo: `Provisiones / Créditos Atrasados` se descarga como `SBS_Provisiones_Creditos_Atrasados.png`. Las etiquetas en pantalla conservan sus tildes.

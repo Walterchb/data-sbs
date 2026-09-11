@@ -85,6 +85,23 @@ const entityName = () =>
   BANK_NAMES[state.entity] ||
   manifest?.entities?.[state.entity]?.name ||
   state.entity;
+function entitySbsName(slug = state.entity, date = state.date) {
+  if (slug === "group") return "";
+  const usesReport =
+    (state.view === "reports" && state.report !== "derived") ||
+    (state.view === "peers" && Boolean(peerReportCode(state.peerMetric)));
+  const source = usesReport
+    ? reportData?.periods.filter((p) => p.date <= date).at(-1)
+    : null;
+  return (
+    source?.entity_names?.[slug] ||
+    baseFinancial?.periods
+      .find((p) => p.date === date)
+      ?.peers.find((b) => b.slug === slug)?.name ||
+    manifest?.entities?.[slug]?.name ||
+    ""
+  );
+}
 const current = () => overview.periods.find((p) => p.date === state.date);
 const rangeButtons = (points, unit, label) =>
   `<div class="range" role="group" aria-label="Rango histórico">${[
@@ -234,6 +251,7 @@ async function copySeries() {
       `Valor (${units[data.unit] || data.unit})`,
       "Periodo declarado",
       "Entidad",
+      "Entidad SBS",
     ],
     ...data.points.map((p) => [
       monthEnd(p.date),
@@ -245,6 +263,7 @@ async function copySeries() {
         : "",
       monthEnd(p.effective || p.date),
       entityName(),
+      entitySbsName(state.entity, p.date),
     ]),
   ];
   const text = rows
@@ -1262,7 +1281,7 @@ function peersView() {
   }
   rows.sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
   exportRows = [
-    ["banco", "periodo", "indicador", "valor", "unidad", "yoy"],
+    ["banco", "periodo", "indicador", "valor", "unidad", "yoy", "banco_sbs"],
     ...rows.map((r) => [
       r.name,
       date,
@@ -1270,6 +1289,7 @@ function peersView() {
       r.value,
       unit,
       compare(r.value, r.prior, unit).value,
+      entitySbsName(r.slug, date),
     ]),
   ];
   const system = rows.find(
@@ -1534,7 +1554,11 @@ function exportCsv() {
       "\uFEFF" +
         exportRows
           .map((r, i) =>
-            [i ? entityName() : "entidad_seleccionada", ...r]
+            [
+              i ? entityName() : "entidad_seleccionada",
+              ...r,
+              i ? entitySbsName() : "entidad_seleccionada_sbs",
+            ]
               .map(csvCell)
               .join(","),
           )

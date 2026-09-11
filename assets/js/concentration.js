@@ -199,6 +199,7 @@ export function concentrationView(report, state) {
       "valor",
       "unidad",
       "fuente",
+      "banco_sbs",
     ],
     ...ranked.flatMap((r) =>
       banks.map((b) => [
@@ -210,6 +211,7 @@ export function concentrationView(report, state) {
         regionValue(report, period, b.slug, r.id, mode),
         unit,
         period.source_url,
+        period.entity_names?.[b.slug] || "",
       ]),
     ),
   ];

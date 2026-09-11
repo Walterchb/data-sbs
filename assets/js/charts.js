@@ -82,7 +82,13 @@ export function chartOptions(points, unit, label, palette, mobile = false) {
           title: "Descargar",
           pixelRatio: 3,
           backgroundColor: palette.panel,
-          name: "SBS_" + label.replace(/[^a-z0-9]/gi, "_"),
+          name:
+            "SBS_" +
+            label
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/[^a-z0-9]+/gi, "_")
+              .replace(/^_+|_+$/g, ""),
         },
       },
     },

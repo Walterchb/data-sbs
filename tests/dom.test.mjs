@@ -312,8 +312,13 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   await click("#series-copy");
   assert.equal(copied.split("\r\n").length, 25);
   assert.match(copied, /Periodo\tIndicador\tValor \(S\/ MM\)/);
-  assert.match(copied, /31\/07\/2026\tCréditos brutos\t15692\.39\t31\/07\/2026/);
+  assert.match(
+    copied,
+    /31\/07\/2026\tCréditos brutos\t15692\.39\t31\/07\/2026/,
+  );
   assert.ok(!copied.includes("15,692"));
+  assert.match(copied, /Entidad SBS/);
+  assert.match(copied, /Banco Interamericano de Finanzas/);
   assert.match(
     document.getElementById("series-copy-status").textContent,
     /Copiado/,
@@ -571,6 +576,52 @@ test("structure tab responds to source, situation, date and exact entity scope",
   await change("entity-select", "banbif");
   await change("period", "2026-07");
   await click('[data-nav="overview"]');
+});
+
+test("CSV exports keep source bank names for each comparison row", async () => {
+  let blob;
+  const create = URL.createObjectURL,
+    revoke = URL.revokeObjectURL;
+  const anchorClick = window.HTMLAnchorElement.prototype.click;
+  URL.createObjectURL = (value) => {
+    blob = value;
+    return "blob:export-test";
+  };
+  URL.revokeObjectURL = () => {};
+  window.HTMLAnchorElement.prototype.click = () => {};
+  try {
+    await click('[data-nav="overview"]');
+    await click("#export");
+    let csv = await blob.text();
+    assert.match(csv, /entidad_seleccionada_sbs/);
+    assert.match(csv, /Banco Interamericano de Finanzas/);
+    await click('[data-nav="peers"]');
+    await change("peer-metric", "credits");
+    await click("#export");
+    csv = await blob.text();
+    assert.match(csv, /banco_sbs/);
+    const bbva = csv
+      .split("\r\n")
+      .find((line) => line.includes("Banco BBVA Perú"));
+    assert.ok(bbva);
+    assert.match(bbva, /Banco BBVA Perú/);
+    const group = csv
+      .split("\r\n")
+      .find((line) => line.includes("Grupo elegido"));
+    assert.ok(group);
+    await click('[data-nav="reports"]');
+    await click('[data-report="concentration"]');
+    await click("#export");
+    csv = await blob.text();
+    assert.match(csv, /banco_sbs/);
+    assert.match(csv, /Interamericano de Finanzas/);
+    assert.match(csv, /Crédito del Perú/);
+  } finally {
+    URL.createObjectURL = create;
+    URL.revokeObjectURL = revoke;
+    window.HTMLAnchorElement.prototype.click = anchorClick;
+    await click('[data-nav="overview"]');
+  }
 });
 
 test("failed source request surfaces an explicit error without sample data", async () => {
