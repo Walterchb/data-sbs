@@ -54,7 +54,13 @@ def normalize_financial(period):
                 raise ValueError(f'{period["date"]}: unknown statement schema at {spec["id"]}')
             if not finite(source['total']):raise ValueError('Non-numeric financial value')
             values[spec['id']]=[source.get('mn'),source.get('me'),source['total']]
-    return {'date':period['date'][:7],'source_url':period['source_url'],'values':values,'peers':period['peers']}
+    peers=[]
+    for bank in period['peers']:
+        rows=period.get('entity_statements',{}).get(bank['slug'],{}).get('balance',[])
+        byrow={r['row']:r['total'] for r in rows}
+        parts=[byrow.get(n) for n in (78,79,80,85,90)]
+        peers.append({**bank,'total_deposits':sum(parts) if all(finite(v) for v in parts) else bank.get('total_deposits')})
+    return {'date':period['date'][:7],'source_url':period['source_url'],'values':values,'peers':peers}
 
 
 def get(f,row,st='balance'):return f['values'].get(f'{st}:{row}',[None,None,None])[2]
@@ -63,12 +69,14 @@ def get(f,row,st='balance'):return f['values'].get(f'{st}:{row}',[None,None,None
 def summary(f):
     parts=[get(f,n) for n in (26,37,38)];gross=sum(parts) if all(finite(v) for v in parts) else None
     pr=abs(get(f,41)) if finite(get(f,41)) else None
-    return {'assets':get(f,59),'credits':gross,'deposits':get(f,76),'equity':get(f,126),
+    deposit_parts=[get(f,n) for n in (78,79,80,85,90)]
+    deposits=sum(deposit_parts) if all(finite(v) for v in deposit_parts) else None
+    return {'assets':get(f,59),'credits':gross,'deposits':deposits,'equity':get(f,126),
             'available':get(f,9),'investments':get(f,17),'net_income':get(f,79,'income'),
             'npl':ratio(get(f,38),gross),'coverage':ratio(pr,get(f,38)),
             'car':ratio(get(f,38)+get(f,37),gross),'loans':get(f,31),'mortgages':get(f,33),
             'foreign_trade':get(f,34),'refinanced':get(f,37),'overdue':get(f,38),
-            'provisions':pr,'loan_deposit':ratio(gross,get(f,76)),
+            'provisions':pr,'loan_deposit':ratio(gross,deposits),
             'coverage_car':ratio(pr,get(f,38)+get(f,37)),
             'refi_ratio':ratio(get(f,37),gross),'provisions_direct':ratio(pr,gross),
             'available_public':ratio(get(f,9),get(f,76)),

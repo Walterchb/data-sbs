@@ -1,7 +1,7 @@
 export const METRICS = {
   assets: { label: "Activos", row: "balance:59" },
   credits: { label: "Créditos brutos", row: "balance:25" },
-  deposits: { label: "Obligaciones con el público", row: "balance:76" },
+  deposits: { label: "Depósitos", calculated: true },
   equity: { label: "Patrimonio", row: "balance:126" },
   available: { label: "Disponible", row: "balance:9" },
   investments: { label: "Inversiones netas", row: "balance:17" },
@@ -60,7 +60,7 @@ export const METRICS = {
   rfne: { label: "RFNE", unit: "PERCENT" },
   fx_global: { label: "Posición global ME" },
   loan_deposit: {
-    label: "Créditos / obligaciones con público",
+    label: "Créditos / depósitos",
     unit: "PERCENT",
   },
   leverage: { label: "Pasivo / patrimonio", unit: "TIMES" },
@@ -79,10 +79,10 @@ export const METRICS = {
 };
 export const NAV = [
   ["overview", "Panorama"],
-  ["movements", "Qué cambió"],
+  ["movements", "Cambios"],
   ["balance", "Cuentas SBS"],
-  ["reports", "Indicadores y riesgos"],
-  ["peers", "Comparar bancos"],
+  ["reports", "Indicadores"],
+  ["peers", "Comparar"],
   ["health", "Fuentes y calidad"],
 ];
 export const BANK_NAMES = {
@@ -92,6 +92,22 @@ export const BANK_NAMES = {
   bbva: "BBVA",
   scotiabank: "Scotiabank",
   interbank: "Interbank",
+  bancom: "Bancom",
+  pichincha: "Pichincha",
+  citibank: "Citibank",
+  mibanco: "Mibanco",
+  gnb: "GNB",
+  "falabella-peru": "Falabella",
+  "santander-peru": "Santander",
+  ripley: "Ripley",
+  "azteca-peru": "Azteca",
+  icbc: "ICBC",
+  "bank-of-china": "Bank of China",
+  "alfin-banco": "Alfin",
+  "bci-peru": "BCI",
+  "compartamos-banco": "Compartamos",
+  "santander-consumer-bank": "Santander Consumer",
+  efectiva: "Efectiva",
   system: "Banca múltiple · ámbito local",
   system_foreign: "Banca múltiple · incluye sucursales exterior",
 };

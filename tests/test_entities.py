@@ -20,7 +20,17 @@ class EntityDataTests(unittest.TestCase):
                 self.assertEqual(bool(p['values']),bank is not None)
                 if not bank:continue
                 calculated=summary(p)
-                for key,source in [('assets','total_assets'),('credits','gross_credits'),('net_income','net_income'),('equity','equity'),('provisions','provisions')]:
+                for key,source in [('deposits','total_deposits'),('assets','total_assets'),('credits','gross_credits'),('net_income','net_income'),('equity','equity'),('provisions','provisions')]:
                     self.assertAlmostEqual(calculated[key],bank[source],places=3,msg=f'{slug} {p["date"]} {key}')
+
+    def test_deposits_exclude_other_obligations_and_include_financial_system(self):
+        base=json.loads((ROOT/'data/financial.json').read_text())
+        p=next(p for p in base['periods'] if p['date']=='2026-06')
+        s=summary(p)
+        self.assertAlmostEqual(s['deposits']/1000,15926.993,places=3)
+        value=lambda n:p['values'][f'balance:{n}'][2]
+        # SBS displayed parent/child amounts differ by S/2 at this cutoff.
+        self.assertAlmostEqual(s['deposits'],value(76)-value(86)+value(90),delta=.01)
+        self.assertAlmostEqual(s['loan_deposit'],s['credits']/s['deposits']*100)
 
 if __name__=='__main__':unittest.main()

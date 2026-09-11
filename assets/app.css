@@ -1974,3 +1974,303 @@ dialog::backdrop {
   pointer-events: none;
   opacity: 0.65;
 }
+
+/* Monthly date surface; the native month control remains keyboard/touch accessible. */
+#period {
+  color: transparent;
+  cursor: pointer;
+}
+#period::-webkit-datetime-edit {
+  opacity: 0;
+}
+#period::-webkit-calendar-picker-indicator {
+  width: 100%;
+}
+#period-label {
+  position: absolute;
+  inset: 0 30px 0 9px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+.date-picker-wrap:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 5px;
+}
+.entity-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 225px;
+  min-width: 120px;
+  text-align: left;
+  background: var(--panel);
+  border-color: var(--line2);
+}
+.entity-picker > span {
+  flex: 1;
+  white-space: nowrap;
+}
+.entity-picker small {
+  margin-left: 5px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.entity-picker > .fa-chevron-down {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+.entity-dialog {
+  width: min(760px, calc(100vw - 24px));
+  max-height: 85dvh;
+  padding: 24px;
+}
+.entity-dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.entity-dialog-head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.entity-dialog-head p {
+  color: var(--muted);
+  margin: 5px 0 0;
+  font-size: 0.875rem;
+}
+.entity-dialog-head button {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+.entity-group-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin: 18px 0 9px;
+}
+.entity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+.entity-totals {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.entity-card {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  padding: 13px 10px;
+  min-height: 64px;
+  height: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  white-space: normal;
+}
+.entity-card > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+.entity-card strong {
+  font-size: 0.875rem;
+  font-weight: 650;
+  display: block;
+  overflow-wrap: anywhere;
+}
+.entity-card small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.entity-card-icon {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.entity-check {
+  visibility: hidden;
+  color: var(--cyan);
+  font-size: 0.75rem;
+}
+.entity-card[aria-pressed="true"] {
+  background: var(--selected);
+  border-color: var(--cyan);
+  color: var(--ink);
+}
+.entity-card[aria-pressed="true"] .entity-check {
+  visibility: visible;
+}
+.entity-card:hover {
+  border-color: var(--cyan);
+}
+.composition-summary {
+  display: grid;
+  grid-template-columns: 1.35fr repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.composition-summary .stat-card {
+  min-width: 0;
+  padding: 10px 8px;
+}
+.composition-summary .stat-card b {
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.composition-summary .stat-label {
+  font-size: 0.75rem;
+}
+.composition-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.composition-legend i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 4px 0 8px;
+}
+.legend-up {
+  background: var(--green);
+}
+.legend-down {
+  background: var(--red);
+}
+.composition-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.composition-row-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+.composition-row-head .text-button {
+  font-size: 0.875rem;
+  text-align: left;
+  line-height: 1.4;
+}
+.composition-row-head > div {
+  text-align: right;
+  flex-shrink: 0;
+}
+.composition-row-head b {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.composition-row-head small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-top: 3px;
+}
+.composition-changes {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 6px 0 8px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.composition-changes small {
+  font-size: inherit;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.composition-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 122px;
+  align-items: center;
+  gap: 10px;
+}
+.composition-bar-row > b {
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.diverging-track {
+  position: relative;
+  height: 18px;
+  background: var(--soft);
+}
+.diverging-track::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 50%;
+  width: 1px;
+  background: var(--line2);
+}
+.diverging-fill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+}
+.diverging-fill.change-up {
+  background: var(--green);
+}
+.diverging-fill.change-down {
+  background: var(--red);
+}
+.change-up {
+  color: var(--green);
+}
+.change-down {
+  color: var(--red);
+}
+@media (max-width: 760px) {
+  .entity-dialog {
+    padding: 16px;
+  }
+  .entity-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .entity-card {
+    padding: 11px 8px;
+    gap: 7px;
+  }
+  .entity-card-icon {
+    display: none;
+  }
+  .composition-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .composition-summary > :first-child {
+    grid-column: 1 / -1;
+  }
+  .composition-summary > :first-child b {
+    font-size: 1.2rem;
+  }
+  .composition-changes {
+    gap: 10px;
+  }
+}
+@media (max-width: 360px) {
+  .entity-totals {
+    grid-template-columns: 1fr;
+  }
+}

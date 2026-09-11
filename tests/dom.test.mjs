@@ -61,23 +61,22 @@ async function click(selector) {
   await ready();
 }
 async function change(id, value) {
+  if (id === "entity-select") {
+    document.getElementById("entity-select").click();
+    document.querySelector(`[data-entity="${value}"]`).click();
+    await ready();
+    return;
+  }
   const el = document.getElementById(id);
   assert.ok(el, "Missing control " + id);
-  el.value =
-    id === "period" && value.length === 7
-      ? new Date(
-          Date.UTC(Number(value.slice(0, 4)), Number(value.slice(5, 7)), 0),
-        )
-          .toISOString()
-          .slice(0, 10)
-      : value;
+  el.value = value;
   el.dispatchEvent(new window.Event("change", { bubbles: true }));
   await ready();
 }
 await ready();
 
 test("all views and controls render with real data and no JS errors", async () => {
-  assert.equal(document.getElementById("period").value, "2026-07-31");
+  assert.equal(document.getElementById("period").value, "2026-07");
   assert.ok(document.body.textContent.includes("23,316.79"));
   assert.ok(document.body.textContent.includes("3.09%"));
   assert.ok(
@@ -345,7 +344,7 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   await click('#detail-body [data-nav="health"]');
   assert.equal(document.getElementById("detail-dialog").open, false);
   await change("period", "2030-01");
-  assert.equal(document.getElementById("period").value, "2026-07-31");
+  assert.equal(document.getElementById("period").value, "2026-07");
   await change("period", "2021-01");
   assert.equal(document.getElementById("prev").disabled, true);
   const before = requests.filter((p) => p === "./data/manifest.json").length;
@@ -356,7 +355,7 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   assert.equal(document.getElementById("detail-dialog").open, false);
   assert.equal(
     document.getElementById("period").value,
-    "2021-01-31",
+    "2021-01",
     "Refresh preserves historical selection",
   );
   assert.equal(
@@ -370,7 +369,36 @@ test("global entity selection updates statements, ratios, capital, regions and h
   await change("period", "2026-06");
   await click('[data-nav="overview"]');
   assert.equal(document.getElementById("entity-select").value, "banbif");
-  assert.ok(document.querySelectorAll("#entity-select option").length > 20);
+  document.getElementById("entity-select").click();
+  assert.ok(document.getElementById("entity-dialog").open);
+  assert.ok(document.querySelectorAll("[data-entity]").length > 20);
+  assert.equal(
+    document.querySelector('[data-entity="bci-peru"] strong').textContent,
+    "BCI",
+  );
+  document.getElementById("entity-close").click();
+  assert.match(
+    document.querySelector('[data-metric="deposits"]').textContent,
+    /15,926.99/,
+  );
+  assert.equal(
+    document.getElementById("period-label").textContent,
+    "Jun - 2026",
+  );
+  assert.match(
+    document.getElementById("period").title,
+    /Al 30 de junio de 2026/,
+  );
+  const composition = document.querySelector(
+    '[data-composition="balance:26"][data-mode="yoy"]',
+  );
+  composition.click();
+  await ready();
+  assert.ok(document.querySelector(".diverging-track"));
+  assert.match(
+    document.querySelector(".composition-legend").textContent,
+    /YOY/,
+  );
   await change("entity-select", "system_foreign");
   assert.match(
     document.querySelector('[data-metric="assets"]').textContent,
@@ -472,8 +500,8 @@ test("global entity selection updates statements, ratios, capital, regions and h
 test("rapid entity changes commit only the latest selection and failed loads never show stale figures", async () => {
   const selected = document.getElementById("entity-select");
   delayedPath = "data/entities/citibank.json";
-  selected.value = "citibank";
-  selected.dispatchEvent(new window.Event("change", { bubbles: true }));
+  selected.click();
+  document.querySelector('[data-entity="citibank"]').click();
   for (let i = 0; i < 50 && !releaseDelay; i++)
     await new Promise((r) => setTimeout(r, 5));
   assert.ok(releaseDelay);

@@ -109,9 +109,13 @@
                   ><span class="date-picker-wrap"
                     ><input
                       id="period"
-                      type="date"
+                      type="month"
                       disabled
-                      aria-label="Seleccionar fecha SBS" /><i
+                      aria-label="Seleccionar mes SBS" /><span
+                      id="period-label"
+                      aria-hidden="true"
+                    ></span
+                    ><i
                       class="fa-regular fa-calendar-days date-fa"
                       aria-hidden="true"
                     ></i></span
@@ -167,6 +171,22 @@
       aria-label="Detalle"
       hidden
     ></div>
+    <dialog
+      id="entity-dialog"
+      class="detail-dialog entity-dialog"
+      aria-labelledby="entity-title"
+    >
+      <div class="entity-dialog-head">
+        <div>
+          <h2 id="entity-title">Seleccionar entidad</h2>
+          <p>Bancos y total del sistema</p>
+        </div>
+        <button type="button" id="entity-close" aria-label="Cerrar">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div id="entity-options"></div>
+    </dialog>
     <dialog
       id="detail-dialog"
       class="detail-dialog"

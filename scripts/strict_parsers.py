@@ -265,7 +265,10 @@ def extract_financial(raw, url, workbook, date):
             if norm(r['label']).startswith('CREDITOS NETOS'):credit=True
             elif credit and norm(r['label'])=='PROVISIONES':provisions=abs(r['total']);break
         components=[val('balance',x) for x in ('Vigentes','Refinanciados y Reestructurados','Atrasados')]
+        deposit_rows={r['row']:r['total'] for r in b}
+        deposit_parts=[deposit_rows.get(n) for n in (78,79,80,85,90)]
         summary={'name':name,'slug':bank,'total_assets':val('balance','TOTAL ACTIVO'),
+                 'total_deposits':sum(deposit_parts) if all(number(v) for v in deposit_parts) else None,
                  'gross_credits':sum(components) if all(v is not None for v in components) else None,
                  'public_deposits':next((r['total'] for r in b if r['label']=='OBLIGACIONES CON EL PÚBLICO'),None),
                  'equity':val('balance','PATRIMONIO'),'overdue':val('balance','Atrasados'),

@@ -1,3 +1,4 @@
+import { compositionData } from "./composition.js";
 import { selectReport, selectFinancial, selectOverview } from "./entities.js";
 import * as Data from "./data.js";
 import { concentrationView } from "./concentration.js";
@@ -60,6 +61,7 @@ const state = {
   collapsed: new Set(),
   treeInitialized: false,
   showReferences: false,
+  compositionModes: {},
   moveMode: "mom",
   moveSort: "absolute",
   report: "B-2401",
@@ -364,7 +366,7 @@ function detailContent(key, modal = false) {
       return `<div class="detail-comparison"><div><b>${name}</b><small>vs. ${month(base)}</small></div><div>${deltaCell(value, previous, unit, key)}<small>${unit === "PERCENT" ? "Puntos básicos" : finite(value) && finite(previous) ? format(value - previous, unit, true) : "Sin base comparable"}</small></div><div><small>Base</small><b>${format(previous, unit)}</b></div></div>`;
     })
     .join("");
-  return `<h2${titleId}>${e(config.label.toLocaleUpperCase("es"))}</h2><div class="detail-lead"><strong>${format(value, unit)}</strong><span>${month(date, true)}</span></div>${rows}<p>${config.kind === "ytd" ? "Acumulado desde enero. La comparación corresponde al mismo mes del año anterior." : key === "npl" ? "Cartera vencida y en cobranza judicial / créditos brutos. Variaciones en puntos básicos." : "Las comparaciones usan periodos exactos; una base ausente se muestra con guion."}</p><p>Fuente: ${e(m?.source || "Sin dato")}${m?.warning ? ` · ${e(m.warning)}` : ""}</p>${config.row ? `<button class="detail-link" data-drill="${config.row}">Explorar rubro ${icon("arrow-right")}</button>` : `<button class="detail-link" data-key="${key}">Explorar indicador ${icon("arrow-right")}</button>`}`;
+  return `<h2${titleId}>${e(config.label.toLocaleUpperCase("es"))}</h2><div class="detail-lead"><strong>${format(value, unit)}</strong><span>${month(date, true)}</span></div>${rows}<p>${config.kind === "ytd" ? "Acumulado desde enero. La comparación corresponde al mismo mes del año anterior." : key === "deposits" ? "Depósitos a la vista + ahorro + plazo + restringidos + depósitos del sistema financiero y organismos internacionales. Excluye Otras obligaciones. Calculado desde B-2201; sin sumar subcuentas dos veces." : key === "npl" ? "Cartera vencida y en cobranza judicial / créditos brutos. Variaciones en puntos básicos." : "Las comparaciones usan periodos exactos; una base ausente se muestra con guion."}</p><p>Fuente: ${e(m?.source || "Sin dato")}${m?.warning ? ` · ${e(m.warning)}` : ""}</p>${config.row ? `<button class="detail-link" data-drill="${config.row}">Explorar rubro ${icon("arrow-right")}</button>` : `<button class="detail-link" data-key="${key}">Explorar indicador ${icon("arrow-right")}</button>`}`;
 }
 let hoverTimer, popupTrigger;
 let refreshInFlight = false,
@@ -538,10 +540,15 @@ function calendarDate(period) {
   return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
 }
 function setPeriodBounds() {
-  $("period").min = calendarDate(overview.periods[0].date);
-  $("period").max = calendarDate(manifest.latest_period);
+  $("period").min = overview.periods[0].date;
+  $("period").max = manifest.latest_period;
   $("period").disabled = false;
-  $("period").value = calendarDate(state.date);
+  $("period").value = state.date;
+  $("period-label").textContent = month(state.date).replace(" ", " - ");
+  const tooltip = `Al ${Number(calendarDate(state.date).slice(-2))} de ${month(state.date, true).replace(" ", " de ")}`;
+  $("period").title = tooltip;
+  $("period").setAttribute("aria-label", `Seleccionar mes SBS. ${tooltip}`);
+  $("period").parentElement.title = tooltip;
 }
 function startAutoRefresh() {
   const interval = 5 * 60 * 1000;
@@ -592,17 +599,34 @@ function movementsPreview() {
       : '<div class="empty">No hay movimientos que superen la materialidad configurada.</div>';
 }
 function composition(parent, label) {
-  const p = financial.periods.find((p) => p.date === state.date);
-  const rows = financial.catalog
-    .filter((r) => r.parent === parent)
-    .map((r) => ({ id: r.id, label: r.label, value: p?.values[r.id]?.[2] }))
-    .filter((r) => finite(r.value) && r.value !== 0)
-    .sort((a, b) => b.value - a.value);
+  const mode = state.compositionModes[parent] || "mom";
+  const data = compositionData(financial, state.date, parent, mode);
+  const modes = [
+    ["yoy", "YoY"],
+    ["ytd", "YTD"],
+    ["mom", "MoM"],
+  ];
+  const signed = (value) =>
+    `<span class="${value > 0 ? "change-up" : value < 0 ? "change-down" : ""}">${format(value, "PERCENT", true)}</span>`;
+  const summary = `<div class="composition-summary"><div class="stat-card"><span class="stat-label">Total · S/ MM</span><b>${num(finite(data.total) ? data.total / 1000 : null)}</b></div>${modes.map(([key, name]) => `<div class="stat-card"><span class="stat-label">${name}</span><b>${signed(data.changes[key])}</b></div>`).join("")}</div>`;
+  const rows = data.rows
+    .map((r) => {
+      const width =
+        data.max && finite(r.delta) ? (Math.abs(r.delta) / data.max) * 50 : 0;
+      const left = r.delta < 0 ? 50 - width : 50;
+      const deltaClass =
+        r.delta > 0 ? "change-up" : r.delta < 0 ? "change-down" : "";
+      return `<div class="composition-row"><div class="composition-row-head"><button class="text-button" data-drill="${r.id}">${e(r.label)}</button><div><b>${format(r.value)}</b><small>${format(r.share, "PERCENT")} del total</small></div></div><div class="composition-changes">${modes.map(([key, name]) => `<span><small>${name}</small>${signed(r.changes[key])}</span>`).join("")}</div><div class="composition-bar-row"><div class="diverging-track" role="img" aria-label="${e(r.label)}: variación ${mode.toUpperCase()} ${format(r.delta, "PEN_THOUSAND", true)}"><span class="diverging-fill ${deltaClass}" style="left:${left}%;width:${width}%"></span></div><b class="${deltaClass}">${format(r.delta, "PEN_THOUSAND", true)}</b></div></div>`;
+    })
+    .join("");
   return panel(
     label,
-    `${month(state.date)} · componentes directos del rubro`,
-    bars(rows.slice(0, 6), "PEN_THOUSAND") +
-      `<p class="source-note"><button class="text-button" data-drill="${parent}">Ver composición completa →</button></p>`,
+    `${month(state.date)} · ${parent === "balance:76" ? "Obligaciones con el público" : "Créditos vigentes"}`,
+    finite(data.total)
+      ? summary +
+          `<div class="composition-legend"><span>Variación ${mode.toUpperCase()} · vs. ${month(data.reference)} · S/ MM</span><span><i class="legend-up"></i>Aumento <i class="legend-down"></i>Disminución</span></div><div class="composition-rows">${rows || '<div class="empty">Sin saldos en los componentes.</div>'}</div><p class="source-note">${parent === "balance:76" ? "Incluye otras obligaciones; los depósitos del sistema financiero figuran fuera de este rubro. " : ""}Variaciones sobre periodos exactos. —: sin base comparable. <button class="text-button" data-drill="${parent}">Ver cuentas ${icon("arrow-right")}</button></p>`
+      : '<div class="empty">Sin datos para esta entidad y periodo.</div>',
+    `<div class="range" role="group" aria-label="Base de variación de ${e(label)}">${modes.map(([key, name]) => `<button data-composition="${parent}" data-mode="${key}" aria-pressed="${key === mode}">${name}</button>`).join("")}</div>`,
   );
 }
 function overviewView() {
@@ -633,7 +657,7 @@ function overviewView() {
       `<div class="controls"><label class="sr-only" for="trend-metric">Métrica de tendencia</label><select id="trend-metric">${Object.entries(
         METRICS,
       )
-        .filter(([, v]) => v.row)
+        .filter(([, v]) => v.row || v.calculated)
         .map(
           ([k, v]) =>
             `<option value="${k}" ${k === state.metric ? "selected" : ""}>${e(v.label)}</option>`,
@@ -841,7 +865,7 @@ function reportView() {
     exportRows = result.rows;
     return (
       heading(
-        "Indicadores y riesgos",
+        "Indicadores",
         "Concentración geográfica · Depósitos y créditos por región",
       ) +
       reportTabs() +
@@ -851,13 +875,13 @@ function reportView() {
   const p = reportData.periods.filter((p) => p.date <= state.date).at(-1);
   if (!p)
     return (
-      heading("Indicadores y riesgos", "Fuentes regulatorias SBS") +
+      heading("Indicadores", "Fuentes regulatorias SBS") +
       reportTabs() +
       '<div class="empty">No hay observaciones disponibles hasta el corte seleccionado.</div>'
     );
   if (!Object.values(p.values).some(finite))
     return (
-      heading("Indicadores y riesgos", e(entityName())) +
+      heading("Indicadores", e(entityName())) +
       reportTabs() +
       `<div class="empty">Sin datos de ${e(entityName())} en esta fuente para ${month(p.date)}. Se respeta el ámbito de la entidad seleccionada.</div>`
     );
@@ -939,10 +963,7 @@ function reportView() {
     true,
   );
   return (
-    heading(
-      "Indicadores y riesgos",
-      `${reportData.title} · fuente ${state.report}`,
-    ) +
+    heading("Indicadores", `${reportData.title} · fuente ${state.report}`) +
     reportTabs() +
     (p.date !== state.date
       ? notice(
@@ -977,7 +998,7 @@ function reportTabs() {
 const PEER_FINANCIAL = {
   assets: "total_assets",
   credits: "gross_credits",
-  deposits: "public_deposits",
+  deposits: "total_deposits",
   equity: "equity",
   net_income: "net_income",
 };
@@ -1203,11 +1224,47 @@ function peerReportCode(key) {
     rfne: "B-234021",
   }[key];
 }
+function entityShortName(slug) {
+  if (slug === "system" || slug === "system_foreign") return "Banca múltiple";
+  if (slug === "bcp_foreign") return "BCP";
+  return BANK_NAMES[slug] || manifest.entities?.[slug]?.name || slug;
+}
+function openEntities() {
+  closeDetails();
+  const entries = Object.entries(manifest.entities || {});
+  const card = ([slug, item]) => {
+    const scope = slug.endsWith("_foreign")
+      ? "Incluye sucursales exterior"
+      : slug === "system" || slug === "bcp"
+        ? "Ámbito local"
+        : "";
+    return `<button class="entity-card" data-entity="${e(slug)}" aria-pressed="${slug === state.entity}" title="${e(item.name)}"><span class="entity-card-icon">${icon(slug.startsWith("system") ? "landmark" : "building-columns")}</span><span><strong>${e(entityShortName(slug))}</strong>${scope ? `<small>${scope}</small>` : ""}</span><span class="entity-check">${icon("check")}</span></button>`;
+  };
+  $("entity-options").innerHTML =
+    `<p class="entity-group-label">Banca múltiple</p><div class="entity-grid entity-totals">${entries
+      .filter(([s]) => s.startsWith("system"))
+      .map(card)
+      .join(
+        "",
+      )}</div><p class="entity-group-label">Entidades</p><div class="entity-grid">${entries
+      .filter(([s]) => !s.startsWith("system"))
+      .sort(([a], [b]) =>
+        a === "banbif"
+          ? -1
+          : b === "banbif"
+            ? 1
+            : entityShortName(a).localeCompare(entityShortName(b), "es"),
+      )
+      .map(card)
+      .join("")}</div>`;
+  $("entity-dialog").showModal();
+  $("entity-options").querySelector('[aria-pressed="true"]')?.focus();
+}
 function renderNavigation() {
   const navigation = $("navigation");
   if (!$("entity-select")) {
     navigation.innerHTML =
-      `<label class="sr-only" for="entity-select">Entidad financiera</label><select id="entity-select" class="entity-picker" aria-label="Entidad financiera"></select>` +
+      `<button type="button" id="entity-select" class="entity-picker" aria-haspopup="dialog" aria-controls="entity-dialog"></button>` +
       NAV.filter(([v]) => v !== "health")
         .map(
           ([v, label]) =>
@@ -1215,30 +1272,14 @@ function renderNavigation() {
         )
         .join("");
   }
-  const select = $("entity-select");
-  const options = manifest.entities || { banbif: { name: "BanBif" } };
-  const signature = Object.keys(options).join("|");
-  if (select.dataset.entities !== signature) {
-    select.innerHTML = Object.entries(options)
-      .sort(
-        ([a, av], [b, bv]) =>
-          (a === "banbif" ? -3 : a.startsWith("system") ? -2 : 0) -
-            (b === "banbif" ? -3 : b.startsWith("system") ? -2 : 0) ||
-          av.name.localeCompare(bv.name, "es"),
-      )
-      .map(
-        ([slug, value]) =>
-          `<option value="${e(slug)}">${e(BANK_NAMES[slug] || value.name)}</option>`,
-      )
-      .join("");
-    select.dataset.entities = signature;
-  }
-  select.value = state.entity;
-  select.title = entityName();
-  for (const button of navigation.querySelectorAll("[data-nav]")) {
-    if (button.dataset.nav === state.view)
-      button.setAttribute("aria-current", "page");
-    else button.removeAttribute("aria-current");
+  const button = $("entity-select");
+  button.value = state.entity;
+  button.innerHTML = `${icon("building-columns")}<span>${e(entityShortName(state.entity))}${state.entity.endsWith("_foreign") ? "<small>+ exterior</small>" : ""}</span>${icon("chevron-down")}`;
+  button.title = entityName();
+  button.setAttribute("aria-label", `Elegir entidad: ${entityName()}`);
+  for (const b of navigation.querySelectorAll("[data-nav]")) {
+    if (b.dataset.nav === state.view) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
   }
 }
 async function render() {
@@ -1289,7 +1330,12 @@ async function render() {
     renderNavigation();
     $("entity-brand").textContent = `${entityName()} · Treasury Hub`;
     $("entity-footer").textContent = `${entityName()} · Treasury Hub`;
-    $("period").value = calendarDate(state.date);
+    $("period").value = state.date;
+    $("period-label").textContent = month(state.date).replace(" ", " - ");
+    const tooltip = `Al ${Number(calendarDate(state.date).slice(-2))} de ${month(state.date, true).replace(" ", " de ")}`;
+    $("period").title = tooltip;
+    $("period").setAttribute("aria-label", `Seleccionar mes SBS. ${tooltip}`);
+    $("period").parentElement.title = tooltip;
     const i = overview.periods.findIndex((p) => p.date === state.date);
     $("prev").disabled = i <= 0;
     $("next").disabled = i >= overview.periods.length - 1;
@@ -1370,14 +1416,21 @@ function switchTheme() {
   } catch {}
 }
 function bind() {
-  document.addEventListener("change", (event) => {
-    if (event.target.id !== "entity-select") return;
-    const next = event.target.value;
-    if (!manifest.entities?.[next] || next === state.entity) return;
-    state.entity = next;
-    render();
+  $("entity-close").addEventListener("click", () => $("entity-dialog").close());
+  $("entity-dialog").addEventListener("close", () =>
+    $("entity-select")?.focus(),
+  );
+  $("entity-dialog").addEventListener("click", (event) => {
+    if (event.target !== $("entity-dialog")) return;
+    const r = event.target.getBoundingClientRect();
+    if (
+      event.clientX < r.left ||
+      event.clientX > r.right ||
+      event.clientY < r.top ||
+      event.clientY > r.bottom
+    )
+      event.target.close();
   });
-
   document.addEventListener(
     "toggle",
     (event) => {
@@ -1389,6 +1442,25 @@ function bind() {
   document.addEventListener("click", (event) => {
     const b = event.target.closest("button");
     if (!b) return;
+    if (b.id === "entity-select") {
+      openEntities();
+      return;
+    }
+    if (b.dataset.entity) {
+      const next = b.dataset.entity;
+      if (!manifest.entities?.[next]) return;
+      $("entity-dialog").close();
+      if (next !== state.entity) {
+        state.entity = next;
+        render();
+      }
+      return;
+    }
+    if (b.dataset.composition) {
+      state.compositionModes[b.dataset.composition] = b.dataset.mode;
+      render();
+      return;
+    }
     if (b.dataset.nav) {
       closeDetails();
       state.view = b.dataset.nav;
@@ -1527,7 +1599,7 @@ function bind() {
       if (el.id === "period") {
         const chosen = el.value.slice(0, 7);
         if (!overview.periods.some((p) => p.date === chosen)) {
-          el.value = calendarDate(state.date);
+          el.value = state.date;
           toast("Ese periodo no tiene información SBS disponible.");
           return;
         }
