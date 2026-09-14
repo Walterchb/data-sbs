@@ -1,3 +1,4 @@
+import { frameChartSvg } from "./chart-presentation.js";
 import { initPreviewViewport } from "./preview-viewport.js";
 import { labelMarkup } from "./chart-labels.js";
 import { escape } from "./format.js";
@@ -197,6 +198,7 @@ export function createDrawingEditor(preview, form, onChange) {
     width = 1600,
     height = 900,
     baseSvg = "",
+    presentation = {},
     drag = null,
     frame = 0;
   const surface = preview.querySelector(".export-preview-surface");
@@ -263,7 +265,15 @@ export function createDrawingEditor(preview, form, onChange) {
     <p class="export-control-note">Arrastra para mover; usa la esquina para cambiar el tamaño. La capa «Detrás del gráfico» coloca el elemento debajo del título, curvas y etiquetas.</p>`;
   form.prepend(inspector);
   const selected = () => items.find((item) => item.id === selectedId);
-  const composed = () => (baseSvg ? composeDrawingSvg(baseSvg, items) : "");
+  const composed = () =>
+    baseSvg
+      ? frameChartSvg(
+          composeDrawingSvg(baseSvg, items),
+          width,
+          height,
+          presentation,
+        )
+      : "";
   function syncInspector() {
     const item = selected();
     inspector.hidden = !item;
@@ -333,17 +343,18 @@ export function createDrawingEditor(preview, form, onChange) {
   function paint() {
     const svg = canvas.querySelector("svg");
     if (!svg) return;
+    const artboard = svg.querySelector("[data-editor-artboard]") || svg;
     for (const layer of ["back", "front", "labels"]) {
       let group = svg.querySelector(`[data-chart-drawings="${layer}"]`);
       if (!group) {
         group = document.createElementNS("http://www.w3.org/2000/svg", "g");
         group.setAttribute("data-chart-drawings", layer);
         if (layer === "back")
-          svg.insertBefore(
+          artboard.insertBefore(
             group,
-            svg.querySelector("[data-chart-content]") || svg.firstChild,
+            svg.querySelector("[data-chart-content]") || artboard.firstChild,
           );
-        else svg.append(group);
+        else artboard.append(group);
       }
       group.innerHTML = drawingMarkup(
         items.filter((i) =>
@@ -357,7 +368,8 @@ export function createDrawingEditor(preview, form, onChange) {
     svg.querySelector("[data-drawing-handles]")?.remove();
     const scale =
         Math.abs(
-          svg.getScreenCTM?.()?.a || svg.getBoundingClientRect().width / width,
+          artboard.getScreenCTM?.()?.a ||
+            svg.getBoundingClientRect().width / width,
         ) || 1,
       h = 14 / scale;
     const controls = document.createElementNS(
@@ -379,7 +391,7 @@ export function createDrawingEditor(preview, form, onChange) {
     const item = selected();
     if (item)
       controls.innerHTML += `<rect data-selection-frame="true" x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="none" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="5 3" pointer-events="none"/>${item.type === "label" ? "" : `<rect data-resize="${escape(item.id)}" x="${item.x + item.width - h / 2}" y="${item.y + item.height - h / 2}" width="${h}" height="${h}" rx="${2 / scale}" fill="#fff" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" style="cursor:nwse-resize"/>`}`;
-    svg.append(controls);
+    artboard.append(controls);
   }
   function changed(sync = true) {
     for (const item of items.filter((i) => i.type === "label"))
@@ -486,7 +498,9 @@ export function createDrawingEditor(preview, form, onChange) {
   });
   const point = (event) => {
     const svg = canvas.querySelector("svg"),
-      matrix = svg?.getScreenCTM?.();
+      matrix = (
+        svg?.querySelector("[data-editor-artboard]") || svg
+      )?.getScreenCTM?.();
     if (!matrix) return null;
     const p = svg.createSVGPoint();
     p.x = event.clientX;
@@ -575,7 +589,8 @@ export function createDrawingEditor(preview, form, onChange) {
       for (const edit of labelEdits.values()) edit.connector = value;
       changed();
     },
-    setBase(svg, w, h, labels = []) {
+    setBase(svg, w, h, labels = [], frameSettings = {}) {
+      presentation = frameSettings;
       for (let i = items.length - 1; i >= 0; i--)
         if (items[i].type === "label") items.splice(i, 1);
       if (w !== width || h !== height)
@@ -606,7 +621,7 @@ export function createDrawingEditor(preview, form, onChange) {
         items.push(fitDrawing(label, w, h));
       }
       baseSvg = svg;
-      canvas.innerHTML = svg;
+      canvas.innerHTML = frameChartSvg(svg, w, h, presentation);
       const root = canvas.querySelector("svg");
       root.removeAttribute("width");
       root.removeAttribute("height");

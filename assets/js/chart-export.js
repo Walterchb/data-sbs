@@ -1,3 +1,5 @@
+import { PRESENTATION_PRESETS } from "./chart-presentation.js";
+import { initPreviewResize } from "./preview-resize.js";
 import { escape, month, units } from "./format.js";
 import { finite } from "./analytics.js";
 import { exportComparisons } from "./chart-annotations.js";
@@ -365,7 +367,22 @@ export function openChartExport(payload) {
         <label class="export-check"><input name="grid" type="checkbox" checked> Mostrar cuadrícula</label>
         ${spec.comparison ? '<label class="export-check"><input name="legend" type="checkbox" checked> Mostrar leyenda</label>' : '<label class="export-check"><input name="references" type="checkbox" checked> Promedio, máximo y mínimo</label>'}
       </div></details>
-    </form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
+    <details class="export-section"><summary>5 · Fondo y presentación</summary><div class="export-section-body">
+      <label>Fondo exterior<select name="frameType"><option value="none">Sin marco</option><option value="solid">Color sólido</option><option value="gradient">Degradado lineal</option><option value="radial">Degradado radial</option></select></label>
+      <div class="frame-presets" role="group" aria-label="Fondos predefinidos">${Object.entries(
+        PRESENTATION_PRESETS,
+      )
+        .map(
+          ([id, p]) =>
+            `<button type="button" data-frame-preset="${id}" style="--frame-start:${p.start};--frame-end:${p.end}" title="${p.name}"><span></span>${p.name}</button>`,
+        )
+        .join("")}</div>
+      <div class="export-field-row"><label>Color inicial<input type="color" name="frameStart" value="#dceeff"></label><label>Color final<input type="color" name="frameEnd" value="#9dc8f2"></label></div>
+      <label>Dirección del degradado<select name="frameAngle"><option value="0">Horizontal</option><option value="90">Vertical</option><option value="45">Diagonal ↘</option><option value="135" selected>Diagonal ↙</option></select></label>
+      <div class="export-field-row"><label>Margen exterior · px<input type="number" name="frameMargin" value="48" min="0" max="160" step="1"></label><label>Esquinas · px<input type="number" name="frameRadius" value="18" min="0" max="80" step="1"></label></div>
+      <label>Sombra<input type="range" name="frameShadow" min="0" max="100" value="25" aria-label="Intensidad de sombra"></label>
+      <p class="export-control-note">El gráfico completo se ajusta dentro del marco. Se conservan las dimensiones finales elegidas; 0 elimina la sombra o el redondeado.</p>
+    </div></details></form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
     <footer class="chart-export-footer"><span>La imagen incluye el rango visible del gráfico.</span><button type="button" data-download>Descargar imagen</button></footer>`;
   const trigger = document.activeElement;
   const unlockScroll = lockPageScroll();
@@ -393,6 +410,7 @@ export function openChartExport(payload) {
     form,
     setPreviewImage,
   );
+  const previewResize = initPreviewResize(dialog);
   const selectedDates = new Set(date ? [date] : []);
   const comparisons = [];
   let nextComparisonId = 0;
@@ -404,6 +422,13 @@ export function openChartExport(payload) {
     height: Number(field("height").value),
     fontSize: Number(field("fontSize").value),
     background: field("background").value,
+    frameType: field("frameType").value,
+    frameStart: field("frameStart").value,
+    frameEnd: field("frameEnd").value,
+    frameAngle: Number(field("frameAngle").value),
+    frameMargin: Number(field("frameMargin").value),
+    frameRadius: Number(field("frameRadius").value),
+    frameShadow: Number(field("frameShadow").value),
     labels: field("labels").value,
     labelBackground: field("labelBackground").checked,
     labelBackgroundColor: field("labelBackgroundColor").value,
@@ -431,6 +456,31 @@ export function openChartExport(payload) {
     if (dialog.querySelector(".export-label-dates"))
       dialog.querySelector(".export-label-dates").disabled =
         field("labels").value !== "selected";
+    const frameType = field("frameType").value;
+    for (const name of [
+      "frameStart",
+      "frameEnd",
+      "frameAngle",
+      "frameMargin",
+      "frameRadius",
+      "frameShadow",
+    ])
+      field(name).disabled =
+        frameType === "none" ||
+        (frameType === "solid" && ["frameEnd", "frameAngle"].includes(name)) ||
+        (frameType === "radial" && name === "frameAngle");
+    const marginLimit = Math.min(
+      160,
+      Math.floor(
+        Math.min(Number(field("width").value), Number(field("height").value)) *
+          0.25,
+      ),
+    );
+    if (Number.isFinite(marginLimit) && marginLimit > 0) {
+      field("frameMargin").max = marginLimit;
+      if (Number(field("frameMargin").value) > marginLimit)
+        field("frameMargin").value = marginLimit;
+    }
     if (!form.checkValidity()) {
       status.textContent =
         "Revisa las dimensiones y el tamaño de texto indicados.";
@@ -496,7 +546,9 @@ export function openChartExport(payload) {
           `$1<rect width="${s.width}" height="${s.height}" fill="${background}"/><g data-chart-content="true">`,
         )
         .replace(/<\/svg>\s*$/, "</g></svg>");
-      setPreviewImage(drawingEditor.setBase(base, s.width, s.height, labels));
+      setPreviewImage(
+        drawingEditor.setBase(base, s.width, s.height, labels, s),
+      );
       dialog.querySelector(".export-preview-size").textContent =
         `${s.width} × ${s.height} px · ${s.format.toUpperCase()}`;
       const selectedSeries = spec.comparison
@@ -560,7 +612,13 @@ export function openChartExport(payload) {
   form.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button) return;
-    if (button.hasAttribute("data-add-date")) {
+    if (button.dataset.framePreset) {
+      const preset = PRESENTATION_PRESETS[button.dataset.framePreset];
+      if (!preset) return;
+      field("frameType").value = "gradient";
+      field("frameStart").value = preset.start;
+      field("frameEnd").value = preset.end;
+    } else if (button.hasAttribute("data-add-date")) {
       selectedDates.add(field("labelDate").value);
       renderDates();
     } else if (button.dataset.removeDate) {
@@ -714,6 +772,7 @@ export function openChartExport(payload) {
     "close",
     () => {
       clearTimeout(timer);
+      previewResize.destroy();
       drawingEditor.destroy();
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       dialog.remove();
@@ -725,5 +784,7 @@ export function openChartExport(payload) {
   );
   renderDates();
   dialog.showModal();
+  dialog.tabIndex = -1;
+  dialog.focus({ preventScroll: true });
   renderPreview();
 }

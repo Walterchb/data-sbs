@@ -42,7 +42,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 
 ## Editor ordenado y zoom
 
-- Las opciones se agrupan en cuatro secciones plegables: Título y fuente; Formato y tamaño; Etiquetas y comparaciones; Estilo del gráfico.
+- Las opciones se agrupan en cinco secciones plegables: Título y fuente; Formato y tamaño; Etiquetas y comparaciones; Estilo del gráfico; Fondo y presentación.
 - La vista previa admite zoom de 100% a 400% con dos dedos, con botones +/− y con un botón para volver a ajustar la imagen.
 - Con la vista ampliada puedes desplazarla con dos dedos; un dedo sobre un espacio libre también desplaza la vista. Arrastrar una anotación sigue moviendo ese elemento.
 - El zoom solo afecta a la vista previa: no recorta la descarga ni cambia sus dimensiones.
@@ -59,9 +59,24 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 - Los reportes se cargan bajo demanda y se reutiliza la caché. No se sustituyen los datos locales por los que incluyen sucursales del exterior.
 - La descarga CSV incluye las estadísticas y el nombre oficial SBS de cada banco. El gráfico usa el editor de imágenes con anotaciones.
 
+## Altura de la vista previa en móvil
+
+- Arrastra la barra «Ajustar altura», debajo de la vista previa, para ampliar o reducir el espacio de imagen.
+- El botón ↺ restablece la altura inicial. El encabezado y la descarga permanecen fijos, y siempre queda espacio para las opciones.
+- El zoom con dos dedos sigue disponible dentro del recuadro. Ajustar su altura solo cambia el espacio de trabajo, no las dimensiones de la descarga.
+
+## Fondo y presentación
+
+- Nueva sección «5 · Fondo y presentación»: Sin marco, Color sólido, Degradado lineal y Degradado radial.
+- Presets Azul, Lavanda, Arena, Menta y Noche; colores inicial/final y dirección personalizables.
+- Margen exterior, radio de esquinas y sombra regulables. Un valor de 0 elimina el redondeado o la sombra.
+- El gráfico completo y sus anotaciones se ajustan proporcionalmente dentro del marco, conservando el ancho y alto finales elegidos.
+- El fondo del gráfico se elige en «Formato y tamaño». Al elegir Transparente, el fondo exterior se ve a través del gráfico y no se añade una tarjeta opaca con sombra.
+- El marco se conserva en PNG, JPG y SVG; las anotaciones siguen siendo movibles en la vista previa.
+
 ## Validación
 
-45 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+47 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
@@ -70,3 +85,5 @@ También se verificaron en Chromium el color independiente de comparación, fond
 Se verificaron también etiquetas de valores en barras agrupadas, las fechas en los extremos del gráfico, huecos de datos, zoom, líneas de unión, restablecimiento de posiciones y cambios de dimensiones.
 
 Verificado en Chromium móvil/escritorio: añadir y quitar series, unidades mixtas, periodos rezagados, tabla, descarga de imagen, secciones del editor, pellizco real con dos dedos, zoom sin alterar la exportación y cierre/restauración del desplazamiento.
+
+Se verificaron también el tirador con gesto táctil, sus límites y restablecimiento; fondos y presets; esquinas y sombras; arrastre de anotaciones dentro del marco y exportación a los tres formatos.
