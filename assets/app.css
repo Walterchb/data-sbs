@@ -2882,3 +2882,12 @@ dialog::backdrop {
     font-size: 16px;
   }
 }
+
+.drawing-toolbar [data-select-label] { font-size: .75rem; min-height: 30px; }
+
+.drawing-inspector .export-field-row:not(:has(> label:not([hidden]))) { display: none; }
+
+@media (max-width: 760px) {
+  .drawing-toolbar > span { display: none; }
+  .drawing-toolbar button { padding-inline: 4px; }
+}

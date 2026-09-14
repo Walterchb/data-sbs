@@ -1,3 +1,4 @@
+import { labelMarkup } from "./chart-labels.js";
 import { escape } from "./format.js";
 
 export const DRAWING_TYPES = {
@@ -43,6 +44,15 @@ function textLines(item) {
   return lines;
 }
 export function fitDrawing(item, width, height) {
+  if (item.type === "label") {
+    item.x = Math.round(
+      clamp(number(item.x), 0, Math.max(0, width - item.width)),
+    );
+    item.y = Math.round(
+      clamp(number(item.y), 0, Math.max(0, height - item.height)),
+    );
+    return item;
+  }
   item.fontSize = clamp(number(item.fontSize, 28), 12, 72);
   item.width = Math.round(clamp(number(item.width, 200), 20, width));
   item.height = Math.round(clamp(number(item.height, 100), 8, height));
@@ -86,11 +96,13 @@ export function newDrawing(type, id, width, height) {
     highlightColor: "#f3d34a",
     reverse: false,
     direction: "up",
+    layer: type === "highlight" ? "back" : "front",
   };
   if (type === "text") item.stroke = "#102033";
   return fitDrawing(item, width, height);
 }
 function markup(item) {
+  if (item.type === "label") return labelMarkup(item);
   const { x, y, width: w, height: h } = item;
   const stroke = drawingColor(item.stroke),
     fill = drawingColor(item.fill);
@@ -157,18 +169,28 @@ export function drawingMarkup(items) {
   // Marker strokes sit behind the manually added text and figures, even if added later.
   return [...items]
     .sort((a, b) => (a.type !== "highlight") - (b.type !== "highlight"))
-    .map((item) => `<g data-drawing-id="${item.id}">${markup(item)}</g>`)
+    .map(
+      (item) => `<g data-drawing-id="${escape(item.id)}">${markup(item)}</g>`,
+    )
     .join("");
 }
 export function composeDrawingSvg(baseSvg, items) {
-  return baseSvg.replace(
-    /<\/svg>\s*$/,
-    `<g data-chart-drawings="true">${drawingMarkup(items)}</g></svg>`,
-  );
+  const behind = `<g data-chart-drawings="back">${drawingMarkup(items.filter((i) => i.layer === "back" && i.type !== "label"))}</g>`;
+  const front = `<g data-chart-drawings="front">${drawingMarkup(items.filter((i) => i.layer !== "back" && i.type !== "label"))}</g>`;
+  const labels = `<g data-chart-drawings="labels">${drawingMarkup(items.filter((i) => i.type === "label"))}</g>`;
+  if (baseSvg.includes('<g data-chart-content="true">'))
+    baseSvg = baseSvg.replace(
+      '<g data-chart-content="true">',
+      behind + '<g data-chart-content="true">',
+    );
+  else baseSvg = baseSvg.replace(/(<svg\b[^>]*>)/, "$1" + behind);
+  return baseSvg.replace(/<\/svg>\s*$/, `${front}${labels}</svg>`);
 }
 
 export function createDrawingEditor(preview, form, onChange) {
   const items = [];
+  const labelEdits = new Map();
+  const parseId = (id) => (String(id).includes(":") ? id : Number(id));
   let selectedId = null,
     nextId = 0,
     width = 1600,
@@ -207,6 +229,10 @@ export function createDrawingEditor(preview, form, onChange) {
           `<button type="button" data-add-drawing="${type}" title="${label}" aria-label="Agregar ${label.toLowerCase()}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${glyph[type]}</svg></button>`,
       )
       .join("");
+  toolbar.insertAdjacentHTML(
+    "beforeend",
+    '<button type="button" data-select-label title="Seleccionar etiqueta" aria-label="Seleccionar etiqueta"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 4H14L21 11L11 21L3 13Z"/><circle cx="8" cy="9" r="1.4"/></svg></button>',
+  );
   preview.prepend(toolbar);
   const inspector = document.createElement("fieldset");
   inspector.className = "drawing-inspector";
@@ -223,39 +249,75 @@ export function createDrawingEditor(preview, form, onChange) {
     <label data-for-text>Color del resaltado<input type="color" data-prop="highlightColor"></label>
     <label data-for-line>Orientación<select data-prop="direction"><option value="up">Ascendente</option><option value="down">Descendente</option><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></label>
     <label class="export-check" data-for-line><input type="checkbox" data-prop="reverse"> Invertir dirección</label>
+    <label data-for-manual>Capa<select data-prop="layer"><option value="back">Detrás del gráfico</option><option value="front">Delante del gráfico</option></select></label>
+    <label class="export-check" data-for-label><input type="checkbox" data-prop="connector"> Línea de unión con su referencia</label>
+    <button type="button" data-reset-label data-for-label>Restablecer posición</button>
     <div class="drawing-nudge"><select data-step aria-label="Paso de movimiento"><option value="1">1 px</option><option value="5">5 px</option><option value="10" selected>10 px</option><option value="25">25 px</option></select><button type="button" data-move="left" aria-label="Mover a la izquierda">←</button><button type="button" data-move="up" aria-label="Mover arriba">↑</button><button type="button" data-move="down" aria-label="Mover abajo">↓</button><button type="button" data-move="right" aria-label="Mover a la derecha">→</button></div>
     <div class="drawing-actions"><button type="button" data-layer="back">Al fondo</button><button type="button" data-layer="front">Al frente</button><button type="button" data-duplicate>Duplicar</button><button type="button" data-delete>Eliminar</button><button type="button" data-done>Listo</button></div>
-    <p class="export-control-note">Arrastra para mover; usa la esquina para cambiar el tamaño. Los resaltados quedan detrás de tus figuras y textos.</p>`;
+    <p class="export-control-note">Arrastra para mover; usa la esquina para cambiar el tamaño. La capa «Detrás del gráfico» coloca el elemento debajo del título, curvas y etiquetas.</p>`;
   form.prepend(inspector);
   const selected = () => items.find((item) => item.id === selectedId);
   const composed = () => (baseSvg ? composeDrawingSvg(baseSvg, items) : "");
   function syncInspector() {
     const item = selected();
     inspector.hidden = !item;
+    toolbar.querySelector("[data-select-label]").disabled = !items.some(
+      (i) => i.type === "label",
+    );
     inspector.querySelector("[data-drawing-list]").innerHTML = items
       .map(
         (x) =>
-          `<option value="${x.id}" ${x.id === selectedId ? "selected" : ""}>${DRAWING_TYPES[x.type]} ${x.id}</option>`,
+          `<option value="${x.id}" ${x.id === selectedId ? "selected" : ""}>${escape(x.type === "label" ? x.text.replace(/\n/g, " · ") : `${DRAWING_TYPES[x.type]} ${x.id}`)}</option>`,
       )
       .join("");
     if (!item) return;
     inspector.querySelectorAll("[data-prop]").forEach((input) => {
+      input.disabled =
+        item.type === "label" &&
+        !["x", "y", "connector", "text"].includes(input.dataset.prop);
       const value = item[input.dataset.prop];
       if (input.type === "checkbox") input.checked = Boolean(value);
       else input.value = value ?? "";
     });
     inspector
       .querySelectorAll("[data-for-text]")
-      .forEach((n) => (n.hidden = item.type !== "text"));
+      .forEach((n) => (n.hidden = !["text", "label"].includes(item.type)));
     inspector
       .querySelectorAll("[data-for-shape]")
-      .forEach((n) => (n.hidden = item.type === "text"));
+      .forEach((n) => (n.hidden = ["text", "label"].includes(item.type)));
     inspector
       .querySelectorAll("[data-for-line]")
       .forEach((n) => (n.hidden = !["arrow", "line"].includes(item.type)));
+    inspector
+      .querySelectorAll("[data-for-label]")
+      .forEach((n) => (n.hidden = item.type !== "label"));
+    inspector
+      .querySelectorAll(
+        "[data-for-manual],[data-layer],[data-delete],[data-duplicate]",
+      )
+      .forEach((n) => (n.hidden = item.type === "label"));
+    for (const prop of [
+      "width",
+      "height",
+      "stroke",
+      "fontSize",
+      "filled",
+      "fill",
+      "fillOpacity",
+      "underline",
+      "highlightColor",
+    ]) {
+      inspector.querySelector(`[data-prop="${prop}"]`).closest("label").hidden =
+        item.type === "label" ||
+        (["fontSize", "underline", "highlightColor"].includes(prop) &&
+          item.type !== "text");
+    }
+    inspector.querySelector('[data-prop="text"]').readOnly =
+      item.type === "label";
     inspector.querySelector('[data-prop="height"]').disabled = [
       "text",
       "circle",
+      "label",
     ].includes(item.type);
     inspector.querySelector('[data-prop="x"]').max = width - item.width;
     inspector.querySelector('[data-prop="y"]').max = height - item.height;
@@ -265,13 +327,27 @@ export function createDrawingEditor(preview, form, onChange) {
   function paint() {
     const svg = canvas.querySelector("svg");
     if (!svg) return;
-    let group = svg.querySelector("[data-chart-drawings]");
-    if (!group) {
-      group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      group.setAttribute("data-chart-drawings", "true");
-      svg.append(group);
+    for (const layer of ["back", "front", "labels"]) {
+      let group = svg.querySelector(`[data-chart-drawings="${layer}"]`);
+      if (!group) {
+        group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        group.setAttribute("data-chart-drawings", layer);
+        if (layer === "back")
+          svg.insertBefore(
+            group,
+            svg.querySelector("[data-chart-content]") || svg.firstChild,
+          );
+        else svg.append(group);
+      }
+      group.innerHTML = drawingMarkup(
+        items.filter((i) =>
+          layer === "labels"
+            ? i.type === "label"
+            : i.type !== "label" &&
+              (i.layer === "back" ? "back" : "front") === layer,
+        ),
+      );
     }
-    group.innerHTML = drawingMarkup(items);
     svg.querySelector("[data-drawing-handles]")?.remove();
     const scale =
         Math.abs(
@@ -284,18 +360,28 @@ export function createDrawingEditor(preview, form, onChange) {
     );
     controls.setAttribute("data-drawing-handles", "true");
     controls.innerHTML = [...items]
-      .sort((a, b) => (a.type !== "highlight") - (b.type !== "highlight"))
+      .sort(
+        (a, b) =>
+          (a.type === "label") - (b.type === "label") ||
+          (a.layer !== "back") - (b.layer !== "back"),
+      )
       .map(
         (item) =>
-          `<rect data-hit="${item.id}" x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="transparent" style="cursor:move"/>`,
+          `<rect data-hit="${escape(item.id)}" x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="transparent" style="cursor:move"/>`,
       )
       .join("");
     const item = selected();
     if (item)
-      controls.innerHTML += `<rect x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="none" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="5 3" pointer-events="none"/><rect data-resize="${item.id}" x="${item.x + item.width - h / 2}" y="${item.y + item.height - h / 2}" width="${h}" height="${h}" rx="${2 / scale}" fill="#fff" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" style="cursor:nwse-resize"/>`;
+      controls.innerHTML += `<rect x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="none" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="5 3" pointer-events="none"/>${item.type === "label" ? "" : `<rect data-resize="${escape(item.id)}" x="${item.x + item.width - h / 2}" y="${item.y + item.height - h / 2}" width="${h}" height="${h}" rx="${2 / scale}" fill="#fff" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" style="cursor:nwse-resize"/>`}`;
     svg.append(controls);
   }
   function changed(sync = true) {
+    for (const item of items.filter((i) => i.type === "label"))
+      labelEdits.set(item.id, {
+        dx: item.x - item.defaultX,
+        dy: item.y - item.defaultY,
+        connector: item.connector,
+      });
     paint();
     if (sync) syncInspector();
     onChange(composed());
@@ -304,8 +390,13 @@ export function createDrawingEditor(preview, form, onChange) {
     selectedId = id;
     paint();
     syncInspector();
+    if (selected()) form.scrollTop = 0;
   }
   toolbar.addEventListener("click", (event) => {
+    if (event.target.closest("[data-select-label]")) {
+      choose(items.find((i) => i.type === "label")?.id);
+      return;
+    }
     const type = event.target.closest("[data-add-drawing]")?.dataset.addDrawing;
     if (!type) return;
     const item = newDrawing(type, ++nextId, width, height);
@@ -341,7 +432,7 @@ export function createDrawingEditor(preview, form, onChange) {
   inspector.addEventListener("change", (event) => {
     event.stopPropagation();
     if (event.target.hasAttribute("data-drawing-list"))
-      choose(Number(event.target.value));
+      choose(parseId(event.target.value));
     else syncInspector();
   });
   inspector.addEventListener("click", (event) => {
@@ -354,7 +445,10 @@ export function createDrawingEditor(preview, form, onChange) {
       changed();
       return;
     }
-    if (button.dataset.move) {
+    if (button.hasAttribute("data-reset-label")) {
+      item.x = item.defaultX;
+      item.y = item.defaultY;
+    } else if (button.dataset.move) {
       const amount = Number(inspector.querySelector("[data-step]").value);
       item.x +=
         button.dataset.move === "left"
@@ -376,6 +470,7 @@ export function createDrawingEditor(preview, form, onChange) {
       items.push(fitDrawing(copy, width, height));
       selectedId = copy.id;
     } else if (button.dataset.layer) {
+      item.layer = button.dataset.layer;
       items.splice(items.indexOf(item), 1);
       if (button.dataset.layer === "front") items.push(item);
       else items.unshift(item);
@@ -400,7 +495,7 @@ export function createDrawingEditor(preview, form, onChange) {
     }
     const p = point(event);
     if (!p) return;
-    choose(Number(target.dataset.hit || target.dataset.resize));
+    choose(parseId(target.dataset.hit || target.dataset.resize));
     drag = {
       pointerId: event.pointerId,
       start: p,
@@ -447,6 +542,7 @@ export function createDrawingEditor(preview, form, onChange) {
     if (!item) return;
     const amount = event.shiftKey ? 10 : 1;
     if (event.key === "Delete" || event.key === "Backspace") {
+      if (item.type === "label") return;
       items.splice(items.indexOf(item), 1);
       selectedId = items.at(-1)?.id ?? null;
     } else if (event.key === "ArrowLeft") item.x -= amount;
@@ -463,7 +559,20 @@ export function createDrawingEditor(preview, form, onChange) {
     : null;
   observer?.observe(surface);
   return {
-    setBase(svg, w, h) {
+    setConnectors(value) {
+      for (const item of items.filter((i) => i.type === "label"))
+        item.connector = value;
+      for (const edit of labelEdits.values()) edit.connector = value;
+      changed();
+    },
+    setBase(svg, w, h, labels = []) {
+      for (let i = items.length - 1; i >= 0; i--)
+        if (items[i].type === "label") items.splice(i, 1);
+      if (w !== width || h !== height)
+        for (const edit of labelEdits.values()) {
+          edit.dx *= w / width;
+          edit.dy *= h / height;
+        }
       if (w !== width || h !== height) {
         for (const item of items) {
           item.x *= w / width;
@@ -474,6 +583,17 @@ export function createDrawingEditor(preview, form, onChange) {
         }
         width = w;
         height = h;
+      }
+      for (const label of labels) {
+        const edit = labelEdits.get(label.id);
+        label.defaultX = label.x;
+        label.defaultY = label.y;
+        if (edit) {
+          label.x += edit.dx;
+          label.y += edit.dy;
+          label.connector = edit.connector;
+        }
+        items.push(fitDrawing(label, w, h));
       }
       baseSvg = svg;
       canvas.innerHTML = svg;

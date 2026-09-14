@@ -1,6 +1,7 @@
 import { escape, month, units } from "./format.js";
 import { finite } from "./analytics.js";
 import { exportComparisons } from "./chart-annotations.js";
+import { collectExportLabels } from "./chart-labels.js";
 import { lockPageScroll } from "./modal-scroll.js";
 import { createDrawingEditor, drawingColor } from "./chart-drawing.js";
 
@@ -59,12 +60,14 @@ export function buildExportOptions(payload, settings) {
   const palette = palettes[settings.background === "dark" ? "dark" : "light"];
   const option = payload.makeOptions(palette);
   const font = settings.fontSize;
+  const labelColor = drawingColor(settings.labelBackgroundColor, palette.panel);
+  const channels = [1, 3, 5].map((i) =>
+    parseInt(labelColor.slice(i, i + 2), 16),
+  );
   const labelBackground =
     settings.labelBackground === false
       ? "transparent"
-      : settings.background === "dark"
-        ? "rgba(13,27,42,0.82)"
-        : "rgba(255,255,255,0.82)";
+      : `rgba(${channels.join(",")},0.82)`;
   const titleSize = Math.min(72, font * 1.65);
   const title = wrap(settings.title, settings.width - 64, titleSize);
   const subtitle = wrap(settings.subtitle, settings.width - 64, font);
@@ -279,6 +282,7 @@ export function buildExportOptions(payload, settings) {
             coord: [comparison.fromIndex, series.data[comparison.fromIndex]],
             symbol: "none",
             name: text,
+            exportComparisonId: comparison.id,
             lineStyle: {
               color,
               width: Math.max(1.5, settings.lineWidth),
@@ -345,6 +349,9 @@ export function openChartExport(payload) {
       <div class="export-field-row"><label>Ancho · px<input name="width" type="number" min="640" max="3840" step="1" value="1600" required></label><label>Alto · px<input name="height" type="number" min="360" max="2160" step="1" value="900" required></label></div>
       <div class="export-field-row"><label>Etiquetas<select name="labels"><option value="selected" ${isBar ? "hidden" : ""}>Fechas elegidas</option><option value="all" ${isBar ? "selected" : ""}>Todos los valores</option><option value="none">Sin etiquetas</option></select></label><label>Decimales<select name="decimals"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label></div>
       <label class="export-check"><input type="checkbox" name="labelBackground" checked> Fondo sutil en las etiquetas</label>
+      <label>Color del fondo de etiquetas<input name="labelBackgroundColor" type="color" value="#ffffff"></label>
+      <label class="export-check"><input name="labelConnectors" type="checkbox"> Líneas de unión en las etiquetas</label>
+      <p class="export-control-note">Toca una etiqueta en la vista previa para moverla o ajustar su línea de unión.</p>
       ${
         isBar
           ? ""
@@ -399,6 +406,8 @@ export function openChartExport(payload) {
     background: field("background").value,
     labels: field("labels").value,
     labelBackground: field("labelBackground").checked,
+    labelBackgroundColor: field("labelBackgroundColor").value,
+    labelConnectors: field("labelConnectors").checked,
     selectedDates: [...selectedDates],
     comparisons: comparisons.map((item) => ({ ...item })),
     format: field("format").value,
@@ -461,10 +470,33 @@ export function openChartExport(payload) {
         download.disabled = true;
         return;
       }
+      const background = option.backgroundColor;
+      option.backgroundColor = "transparent";
+      // Render data once to resolve exact coordinates; editable labels live in a separate SVG layer.
+      const layouts = new Map();
+      for (const series of option.series)
+        series.labelLayout = (p) => {
+          layouts.set(`${p.seriesIndex}:${p.dataIndex}`, p);
+          return { hideOverlap: true };
+        };
       chart.setOption(option, true);
-      setPreviewImage(
-        drawingEditor.setBase(chart.renderToSVGString(), s.width, s.height),
-      );
+      const labels = collectExportLabels(chart, option, s, layouts);
+      for (const series of option.series) {
+        series.label.show = false;
+        for (const point of series.markPoint?.data || [])
+          point.label.show = false;
+        for (const line of series.markLine?.data || [])
+          if (Array.isArray(line)) line[0].label.show = false;
+      }
+      chart.setOption(option, true);
+      const base = chart
+        .renderToSVGString()
+        .replace(
+          /(<svg\b[^>]*>)/,
+          `$1<rect width="${s.width}" height="${s.height}" fill="${background}"/><g data-chart-content="true">`,
+        )
+        .replace(/<\/svg>\s*$/, "</g></svg>");
+      setPreviewImage(drawingEditor.setBase(base, s.width, s.height, labels));
       dialog.querySelector(".export-preview-size").textContent =
         `${s.width} × ${s.height} px · ${s.format.toUpperCase()}`;
       const selectedSeries = spec.comparison
@@ -590,6 +622,19 @@ export function openChartExport(payload) {
       );
       if (item) item[event.target.dataset.growthField] = event.target.value;
     }
+    if (event.target.name === "labelConnectors")
+      drawingEditor.setConnectors(event.target.checked);
+    if (
+      event.target.name === "background" &&
+      !field("labelBackgroundColor").dataset.custom
+    ) {
+      field("labelBackgroundColor").value =
+        event.target.value === "dark"
+          ? palettes.dark.panel
+          : palettes.light.panel;
+    }
+    if (event.target.name === "labelBackgroundColor")
+      field("labelBackgroundColor").dataset.custom = "true";
     if (event.target.name === "preset" && event.target.value !== "custom") {
       const [width, height] = event.target.value.split("x");
       field("width").value = width;

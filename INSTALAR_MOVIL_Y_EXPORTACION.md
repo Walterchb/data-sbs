@@ -31,10 +31,21 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 - Puedes duplicar, eliminar o cambiar el orden de los elementos. Los resaltados quedan detrás de las figuras y textos añadidos; los cuadros de texto también admiten un subrayado de color detrás de las letras.
 - Las anotaciones se incluyen en PNG, JPG y SVG; los controles de selección no aparecen en la descarga.
 
+## Etiquetas movibles y capas del gráfico
+
+- El selector «Color del fondo de etiquetas» cambia el color del fondo sutil. La casilla permite seguir activándolo o desactivándolo.
+- Las etiquetas de fechas, valores y variaciones se pueden seleccionar directamente en la vista previa. El último icono de la barra también abre la selección de etiquetas.
+- Arrastra con mouse o dedo, o usa los controles X/Y y los botones de movimiento. Los valores permanecen vinculados a sus datos y no se editan manualmente.
+- Activa «Líneas de unión en las etiquetas» para todas, o la casilla «Línea de unión con su referencia» para la etiqueta seleccionada. La unión sigue apuntando al dato o al centro del trazo de comparación.
+- «Restablecer posición» devuelve la etiqueta seleccionada a su ubicación inicial. Las posiciones se mantienen al cambiar el formato y se adaptan al cambiar las dimensiones.
+- En las figuras y textos añadidos, «Capa» permite elegir «Detrás del gráfico» o «Delante del gráfico». Los resaltados se crean detrás del gráfico por defecto, debajo del título, curvas y etiquetas, pero encima del fondo general.
+
 ## Validación
 
-39 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+42 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
 También se verificaron en Chromium el color independiente de comparación, fondos de etiquetas, los siete tipos de anotación, arrastre con mouse y gesto táctil, cambio de tamaño, movimiento de un píxel, orden de elementos y conservación de las anotaciones en los tres formatos.
+
+Se verificaron también etiquetas de valores en barras agrupadas, las fechas en los extremos del gráfico, huecos de datos, zoom, líneas de unión, restablecimiento de posiciones y cambios de dimensiones.
