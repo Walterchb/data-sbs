@@ -20,7 +20,14 @@ const css = (name) =>
     .getComputedStyle(document.documentElement)
     .getPropertyValue(name)
     .trim();
-export function chartOptions(points, unit, label, palette, mobile = false) {
+export function chartOptions(
+  points,
+  unit,
+  label,
+  palette,
+  mobile = false,
+  onExport,
+) {
   const valid = points.filter((p) => finite(p.value));
   const values = valid.map((p) => p.value),
     last = points.at(-1)?.value;
@@ -80,11 +87,16 @@ export function chartOptions(points, unit, label, palette, mobile = false) {
           title: { zoom: "Zoom", back: "Atrás" },
         },
         restore: { title: "Restaurar" },
-        myExport: {
-          title: "Descargar",
-          show: true,
-          icon: "path://M4,14 L4,20 L20,20 L20,14 M12,2 L12,15 M6,9 L12,15 L18,9",
-        },
+        ...(typeof onExport === "function"
+          ? {
+              myExport: {
+                title: "Descargar",
+                show: true,
+                icon: "path://M4,14 L4,20 L20,20 L20,14 M12,2 L12,15 M6,9 L12,15 L18,9",
+                onclick: onExport,
+              },
+            }
+          : {}),
       },
     },
     dataZoom: [
@@ -232,56 +244,44 @@ export function mountCharts(context) {
       mounted.set(id, entry);
     }
     const zoom = entry.chart.getOption()?.dataZoom;
-    entry.chart.setOption(
-      spec.comparison
-        ? comparisonOptions(
-            spec.series,
-            spec.unit,
-            spec.label,
-            palette,
-            spec.kind,
-            window.innerWidth <= 760,
-          )
-        : chartOptions(
-            spec.points,
-            spec.unit,
-            spec.label,
-            palette,
-            window.innerWidth <= 760,
-          ),
-      true,
-    );
-    entry.chart.setOption({
-      toolbox: {
-        feature: {
-          myExport: {
-            onclick: () =>
-              openChartExport({
-                spec,
-                context: { ...exportContext },
-                zoom: entry.chart.getOption()?.dataZoom,
-                makeOptions: (colors) =>
-                  spec.comparison
-                    ? comparisonOptions(
-                        spec.series,
-                        spec.unit,
-                        spec.label,
-                        colors,
-                        spec.kind,
-                        false,
-                      )
-                    : chartOptions(
-                        spec.points,
-                        spec.unit,
-                        spec.label,
-                        colors,
-                        false,
-                      ),
-              }),
-          },
-        },
-      },
-    });
+    // Custom toolbox features must have their handler in the FIRST setOption.
+    // Registering it in a second update leaves ECharts partially initialized.
+    const onExport = () =>
+      openChartExport({
+        spec,
+        context: { ...exportContext },
+        zoom: entry.chart.getOption()?.dataZoom,
+        makeOptions: (colors) =>
+          spec.comparison
+            ? comparisonOptions(
+                spec.series,
+                spec.unit,
+                spec.label,
+                colors,
+                spec.kind,
+                false,
+              )
+            : chartOptions(spec.points, spec.unit, spec.label, colors, false),
+      });
+    const options = spec.comparison
+      ? comparisonOptions(
+          spec.series,
+          spec.unit,
+          spec.label,
+          palette,
+          spec.kind,
+          window.innerWidth <= 760,
+          onExport,
+        )
+      : chartOptions(
+          spec.points,
+          spec.unit,
+          spec.label,
+          palette,
+          window.innerWidth <= 760,
+          onExport,
+        );
+    entry.chart.setOption(options, true);
     if (zoom?.length)
       entry.chart.setOption({
         dataZoom: zoom.map((z) => ({ start: z.start, end: z.end })),
@@ -407,10 +407,18 @@ export function comparisonOptions(
   palette,
   kind = "line",
   mobile = false,
+  onExport,
 ) {
   const baseline =
     series.find((s) => s.points.some((p) => finite(p.value))) || series[0];
-  const options = chartOptions(baseline.points, unit, label, palette, mobile);
+  const options = chartOptions(
+    baseline.points,
+    unit,
+    label,
+    palette,
+    mobile,
+    onExport,
+  );
   const categories = series[0].points.map((p) => p.date);
   options.color = series.map((s) => s.color);
   options.legend = {

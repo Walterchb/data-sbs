@@ -9,7 +9,7 @@ Este paquete se aplica sobre la última versión del dashboard data-sbs entregad
 3. Haz Commit y Push origin.
 4. Cuando termine la publicación, recarga el dashboard con Ctrl+F5. En el móvil, recarga la página.
 
-Se incluyen cinco archivos de interfaz, dos pruebas y esta guía. No se incluyen datos históricos ni cambios en la sincronización SBS.
+Se incluyen cinco archivos de interfaz, tres archivos de pruebas, package.json, package-lock.json y esta guía. No se incluyen datos históricos ni cambios en la sincronización SBS.
 
 ## Cambios
 
@@ -21,6 +21,12 @@ Se incluyen cinco archivos de interfaz, dos pruebas y esta guía. No se incluyen
 
 ## Validación
 
-32 pruebas JavaScript aprobadas y validación de imports, sintaxis y datos aprobada. Se verificó el modal con ECharts real: generación SVG, cambios de opciones, dimensiones, restricción de transparencia en JPG, cierre y restauración de foco. Se renderizaron y revisaron muestras de los gráficos exportados.
+34 pruebas JavaScript aprobadas y validación de imports, sintaxis y datos aprobada. Se verificó el modal con ECharts real: generación SVG, cambios de opciones, dimensiones, restricción de transparencia en JPG, cierre y restauración de foco. Se renderizaron y revisaron muestras de los gráficos exportados.
 
 Pendiente: revisión visual completa del dashboard en un navegador móvil y comprobación de la descarga PNG/JPG en navegador. El navegador de pruebas no estuvo disponible en este entorno.
+
+## Corrección de ECharts
+
+Se corrigieron los errores «Bind must be called on a function» y «Cannot read properties of undefined (reading '__ec_inner_…')». El botón personalizado de exportación ahora se registra junto con su función en la primera configuración del gráfico. Antes, el registro se hacía en dos pasos y dejaba ECharts parcialmente inicializado.
+
+La prueba de regresión utiliza ECharts 5.6.0 real y comprueba creación, apertura del modal, generación SVG, zoom, restauración, actualización y limpieza repetida de gráficos de líneas y barras. La dependencia añadida es exclusivamente para las pruebas.
