@@ -340,14 +340,15 @@ export function openChartExport(payload) {
   activeDialog = dialog;
   dialog.className = "chart-export-dialog";
   dialog.setAttribute("aria-labelledby", "chart-export-heading");
-  dialog.innerHTML = `<header class="chart-export-head"><div><h2 id="chart-export-heading">Preparar imagen</h2><p>Personaliza el gráfico y revisa cómo quedará.</p></div><button type="button" data-close aria-label="Cerrar">✕</button></header>
+  dialog.innerHTML = `<header class="chart-export-head"><div><h2 id="chart-export-heading">Preparar imagen</h2><p>Configura la imagen y añade anotaciones en la vista previa.</p></div><button type="button" data-close aria-label="Cerrar">✕</button></header>
     <div class="chart-export-layout"><form class="chart-export-controls">
-      <label>Título<input name="title" maxlength="160" value="${escape(spec.label)}"></label>
+      <details class="export-section" open><summary>1 · Título y fuente</summary><div class="export-section-body"><label>Título<input name="title" maxlength="160" value="${escape(spec.label)}"></label>
       <label>Subtítulo<input name="subtitle" maxlength="220" value="${escape(description)}"></label>
-      <div class="export-field-row"><label>Formato<select name="format"><option value="png">PNG</option><option value="jpeg">JPG</option><option value="svg">SVG · vectorial</option></select></label><label>Fondo<select name="background"><option value="light">Claro</option><option value="dark">Oscuro</option><option value="transparent">Transparente</option></select></label></div>
+      <label>Fuente o nota<input name="source" maxlength="300" value="${escape("Fuente: SBS · " + description)}"></label></div></details>
+      <details class="export-section"><summary>2 · Formato y tamaño</summary><div class="export-section-body"><div class="export-field-row"><label>Formato<select name="format"><option value="png">PNG</option><option value="jpeg">JPG</option><option value="svg">SVG · vectorial</option></select></label><label>Fondo<select name="background"><option value="light">Claro</option><option value="dark">Oscuro</option><option value="transparent">Transparente</option></select></label></div>
       <label>Tamaño<select name="preset"><option value="1600x900">Presentación · 1600 × 900</option><option value="1920x1080">Full HD · 1920 × 1080</option><option value="1200x800">Informe · 1200 × 800</option><option value="1200x1200">Cuadrado · 1200 × 1200</option><option value="custom">Personalizado</option></select></label>
       <div class="export-field-row"><label>Ancho · px<input name="width" type="number" min="640" max="3840" step="1" value="1600" required></label><label>Alto · px<input name="height" type="number" min="360" max="2160" step="1" value="900" required></label></div>
-      <div class="export-field-row"><label>Etiquetas<select name="labels"><option value="selected" ${isBar ? "hidden" : ""}>Fechas elegidas</option><option value="all" ${isBar ? "selected" : ""}>Todos los valores</option><option value="none">Sin etiquetas</option></select></label><label>Decimales<select name="decimals"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label></div>
+      </div></details><details class="export-section"><summary>3 · Etiquetas y comparaciones</summary><div class="export-section-body"><div class="export-field-row"><label>Etiquetas<select name="labels"><option value="selected" ${isBar ? "hidden" : ""}>Fechas elegidas</option><option value="all" ${isBar ? "selected" : ""}>Todos los valores</option><option value="none">Sin etiquetas</option></select></label><label>Decimales<select name="decimals"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label></div>
       <label class="export-check"><input type="checkbox" name="labelBackground" checked> Fondo sutil en las etiquetas</label>
       <label>Color del fondo de etiquetas<input name="labelBackgroundColor" type="color" value="#ffffff"></label>
       <label class="export-check"><input name="labelConnectors" type="checkbox"> Líneas de unión en las etiquetas</label>
@@ -358,13 +359,12 @@ export function openChartExport(payload) {
           : `<fieldset class="export-label-dates"><legend>Fechas de etiqueta</legend><div class="export-date-chips"></div><div class="export-date-add"><select name="labelDate" aria-label="Fecha para agregar una etiqueta"></select><button type="button" data-add-date>Agregar</button></div></fieldset>
       <fieldset class="export-growth"><legend>Variación entre fechas</legend><div class="export-growth-rows"></div><button type="button" data-add-growth>Agregar comparación</button><p class="export-control-note">Cada comparación también etiqueta sus extremos.</p></fieldset>`
       }
-      <details><summary>Más opciones</summary>
+      </div></details><details class="export-section"><summary>4 · Estilo del gráfico</summary><div class="export-section-body">
         <div class="export-field-row"><label>Tamaño de texto<input name="fontSize" type="number" min="12" max="72" value="18" required></label><label>Fechas<select name="dateFormat" ${isBar ? "disabled" : ""}><option value="month">Jul 2026</option><option value="year-month">2026-07</option></select></label></div>
         ${isBar ? "" : `<div class="export-field-row"><label>Grosor de línea<input name="lineWidth" type="number" min="1" max="6" step="0.5" value="2.5"></label>${spec.comparison ? "" : '<label>Color de línea<input name="color" type="color" value="#1c7ff2"></label>'}</div>`}
         <label class="export-check"><input name="grid" type="checkbox" checked> Mostrar cuadrícula</label>
         ${spec.comparison ? '<label class="export-check"><input name="legend" type="checkbox" checked> Mostrar leyenda</label>' : '<label class="export-check"><input name="references" type="checkbox" checked> Promedio, máximo y mínimo</label>'}
-        <label>Fuente o nota<input name="source" maxlength="300" value="${escape("Fuente: SBS · " + description)}"></label>
-      </details>
+      </div></details>
     </form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
     <footer class="chart-export-footer"><span>La imagen incluye el rango visible del gráfico.</span><button type="button" data-download>Descargar imagen</button></footer>`;
   const trigger = document.activeElement;

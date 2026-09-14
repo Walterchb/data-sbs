@@ -1,3 +1,4 @@
+import { initPreviewViewport } from "./preview-viewport.js";
 import { labelMarkup } from "./chart-labels.js";
 import { escape } from "./format.js";
 
@@ -234,6 +235,11 @@ export function createDrawingEditor(preview, form, onChange) {
     '<button type="button" data-select-label title="Seleccionar etiqueta" aria-label="Seleccionar etiqueta"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 4H14L21 11L11 21L3 13Z"/><circle cx="8" cy="9" r="1.4"/></svg></button>',
   );
   preview.prepend(toolbar);
+  const viewport = initPreviewViewport(canvas, surface, toolbar, () => {
+    drag = null;
+    canvas.classList.remove("is-dragging");
+    paint();
+  });
   const inspector = document.createElement("fieldset");
   inspector.className = "drawing-inspector";
   inspector.hidden = true;
@@ -372,7 +378,7 @@ export function createDrawingEditor(preview, form, onChange) {
       .join("");
     const item = selected();
     if (item)
-      controls.innerHTML += `<rect x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="none" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="5 3" pointer-events="none"/>${item.type === "label" ? "" : `<rect data-resize="${escape(item.id)}" x="${item.x + item.width - h / 2}" y="${item.y + item.height - h / 2}" width="${h}" height="${h}" rx="${2 / scale}" fill="#fff" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" style="cursor:nwse-resize"/>`}`;
+      controls.innerHTML += `<rect data-selection-frame="true" x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="none" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="5 3" pointer-events="none"/>${item.type === "label" ? "" : `<rect data-resize="${escape(item.id)}" x="${item.x + item.width - h / 2}" y="${item.y + item.height - h / 2}" width="${h}" height="${h}" rx="${2 / scale}" fill="#fff" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" style="cursor:nwse-resize"/>`}`;
     svg.append(controls);
   }
   function changed(sync = true) {
@@ -488,6 +494,7 @@ export function createDrawingEditor(preview, form, onChange) {
     return p.matrixTransform(matrix.inverse());
   };
   canvas.addEventListener("pointerdown", (event) => {
+    canvas.classList.add("pointer-interaction");
     const target = event.target.closest("[data-hit],[data-resize]");
     if (!target) {
       choose(null);
@@ -502,6 +509,7 @@ export function createDrawingEditor(preview, form, onChange) {
       original: { ...selected() },
       resize: target.hasAttribute("data-resize"),
     };
+    canvas.classList.add("is-dragging");
     canvas.setPointerCapture(event.pointerId);
     canvas.focus({ preventScroll: true });
     event.preventDefault();
@@ -531,6 +539,7 @@ export function createDrawingEditor(preview, form, onChange) {
   const endDrag = (event) => {
     if (!drag || event.pointerId !== drag.pointerId) return;
     drag = null;
+    canvas.classList.remove("is-dragging");
     if (canvas.hasPointerCapture(event.pointerId))
       canvas.releasePointerCapture(event.pointerId);
     changed();
@@ -538,6 +547,7 @@ export function createDrawingEditor(preview, form, onChange) {
   canvas.addEventListener("pointerup", endDrag);
   canvas.addEventListener("pointercancel", endDrag);
   canvas.addEventListener("keydown", (event) => {
+    canvas.classList.remove("pointer-interaction");
     const item = selected();
     if (!item) return;
     const amount = event.shiftKey ? 10 : 1;
@@ -607,6 +617,7 @@ export function createDrawingEditor(preview, form, onChange) {
       return composed();
     },
     destroy() {
+      viewport.destroy();
       observer?.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
     },

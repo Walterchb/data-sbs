@@ -54,6 +54,7 @@ export function month(value, long = false) {
   return `${names[m - 1]} ${y}`;
 }
 export const units = {
+  INDEX: "Índice",
   PEN_THOUSAND: "S/ MM",
   USD_THOUSAND: "US$ MM",
   PERCENT: "%",

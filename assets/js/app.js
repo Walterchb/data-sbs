@@ -1,3 +1,9 @@
+import {
+  peerModel,
+  peerChoices,
+  peerReportCode,
+  PEER_METRICS,
+} from "./peers.js";
 import { structureModel } from "./structure.js";
 import { compositionData } from "./composition.js";
 import { selectReport, selectFinancial, selectOverview } from "./entities.js";
@@ -20,7 +26,13 @@ import {
   stats,
   norm,
 } from "./analytics.js";
-import { lineChart, bars, clearCharts, mountCharts } from "./charts.js";
+import {
+  lineChart,
+  comparisonChart,
+  bars,
+  clearCharts,
+  mountCharts,
+} from "./charts.js";
 import { accountTable, wrapTable } from "./tables.js";
 import { initMobileTopbar } from "./mobile-topbar.js";
 
@@ -46,6 +58,7 @@ let baseOverview,
   manifest,
   financial,
   reportData,
+  peerSources = {},
   renderId = 0,
   exportRows = [],
   toastTimer;
@@ -81,6 +94,10 @@ const state = {
   peerMetric: "credits",
   peerBanks: ["bcp", "bbva", "scotiabank", "interbank"],
   peerSource: "financial",
+  peerExtra: [],
+  peerMode: "level",
+  peerAddBank: "banbif",
+  peerAddMetric: "credits",
 };
 const unitOf = (key) => METRICS[key]?.unit || "PEN_THOUSAND";
 const entityName = () =>
@@ -1154,181 +1171,127 @@ function reportTabs() {
     )
     .join("")}</div>`;
 }
-const PEER_FINANCIAL = {
-  assets: "total_assets",
-  credits: "gross_credits",
-  deposits: "total_deposits",
-  equity: "equity",
-  net_income: "net_income",
-};
-function bankFinancialValue(b, key) {
-  if (PEER_FINANCIAL[key]) return b[PEER_FINANCIAL[key]];
-  if (key === "npl") return ratio(b.overdue, b.gross_credits);
-  if (key === "coverage") return ratio(b.provisions, b.overdue);
-  return null;
-}
 function peersView() {
-  const key = state.peerMetric,
-    unit = unitOf(key),
-    config = METRICS[key],
-    isfinancial = key in PEER_FINANCIAL || ["npl", "coverage"].includes(key);
-  let rows = [],
-    date = state.date,
-    note = "",
-    warning = "",
-    groupLabel = "Grupo elegido · agregado",
-    sourceUrl = "";
-  if (isfinancial) {
-    const p = financial.periods.find((p) => p.date === date),
-      prior = financial.periods.find((p) => p.date === shift(date, -12));
-    sourceUrl = p.source_url;
-    rows = p.peers
-      .filter((b) =>
-        state.entity.endsWith("_foreign")
-          ? !["system", "bcp"].includes(b.slug)
-          : !["system_foreign", "bcp_foreign"].includes(b.slug),
-      )
-      .map((b) => ({
-        slug: b.slug,
-        name: BANK_NAMES[b.slug] || b.name,
-        value: bankFinancialValue(b, key),
-        prior: bankFinancialValue(
-          prior?.peers.find((x) => x.slug === b.slug) || {},
-          key,
-        ),
-      }));
-    const aggregate = (period) => {
-      const banks =
-        period?.peers
-          .filter(
-            (b) =>
-              state.peerBanks.includes(b.slug) ||
-              (state.entity.endsWith("_foreign") &&
-                b.slug === "bcp_foreign" &&
-                state.peerBanks.includes("bcp")),
-          )
-          ?.filter(
-            (b) => !(state.entity.endsWith("_foreign") && b.slug === "bcp"),
-          ) || [];
-      if (banks.length !== state.peerBanks.length || !banks.length) return null;
-      if (PEER_FINANCIAL[key]) {
-        const vals = banks.map((b) => b[PEER_FINANCIAL[key]]);
-        return vals.every(finite) ? vals.reduce((a, b) => a + b, 0) : null;
-      }
-      const numerator = key === "npl" ? "overdue" : "provisions",
-        denominator = key === "npl" ? "gross_credits" : "overdue";
-      if (!banks.every((b) => finite(b[numerator]) && finite(b[denominator])))
-        return null;
-      return ratio(
-        banks.reduce((s, b) => s + b[numerator], 0),
-        banks.reduce((s, b) => s + b[denominator], 0),
-      );
-    };
-    rows.push({
-      slug: "group",
-      name: groupLabel,
-      value: aggregate(p),
-      prior: aggregate(prior),
-    });
-    note = `Sistema: total oficial B-2201, ${state.entity.endsWith("_foreign") ? "incluye sucursales en el exterior" : "ámbito local"}. El grupo suma importes y calcula ratios sobre numeradores y denominadores agregados. Los cambios del universo bancario pueden afectar el crecimiento.`;
-  } else {
-    const r = reportData,
-      p = r.periods.filter((p) => p.date <= date).at(-1);
-    date = p?.date || date;
-    const met = p?.keys[key];
-    sourceUrl = p?.source_url || "";
-    if (p?.warning) warning = p.warning;
-    const prior = r.periods.find((q) => q.date === shift(date, -12)),
-      id = met?.id,
-      priorId = prior?.keys[key]?.id;
-    rows = Object.entries(p?.peers || {})
-      .filter(([slug]) =>
-        [
-          state.entity,
-          "banbif",
-          "bbva",
-          "bcp",
-          "bcp_foreign",
-          "scotiabank",
-          "interbank",
-          "system",
-          "system_foreign",
-        ].includes(slug),
-      )
-      .map(([slug, values]) => ({
-        slug,
-        name: BANK_NAMES[slug] || slug,
-        value: values[id],
-        prior: prior?.peers[slug]?.[priorId],
-      }));
-    const chosen = rows.filter(
-      (b) =>
-        state.peerBanks.includes(b.slug) ||
-        (b.slug === "bcp_foreign" && state.peerBanks.includes("bcp")),
-    );
-    const average = (field) =>
-      chosen.length === state.peerBanks.length &&
-      chosen.length &&
-      chosen.every((b) => finite(b[field]))
-        ? chosen.reduce((s, b) => s + b[field], 0) / chosen.length
-        : null;
-    rows.push({
-      slug: "group",
-      name: "Grupo elegido · media simple",
-      value: average("value"),
-      prior: average("prior"),
-    });
-    note =
-      "Ratios oficiales de la misma fuente y periodo. Grupo: media aritmética simple de los bancos elegidos; no equivale al ratio consolidado. Se respeta el ámbito local o con sucursales del exterior indicado por SBS.";
-  }
-  rows.sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
+  const m = peerModel(baseFinancial, peerSources, state);
+  const bankOptions = Object.entries(manifest.entities || {})
+    .map(
+      ([slug, b]) =>
+        `<option value="${e(slug)}" ${slug === state.peerAddBank ? "selected" : ""}>${e(BANK_NAMES[slug] || b.name)}</option>`,
+    )
+    .join("");
+  const metricOptions = (selected) =>
+    PEER_METRICS.map(
+      (k) =>
+        `<option value="${k}" ${k === selected ? "selected" : ""}>${e(METRICS[k].label)}</option>`,
+    ).join("");
+  const rows = [...m.rows, ...(m.group ? [m.group] : [])];
+  const tableValue = (v, unit) =>
+    unit.endsWith("THOUSAND")
+      ? num(finite(v) ? v / 1000 : null)
+      : format(v, unit);
+  const deltaUnit = (r) =>
+    r.unit === "PERCENT" ? "BP" : r.unit === "TIMES" ? "TIMES" : "PERCENT";
   exportRows = [
-    ["banco", "periodo", "indicador", "valor", "unidad", "yoy", "banco_sbs"],
+    [
+      "banco",
+      "periodo",
+      "indicador",
+      "valor",
+      "unidad",
+      "mom",
+      "ytd",
+      "yoy",
+      "promedio_rango",
+      "minimo_rango",
+      "maximo_rango",
+      "observaciones",
+      "banco_sbs",
+    ],
     ...rows.map((r) => [
-      r.name,
-      date,
-      config.label,
+      r.bank === "group" ? r.name : BANK_NAMES[r.bank] || r.bank,
+      r.date,
+      METRICS[r.metric].label,
       r.value,
-      unit,
-      compare(r.value, r.prior, unit).value,
-      entitySbsName(r.slug, date),
+      r.unit,
+      r.mom,
+      r.ytd,
+      r.yoy,
+      r.average,
+      r.min,
+      r.max,
+      r.count,
+      r.official || manifest.entities?.[r.bank]?.name || "",
     ]),
   ];
-  const system = rows.find(
-    (r) =>
-      r.slug ===
-      (state.entity.endsWith("_foreign") ? "system_foreign" : "system"),
-  );
-  const shareAllowed =
-    isfinancial && key in PEER_FINANCIAL && key !== "net_income";
+  const seriesList = `<div class="peer-series-list">${m.rows.map((r, i) => `<span class="peer-series-chip"><i style="background:${m.colors[i % m.colors.length]}"></i>${e(r.name)}${r.bank === state.entity && r.metric === state.peerMetric ? "" : `<button type="button" data-remove-peer="${e(r.id)}" aria-label="Quitar ${e(r.name)}">×</button>`}</span>`).join("")}</div>`;
+  const controls = `<div class="peer-builder"><label>Banco<select id="peer-add-bank">${bankOptions}</select></label><label>Serie<select id="peer-add-metric">${metricOptions(state.peerAddMetric)}</select></label><button type="button" id="peer-add" ${m.rows.length >= 8 ? "disabled" : ""}>Agregar serie</button></div>`;
+  const selectedBanks = `<details class="peer-bank-options"><summary>Bancos para ${e(METRICS[state.peerMetric].label)}</summary><div class="checkboxes">${Object.entries(
+    manifest.entities || {},
+  )
+    .filter(
+      ([b]) =>
+        b !== state.entity &&
+        !(state.entity.endsWith("_foreign")
+          ? ["bcp", "system"].includes(b)
+          : ["bcp_foreign", "system_foreign"].includes(b)),
+    )
+    .map(
+      ([b, v]) =>
+        `<label><input type="checkbox" data-peer="${e(b)}" ${state.peerBanks.includes(b) ? "checked" : ""}>${e(BANK_NAMES[b] || v.name)}</label>`,
+    )
+    .join("")}</div></details>`;
+  const range = `<div class="range" aria-label="Rango de comparación">${[
+    [12, "12M"],
+    [24, "24M"],
+    [60, "5A"],
+    [0, "Máx."],
+  ]
+    .map(
+      ([n, t]) =>
+        `<button data-range="${n}" aria-pressed="${state.range === n}">${t}</button>`,
+    )
+    .join("")}</div>`;
+  const explanation =
+    m.mode === "index"
+      ? m.baseDate
+        ? `Base común: ${month(m.baseDate)} = 100. ${m.mixed ? "Las unidades son distintas; se compara la evolución relativa." : ""}`
+        : "No hay una fecha con valores positivos comparables para todas las series del rango. Amplía el rango o ajusta las series."
+      : `Valores originales · ${units[m.unit] || m.unit}.`;
+  const missingSeries = m.rows.filter((r) => !r.count).map((r) => r.name);
+  const missingNotice = missingSeries.length
+    ? `<p class="source-note">Sin datos del rango para: ${e(missingSeries.join("; "))}.</p>`
+    : "";
+  const chartLabel =
+    m.mode === "index"
+      ? "Evolución comparada · base 100"
+      : "Evolución comparada";
   return (
     heading(
-      `¿Cómo está ${e(entityName())} frente a otros bancos?`,
-      `${config.label} · ${month(date)}`,
-      `<div class="controls"><label>Indicador <select id="peer-metric">${["assets", "credits", "deposits", "equity", "net_income", "npl", "coverage", "roe", "roa", "efficiency", "rcg", "liq_mn", "liq_me", "rcl", "rfne"].map((k) => `<option value="${k}" ${k === key ? "selected" : ""}>${e(METRICS[k].label)}</option>`).join("")}</select></label></div>`,
+      "Comparar bancos y series",
+      `Corte seleccionado · ${month(state.date)} · ${m.rows.length} series`,
+      `<div class="controls"><label>Indicador principal<select id="peer-metric">${metricOptions(state.peerMetric)}</select></label></div>`,
     ) +
-    (date !== state.date
-      ? notice(
-          `Comparación con información disponible hasta ${month(date, true)}.`,
-        )
-      : "") +
-    (warning
-      ? notice(warning + " Comparaciones de variación suspendidas.")
-      : "") +
+    `<div class="peer-workspace">` +
     panel(
-      "Comparación homogénea",
-      note,
-      `<div class="checkboxes">${["bcp", "bbva", "scotiabank", "interbank"].map((b) => `<label><input type="checkbox" data-peer="${b}" ${state.peerBanks.includes(b) ? "checked" : ""}>${BANK_NAMES[b]}</label>`).join("")}</div>`,
+      "Evolución comparada",
+      explanation,
+      controls +
+        seriesList +
+        selectedBanks +
+        missingNotice +
+        comparisonChart(m.chartSeries, m.unit, chartLabel),
+      `<div class="controls"><label>Escala<select id="peer-mode" ${m.mixed ? "disabled" : ""}><option value="level" ${m.mode === "level" ? "selected" : ""}>Valores</option><option value="index" ${m.mode === "index" ? "selected" : ""}>Base 100</option></select></label>${range}</div>`,
     ) +
     panel(
-      "Bancos y referencia de sistema",
-      "Los importes y ratios se ordenan de mayor a menor; el orden no implica una evaluación de riesgo.",
+      "Datos y estadísticas",
+      `Valores originales por serie. MoM, YTD y YoY: % para importes y puntos básicos (pb) para ratios. Estadísticas del rango ${month(m.dates[0])} – ${month(state.date)}.`,
       wrapTable(
-        `<table><thead><tr><th>Banco / referencia</th><th class="number">${e(config.label)}</th><th class="number">${unit === "PERCENT" ? "YoY · pb" : "YoY"}</th>${shareAllowed ? '<th class="number">Participación sistema</th>' : ""}</tr></thead><tbody>${rows.map((r) => `<tr class="${r.slug === state.entity ? "peer-highlight" : ""}"><td>${e(r.name)}</td><td class="number">${format(r.value, unit)}</td><td class="number">${warning ? "—" : deltaCell(r.value, r.prior, unit, key)}</td>${shareAllowed ? `<td class="number">${format(ratio(r.value, system?.value), "PERCENT")}</td>` : ""}</tr>`).join("")}</tbody></table>`,
-        "Comparación de bancos",
+        `<table class="peer-analysis-table"><thead><tr><th>Banco / serie</th><th>Periodo</th><th class="number">Valor</th><th class="number">MoM</th><th class="number">YTD</th><th class="number">YoY</th><th class="number">Promedio</th><th class="number">Mínimo</th><th class="number">Máximo</th><th class="number">Datos</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="${r.bank === state.entity ? "peer-highlight" : ""} ${r.bank === "group" ? "peer-group" : ""}"><td><span class="peer-series-name">${r.bank === "group" ? "" : `<i style="background:${m.colors[i % m.colors.length]}"></i>`}${e(r.bank === "group" ? r.name : BANK_NAMES[r.bank] || r.bank)}</span><small>${e(METRICS[r.metric].label)} · ${units[r.unit] || r.unit}</small></td><td>${month(r.date)}${r.date !== state.date ? "<small>Último disponible</small>" : ""}${r.warning ? "<small>Revisar fuente</small>" : ""}</td><td class="number">${tableValue(r.value, r.unit)}</td>${["mom", "ytd", "yoy"].map((k) => `<td class="number">${format(r[k], deltaUnit(r), true)}</td>`).join("")}<td class="number">${tableValue(r.average, r.unit)}</td><td class="number">${tableValue(r.min, r.unit)}</td><td class="number">${tableValue(r.max, r.unit)}</td><td class="number">${r.count}</td></tr>`).join("")}</tbody></table>`,
+        "Datos y estadísticas de las series",
       ) +
-        `<p class="source-note">${sourceUrl ? "" : "Sin fuente para el corte seleccionado. "}— indica dato o comparativo no disponible.</p>`,
-    )
+        `<p class="source-note">Cada fila usa su periodo declarado y bases exactas. — indica dato o comparación no disponible. Las líneas conservan los huecos de información. Ámbito local y sucursales del exterior se mantienen separados.${rows.some((r) => r.metric === "net_income") ? " Resultado neto es acumulado: se muestra YoY; MoM y YTD no se comparan para evitar el efecto del reinicio anual." : ""}${m.group ? " El grupo excluye los totales del sistema; suma importes y pondera morosidad/cobertura. Otros ratios: media simple, no consolidada." : ""}</p>`,
+    ) +
+    `</div>`
   );
 }
 function healthView() {
@@ -1371,18 +1334,6 @@ function healthView() {
       .join("") +
     `<details class="panel help"><summary>Metodología, cobertura y controles</summary><p>Las cifras proceden de los reportes SBS integrados. No se incorporan calificaciones ni cifras externas de clasificadoras. B-2201 incluye saldos de balance y resultados acumulados; B-2401 aporta ROE y ROA anualizados oficiales. El RFNE se convierte de proporción a porcentaje y se reconcilia con financiación disponible/requerida. El RCL es el promedio de ratios diarios del trimestre; no se sustituye por el cociente de saldos promedio.</p><p>Se validan estructura, duplicados, valores finitos, fechas, periodos faltantes, identidad de entidad, MN + ME, activo = pasivo + patrimonio, y el total oficial del sistema. Los controles de rezago consideran la periodicidad de cada fuente. Una advertencia exige interpretación; no es evidencia automática de un error contable.</p></details>`
   );
-}
-function peerReportCode(key) {
-  return {
-    roe: "B-2401",
-    roa: "B-2401",
-    efficiency: "B-2401",
-    liq_mn: "B-2401",
-    liq_me: "B-2401",
-    rcg: "B-2402",
-    rcl: "B-230809",
-    rfne: "B-234021",
-  }[key];
 }
 function entityShortName(slug) {
   if (slug === "system" || slug === "system_foreign") return "Banca múltiple";
@@ -1474,7 +1425,7 @@ async function render() {
         : requested.view === "peers"
           ? requested.peerCode
           : null;
-    const [base, bundle, source] = await Promise.all([
+    const [base, bundle, source, peerReports] = await Promise.all([
       Data.load("financial"),
       Data.loadEntity(requested.entity),
       reportCode
@@ -1482,8 +1433,20 @@ async function render() {
           ? Data.loadStructure(reportCode)
           : Data.load(reportCode)
         : Promise.resolve(null),
+      requested.view === "peers"
+        ? Promise.all(
+            [
+              ...new Set(
+                peerChoices(state)
+                  .map((c) => peerReportCode(c.metric))
+                  .filter(Boolean),
+              ),
+            ].map(async (code) => [code, await Data.load(code)]),
+          )
+        : Promise.resolve([]),
     ]);
     if (id !== renderId) return;
+    peerSources = Object.fromEntries(peerReports);
     baseFinancial = base;
     loadedEntity = requested.entity;
     financial = selectFinancial(base, bundle);
@@ -1626,6 +1589,35 @@ function bind() {
       }
       return;
     }
+    if (b.id === "peer-add") {
+      const bank = $("peer-add-bank").value,
+        metric = $("peer-add-metric").value;
+      if (
+        peerChoices(state).some((c) => c.bank === bank && c.metric === metric)
+      ) {
+        toast("Esa serie ya está incluida.");
+        return;
+      }
+      if (peerChoices(state).length >= 8) {
+        toast("Puedes comparar hasta ocho series.");
+        return;
+      }
+      state.peerExtra.push({ bank, metric });
+      render();
+      return;
+    }
+    if (b.dataset.removePeer) {
+      const [bank, metric] = b.dataset.removePeer.split(":");
+      state.peerExtra = state.peerExtra.filter(
+        (c) => c.bank !== bank || c.metric !== metric,
+      );
+      if (metric === state.peerMetric)
+        state.peerBanks = state.peerBanks.filter(
+          (b) => b !== bank && !(bank === "bcp_foreign" && b === "bcp"),
+        );
+      render();
+      return;
+    }
     if (b.dataset.composition) {
       state.compositionModes[b.dataset.composition] = b.dataset.mode;
       render();
@@ -1743,6 +1735,7 @@ function bind() {
         "move-mode": "moveMode",
         "move-sort": "moveSort",
         "peer-metric": "peerMetric",
+        "peer-mode": "peerMode",
         "structure-source": "structureSource",
         "structure-status": "structureStatus",
         "structure-metric": "structureMetric",
@@ -1751,6 +1744,11 @@ function bind() {
         "concentration-mode": "concentrationMode",
         "concentration-chart": "concentrationChart",
       };
+    if (el.id === "peer-add-bank" || el.id === "peer-add-metric") {
+      state[el.id === "peer-add-bank" ? "peerAddBank" : "peerAddMetric"] =
+        el.value;
+      return;
+    }
     if (el.dataset.concentrationBank) {
       if (el.checked && state.concentrationBanks.length >= 5) {
         el.checked = false;
@@ -1769,6 +1767,11 @@ function bind() {
           );
       render();
     } else if (el.dataset.peer) {
+      if (el.checked && peerChoices(state).length >= 8) {
+        el.checked = false;
+        toast("Puedes comparar hasta ocho series.");
+        return;
+      }
       state.peerBanks = el.checked
         ? [...new Set([...state.peerBanks, el.dataset.peer])]
         : state.peerBanks.filter((b) => b !== el.dataset.peer);

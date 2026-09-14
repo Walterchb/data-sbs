@@ -234,7 +234,11 @@ export function mountCharts(context) {
             if (spec.kind !== "bar")
               chart.setOption({
                 yAxis: {
-                  position: window.innerWidth <= 760 ? "left" : "right",
+                  position:
+                    spec.series?.some((s) => s.analysis) ||
+                    window.innerWidth <= 760
+                      ? "left"
+                      : "right",
                 },
               });
           })
@@ -249,7 +253,12 @@ export function mountCharts(context) {
     const onExport = () =>
       openChartExport({
         spec,
-        context: { ...exportContext },
+        context: {
+          ...exportContext,
+          ...(spec.series?.some((s) => s.analysis)
+            ? { entity: "Comparación de bancos y series" }
+            : {}),
+        },
         zoom: entry.chart.getOption()?.dataZoom,
         makeOptions: (colors) =>
           spec.comparison
@@ -430,6 +439,15 @@ export function comparisonOptions(
     icon: "roundRect",
   };
   options.grid.top = 52;
+  const analysis = series.some((s) => s.analysis);
+  if (analysis) {
+    options.animationDurationUpdate = 0;
+    options.grid.top = 36;
+    options.yAxis.position = "left";
+    options.yAxis.axisLine.onZero = false;
+    options.xAxis.axisLine.onZero = false;
+    options.legend.show = false;
+  }
   options.tooltip.formatter = (params) => {
     const list = Array.isArray(params) ? params : [params],
       index = list[0]?.dataIndex;
@@ -454,7 +472,7 @@ export function comparisonOptions(
     symbolSize: 5,
     lineStyle: { width: s.slug === "banbif" ? 3 : 2, color: s.color },
     itemStyle: { color: s.color },
-    ...(kind === "line"
+    ...(kind === "line" && !analysis
       ? {
           areaStyle: {
             opacity: s.slug === "banbif" ? 0.15 : 0.035,

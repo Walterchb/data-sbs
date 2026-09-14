@@ -40,12 +40,33 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 - «Restablecer posición» devuelve la etiqueta seleccionada a su ubicación inicial. Las posiciones se mantienen al cambiar el formato y se adaptan al cambiar las dimensiones.
 - En las figuras y textos añadidos, «Capa» permite elegir «Detrás del gráfico» o «Delante del gráfico». Los resaltados se crean detrás del gráfico por defecto, debajo del título, curvas y etiquetas, pero encima del fondo general.
 
+## Editor ordenado y zoom
+
+- Las opciones se agrupan en cuatro secciones plegables: Título y fuente; Formato y tamaño; Etiquetas y comparaciones; Estilo del gráfico.
+- La vista previa admite zoom de 100% a 400% con dos dedos, con botones +/− y con un botón para volver a ajustar la imagen.
+- Con la vista ampliada puedes desplazarla con dos dedos; un dedo sobre un espacio libre también desplaza la vista. Arrastrar una anotación sigue moviendo ese elemento.
+- El zoom solo afecta a la vista previa: no recorta la descarga ni cambia sus dimensiones.
+- El recuadro de selección ya no permanece marcado. La edición sigue disponible en el panel del elemento, con «Listo» para cerrarlo. Se conserva el indicador de foco para navegación por teclado.
+
+## Comparar bancos y series
+
+- Gráfico superior con hasta ocho combinaciones de banco e indicador, y tabla inferior con sus valores originales.
+- «Indicador principal» actualiza las series de los bancos principales. «Agregar serie» permite incorporar otra combinación, por ejemplo depósitos de BanBif junto con créditos de varios bancos.
+- La entidad de la navegación permanece como referencia. Puedes quitar las demás series con × y elegir bancos para el indicador principal en el desplegable de selección múltiple.
+- «Valores» compara magnitudes de la misma unidad; «Base 100» compara su evolución relativa desde una fecha común con bases positivas. Si se mezclan unidades, se usa Base 100 automáticamente. Las series sin datos se identifican y no impiden comparar las demás.
+- La tabla incluye periodo declarado, valor, MoM, YTD, YoY, promedio, mínimo, máximo y número de observaciones del rango. Los ratios cambian en puntos básicos; los importes, en porcentaje.
+- El resultado neto es acumulado: se conserva YoY y se omiten MoM/YTD para no confundirlos con crecimiento mensual.
+- Los reportes se cargan bajo demanda y se reutiliza la caché. No se sustituyen los datos locales por los que incluyen sucursales del exterior.
+- La descarga CSV incluye las estadísticas y el nombre oficial SBS de cada banco. El gráfico usa el editor de imágenes con anotaciones.
+
 ## Validación
 
-42 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+45 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
 También se verificaron en Chromium el color independiente de comparación, fondos de etiquetas, los siete tipos de anotación, arrastre con mouse y gesto táctil, cambio de tamaño, movimiento de un píxel, orden de elementos y conservación de las anotaciones en los tres formatos.
 
 Se verificaron también etiquetas de valores en barras agrupadas, las fechas en los extremos del gráfico, huecos de datos, zoom, líneas de unión, restablecimiento de posiciones y cambios de dimensiones.
+
+Verificado en Chromium móvil/escritorio: añadir y quitar series, unidades mixtas, periodos rezagados, tabla, descarga de imagen, secciones del editor, pellizco real con dos dedos, zoom sin alterar la exportación y cierre/restauración del desplazamiento.
