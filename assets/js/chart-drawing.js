@@ -1,4 +1,4 @@
-import { frameChartSvg } from "./chart-presentation.js";
+import { frameChartSvg, presentationSize } from "./chart-presentation.js";
 import { initPreviewViewport } from "./preview-viewport.js";
 import { labelMarkup } from "./chart-labels.js";
 import { escape } from "./format.js";
@@ -625,7 +625,8 @@ export function createDrawingEditor(preview, form, onChange) {
       const root = canvas.querySelector("svg");
       root.removeAttribute("width");
       root.removeAttribute("height");
-      root.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      const size = presentationSize(width, height, presentation);
+      root.setAttribute("viewBox", `0 0 ${size.width} ${size.height}`);
       root.setAttribute("preserveAspectRatio", "xMidYMid meet");
       paint();
       syncInspector();

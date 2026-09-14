@@ -1,4 +1,9 @@
-import { PRESENTATION_PRESETS } from "./chart-presentation.js";
+import {
+  PRESENTATION_PRESETS,
+  PRESENTATION_PATTERNS,
+  presentationSize,
+  rasterSize,
+} from "./chart-presentation.js";
 import { initPreviewResize } from "./preview-resize.js";
 import { escape, month, units } from "./format.js";
 import { finite } from "./analytics.js";
@@ -348,7 +353,9 @@ export function openChartExport(payload) {
       <label>Subtítulo<input name="subtitle" maxlength="220" value="${escape(description)}"></label>
       <label>Fuente o nota<input name="source" maxlength="300" value="${escape("Fuente: SBS · " + description)}"></label></div></details>
       <details class="export-section"><summary>2 · Formato y tamaño</summary><div class="export-section-body"><div class="export-field-row"><label>Formato<select name="format"><option value="png">PNG</option><option value="jpeg">JPG</option><option value="svg">SVG · vectorial</option></select></label><label>Fondo<select name="background"><option value="light">Claro</option><option value="dark">Oscuro</option><option value="transparent">Transparente</option></select></label></div>
-      <label>Tamaño<select name="preset"><option value="1600x900">Presentación · 1600 × 900</option><option value="1920x1080">Full HD · 1920 × 1080</option><option value="1200x800">Informe · 1200 × 800</option><option value="1200x1200">Cuadrado · 1200 × 1200</option><option value="custom">Personalizado</option></select></label>
+      <label>Resolución de descarga<select name="exportScale"><option value="1">1× · Original</option><option value="2" selected>2× · Alta resolución</option><option value="3">3× · Máxima resolución</option></select></label>
+      <p class="export-control-note">PNG conserva la imagen sin compresión con pérdida. SVG es vectorial. JPG usa compresión con pérdida, incluso con calidad máxima.</p>
+      <label>Tamaño del gráfico<select name="preset"><option value="1600x900">Presentación · 1600 × 900</option><option value="1920x1080">Full HD · 1920 × 1080</option><option value="1200x800">Informe · 1200 × 800</option><option value="1200x1200">Cuadrado · 1200 × 1200</option><option value="custom">Personalizado</option></select></label>
       <div class="export-field-row"><label>Ancho · px<input name="width" type="number" min="640" max="3840" step="1" value="1600" required></label><label>Alto · px<input name="height" type="number" min="360" max="2160" step="1" value="900" required></label></div>
       </div></details><details class="export-section"><summary>3 · Etiquetas y comparaciones</summary><div class="export-section-body"><div class="export-field-row"><label>Etiquetas<select name="labels"><option value="selected" ${isBar ? "hidden" : ""}>Fechas elegidas</option><option value="all" ${isBar ? "selected" : ""}>Todos los valores</option><option value="none">Sin etiquetas</option></select></label><label>Decimales<select name="decimals"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label></div>
       <label class="export-check"><input type="checkbox" name="labelBackground" checked> Fondo sutil en las etiquetas</label>
@@ -368,7 +375,7 @@ export function openChartExport(payload) {
         ${spec.comparison ? '<label class="export-check"><input name="legend" type="checkbox" checked> Mostrar leyenda</label>' : '<label class="export-check"><input name="references" type="checkbox" checked> Promedio, máximo y mínimo</label>'}
       </div></details>
     <details class="export-section"><summary>5 · Fondo y presentación</summary><div class="export-section-body">
-      <label>Fondo exterior<select name="frameType"><option value="none">Sin marco</option><option value="solid">Color sólido</option><option value="gradient">Degradado lineal</option><option value="radial">Degradado radial</option></select></label>
+      <label>Fondo exterior<select name="frameType"><option value="none">Sin marco</option><option value="shadow">Solo sombra · exterior transparente</option><option value="solid">Color sólido</option><option value="gradient">Degradado lineal</option><option value="radial">Degradado radial</option></select></label>
       <div class="frame-presets" role="group" aria-label="Fondos predefinidos">${Object.entries(
         PRESENTATION_PRESETS,
       )
@@ -380,8 +387,17 @@ export function openChartExport(payload) {
       <div class="export-field-row"><label>Color inicial<input type="color" name="frameStart" value="#dceeff"></label><label>Color final<input type="color" name="frameEnd" value="#9dc8f2"></label></div>
       <label>Dirección del degradado<select name="frameAngle"><option value="0">Horizontal</option><option value="90">Vertical</option><option value="45">Diagonal ↘</option><option value="135" selected>Diagonal ↙</option></select></label>
       <div class="export-field-row"><label>Margen exterior · px<input type="number" name="frameMargin" value="48" min="0" max="160" step="1"></label><label>Esquinas · px<input type="number" name="frameRadius" value="18" min="0" max="80" step="1"></label></div>
+      <label class="export-check"><input type="checkbox" name="framePreserveSize" checked> Conservar el tamaño del gráfico</label>
+      <p class="export-control-note">El margen se añade alrededor del gráfico. Desactívalo para ajustar todo al tamaño de lienzo elegido.</p>
+      <label>Patrón<select name="framePattern">${Object.entries(
+        PRESENTATION_PATTERNS,
+      )
+        .map(([id, name]) => `<option value="${id}">${name}</option>`)
+        .join("")}</select></label>
+      <div class="export-field-row"><label>Color del patrón<input type="color" name="patternColor" value="#64748b"></label><label>Separación · px<input type="number" name="patternSize" min="10" max="160" value="32"></label></div>
+      <div class="export-field-row"><label>Opacidad · %<input type="number" name="patternOpacity" min="0" max="60" value="15"></label><label>Grosor · px<input type="number" name="patternStroke" min="0.5" max="4" step="0.5" value="1"></label></div>
       <label>Sombra<input type="range" name="frameShadow" min="0" max="100" value="25" aria-label="Intensidad de sombra"></label>
-      <p class="export-control-note">El gráfico completo se ajusta dentro del marco. Se conservan las dimensiones finales elegidas; 0 elimina la sombra o el redondeado.</p>
+      <p class="export-control-note">Los fondos y patrones son vectoriales. 0 elimina la sombra o el redondeado. Solo sombra conserva la transparencia exterior en PNG y SVG; JPG usa fondo blanco.</p>
     </div></details></form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
     <footer class="chart-export-footer"><span>La imagen incluye el rango visible del gráfico.</span><button type="button" data-download>Descargar imagen</button></footer>`;
   const trigger = document.activeElement;
@@ -422,6 +438,13 @@ export function openChartExport(payload) {
     height: Number(field("height").value),
     fontSize: Number(field("fontSize").value),
     background: field("background").value,
+    exportScale: Number(field("exportScale").value),
+    framePreserveSize: field("framePreserveSize").checked,
+    framePattern: field("framePattern").value,
+    patternColor: field("patternColor").value,
+    patternSize: Number(field("patternSize").value),
+    patternOpacity: Number(field("patternOpacity").value),
+    patternStroke: Number(field("patternStroke").value),
     frameType: field("frameType").value,
     frameStart: field("frameStart").value,
     frameEnd: field("frameEnd").value,
@@ -450,7 +473,8 @@ export function openChartExport(payload) {
     const transparent = field("background").querySelector(
       '[value="transparent"]',
     );
-    transparent.disabled = field("format").value === "jpeg";
+    transparent.disabled =
+      field("format").value === "jpeg" || field("frameType").value === "shadow";
     if (transparent.disabled && field("background").value === "transparent")
       field("background").value = "light";
     if (dialog.querySelector(".export-label-dates"))
@@ -468,7 +492,21 @@ export function openChartExport(payload) {
       field(name).disabled =
         frameType === "none" ||
         (frameType === "solid" && ["frameEnd", "frameAngle"].includes(name)) ||
-        (frameType === "radial" && name === "frameAngle");
+        (frameType === "radial" && name === "frameAngle") ||
+        (frameType === "shadow" &&
+          ["frameStart", "frameEnd", "frameAngle"].includes(name));
+    field("framePreserveSize").disabled = frameType === "none";
+    field("framePattern").disabled = ["none", "shadow"].includes(frameType);
+    for (const name of [
+      "patternColor",
+      "patternSize",
+      "patternOpacity",
+      "patternStroke",
+    ])
+      field(name).disabled =
+        field("framePattern").disabled ||
+        field("framePattern").value === "none";
+    field("exportScale").disabled = field("format").value === "svg";
     const marginLimit = Math.min(
       160,
       Math.floor(
@@ -488,6 +526,14 @@ export function openChartExport(payload) {
       return;
     }
     const s = settings();
+    const size = presentationSize(s.width, s.height, s);
+    const pixels = rasterSize(size.width, size.height, s.exportScale);
+    if (s.format !== "svg" && !pixels.valid) {
+      status.textContent =
+        "La imagen supera 48 megapíxeles. Reduce la resolución, el tamaño o elige SVG.";
+      download.disabled = true;
+      return;
+    }
     const calculated = exportComparisons(spec, s.comparisons);
     for (let i = 0; i < calculated.length; i++) {
       const result = dialog.querySelector(
@@ -550,7 +596,9 @@ export function openChartExport(payload) {
         drawingEditor.setBase(base, s.width, s.height, labels, s),
       );
       dialog.querySelector(".export-preview-size").textContent =
-        `${s.width} × ${s.height} px · ${s.format.toUpperCase()}`;
+        s.format === "svg"
+          ? `${size.width} × ${size.height} · SVG vectorial`
+          : `${pixels.width} × ${pixels.height} px · ${s.format.toUpperCase()} · ${s.exportScale}×`;
       const selectedSeries = spec.comparison
         ? spec.series
         : [{ points: spec.points }];
@@ -615,9 +663,11 @@ export function openChartExport(payload) {
     if (button.dataset.framePreset) {
       const preset = PRESENTATION_PRESETS[button.dataset.framePreset];
       if (!preset) return;
-      field("frameType").value = "gradient";
+      field("frameType").value = preset.type || "gradient";
       field("frameStart").value = preset.start;
       field("frameEnd").value = preset.end;
+      field("patternColor").value =
+        button.dataset.framePreset === "night" ? "#ffffff" : "#64748b";
     } else if (button.hasAttribute("data-add-date")) {
       selectedDates.add(field("labelDate").value);
       renderDates();
@@ -720,17 +770,23 @@ export function openChartExport(payload) {
           img.src = rasterUrl;
         });
         const canvas = document.createElement("canvas");
-        canvas.width = s.width;
-        canvas.height = s.height;
+        const size = presentationSize(s.width, s.height, s);
+        const pixels = rasterSize(size.width, size.height, s.exportScale);
+        canvas.width = pixels.width;
+        canvas.height = pixels.height;
         const ctx = canvas.getContext("2d");
         if (s.format === "jpeg") {
           ctx.fillStyle =
-            s.background === "dark" ? palettes.dark.panel : "#fff";
-          ctx.fillRect(0, 0, s.width, s.height);
+            s.frameType === "shadow"
+              ? "#fff"
+              : s.background === "dark"
+                ? palettes.dark.panel
+                : "#fff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         blob = await new Promise((resolve) =>
-          canvas.toBlob(resolve, `image/${s.format}`, 0.95),
+          canvas.toBlob(resolve, `image/${s.format}`, 1),
         );
         if (!blob) throw new Error("No image");
       }

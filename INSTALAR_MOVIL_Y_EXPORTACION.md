@@ -67,16 +67,27 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 
 ## Fondo y presentación
 
-- Nueva sección «5 · Fondo y presentación»: Sin marco, Color sólido, Degradado lineal y Degradado radial.
-- Presets Azul, Lavanda, Arena, Menta y Noche; colores inicial/final y dirección personalizables.
+- Nueva sección «5 · Fondo y presentación»: Sin marco, Solo sombra, Color sólido, Degradado lineal y Degradado radial.
+- Presets Azul, Blanco, Arena, Menta y Noche; colores inicial/final y dirección personalizables.
 - Margen exterior, radio de esquinas y sombra regulables. Un valor de 0 elimina el redondeado o la sombra.
-- El gráfico completo y sus anotaciones se ajustan proporcionalmente dentro del marco, conservando el ancho y alto finales elegidos.
+- Por defecto, «Conservar el tamaño del gráfico» añade el margen alrededor y amplía el lienzo final sin reducir el gráfico ni sus anotaciones. Puedes desactivarlo para ajustar proporcionalmente todo al tamaño elegido.
 - El fondo del gráfico se elige en «Formato y tamaño». Al elegir Transparente, el fondo exterior se ve a través del gráfico y no se añade una tarjeta opaca con sombra.
 - El marco se conserva en PNG, JPG y SVG; las anotaciones siguen siendo movibles en la vista previa.
 
+## Patrones y calidad de exportación
+
+- «Solo sombra» mantiene transparente el exterior en PNG y SVG. JPG lo rellena de blanco. El gráfico usa una tarjeta opaca para poder proyectar su sombra.
+- Blanco reemplaza a Lavanda y aplica un fondo sólido blanco.
+- Patrones vectoriales: Puntos, Cuadrícula, Diagonales, Cruces, Ondas y Damero. Puedes ajustar color, separación, grosor y opacidad. Se aplican al fondo exterior; Solo sombra los desactiva.
+- PNG sale a 2× por defecto. En «Formato y tamaño» puedes elegir 1×, 2× o 3×; el editor muestra las dimensiones reales del archivo.
+- Ejemplo: gráfico de 1600 × 900, margen de 48 px y tamaño conservado → lienzo de 1696 × 996; a 2×, PNG de 3392 × 1992.
+- SVG conserva trazos, textos y patrones vectoriales. PNG no usa compresión con pérdida. JPG usa calidad máxima, pero su formato sí emplea compresión con pérdida.
+- La exportación se genera directamente desde el SVG a la resolución final. No se amplía una captura de pantalla ni una imagen rasterizada pequeña.
+- Si el archivo supera 48 megapíxeles, el editor pide reducir la resolución o elegir SVG; no reduce la resolución silenciosamente.
+
 ## Validación
 
-47 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+49 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
@@ -87,3 +98,5 @@ Se verificaron también etiquetas de valores en barras agrupadas, las fechas en 
 Verificado en Chromium móvil/escritorio: añadir y quitar series, unidades mixtas, periodos rezagados, tabla, descarga de imagen, secciones del editor, pellizco real con dos dedos, zoom sin alterar la exportación y cierre/restauración del desplazamiento.
 
 Se verificaron también el tirador con gesto táctil, sus límites y restablecimiento; fondos y presets; esquinas y sombras; arrastre de anotaciones dentro del marco y exportación a los tres formatos.
+
+Control de calidad en Chromium: se comparó el área del gráfico original a 1× con la misma área dentro del marco (sin redondeado ni sombra) y hubo 0 diferencias de píxeles. Se comprobaron además la transparencia de Solo sombra, los seis patrones vectoriales y las dimensiones exactas de las salidas a 2× y 3×.
