@@ -21,8 +21,20 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 - El tamaño de texto admite valores de 12 a 72. Para textos grandes, se puede aumentar el ancho/alto de la imagen. El editor avisa si el texto no deja espacio suficiente para el gráfico.
 - Se mantienen PNG, JPG y SVG, títulos, subtítulos, fondos, dimensiones, fuente, decimales, cuadrícula y opciones de línea. La imagen exportada conserva el rango visible.
 
+## Anotaciones y colores
+
+- Cada comparación automática tiene su propio selector de color para el trazo y la flecha.
+- «Fondo sutil en etiquetas» permite activar o desactivar el fondo de las etiquetas de datos y comparaciones.
+- La barra «Anotar», sobre la vista previa, agrega círculos, óvalos, rectángulos, flechas, líneas, textos y resaltados.
+- Toca o haz clic sobre un elemento para seleccionarlo. Arrástralo con el mouse o el dedo; el tirador permite cambiar su tamaño. Pulsa «Listo» o un espacio vacío para volver a las opciones del gráfico.
+- El panel permite ajustar posición y tamaño en píxeles, borde, relleno, opacidad y texto. Los botones de movimiento admiten saltos de 1, 5, 10 o 25 píxeles; las flechas del teclado mueven 1 píxel y Mayús + flecha, 10.
+- Puedes duplicar, eliminar o cambiar el orden de los elementos. Los resaltados quedan detrás de las figuras y textos añadidos; los cuadros de texto también admiten un subrayado de color detrás de las letras.
+- Las anotaciones se incluyen en PNG, JPG y SVG; los controles de selección no aparecen en la descarga.
+
 ## Validación
 
-37 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+39 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
+
+También se verificaron en Chromium el color independiente de comparación, fondos de etiquetas, los siete tipos de anotación, arrastre con mouse y gesto táctil, cambio de tamaño, movimiento de un píxel, orden de elementos y conservación de las anotaciones en los tres formatos.

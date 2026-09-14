@@ -2,6 +2,7 @@ import { escape, month, units } from "./format.js";
 import { finite } from "./analytics.js";
 import { exportComparisons } from "./chart-annotations.js";
 import { lockPageScroll } from "./modal-scroll.js";
+import { createDrawingEditor, drawingColor } from "./chart-drawing.js";
 
 export const exportFilename = (title) =>
   "SBS_" +
@@ -58,6 +59,12 @@ export function buildExportOptions(payload, settings) {
   const palette = palettes[settings.background === "dark" ? "dark" : "light"];
   const option = payload.makeOptions(palette);
   const font = settings.fontSize;
+  const labelBackground =
+    settings.labelBackground === false
+      ? "transparent"
+      : settings.background === "dark"
+        ? "rgba(13,27,42,0.82)"
+        : "rgba(255,255,255,0.82)";
   const titleSize = Math.min(72, font * 1.65);
   const title = wrap(settings.title, settings.width - 64, titleSize);
   const subtitle = wrap(settings.subtitle, settings.width - 64, font);
@@ -188,6 +195,9 @@ export function buildExportOptions(payload, settings) {
       position: spec.kind === "bar" ? "right" : "top",
       color: palette.ink,
       fontSize: font * 0.8,
+      backgroundColor: labelBackground,
+      borderRadius: 3,
+      padding: [3, 5],
       formatter: (p) => (finite(p.value) ? valueLabel(p.value) : ""),
     };
     series.labelLayout = { hideOverlap: true };
@@ -246,10 +256,7 @@ export function buildExportOptions(payload, settings) {
                 color: palette.ink,
                 fontSize: font * 0.85,
                 lineHeight: font * 1.25,
-                backgroundColor:
-                  settings.background === "transparent"
-                    ? "transparent"
-                    : palette.panel,
+                backgroundColor: labelBackground,
                 padding: [4, 6],
                 borderRadius: 2,
                 formatter:
@@ -263,8 +270,10 @@ export function buildExportOptions(payload, settings) {
       series.markLine.data ||= [];
       for (const comparison of ownComparisons) {
         const text = `Var. ${comparison.percent > 0 ? "+" : ""}${number(comparison.percent)}%`;
-        const color =
-          series.lineStyle?.color || series.itemStyle?.color || palette.ink;
+        const color = drawingColor(
+          comparison.color,
+          series.lineStyle?.color || series.itemStyle?.color || palette.ink,
+        );
         series.markLine.data.push([
           {
             coord: [comparison.fromIndex, series.data[comparison.fromIndex]],
@@ -284,10 +293,7 @@ export function buildExportOptions(payload, settings) {
               color: palette.ink,
               fontSize: font * 0.9,
               lineHeight: font * 1.2,
-              backgroundColor:
-                settings.background === "transparent"
-                  ? "transparent"
-                  : palette.panel,
+              backgroundColor: labelBackground,
               padding: [5, 8],
               borderRadius: 2,
             },
@@ -295,6 +301,7 @@ export function buildExportOptions(payload, settings) {
           {
             coord: [comparison.toIndex, series.data[comparison.toIndex]],
             symbol: comparison.style === "line" ? "none" : "arrow",
+            itemStyle: { color },
             symbolSize: Math.max(8, font * 0.6),
           },
         ]);
@@ -337,6 +344,7 @@ export function openChartExport(payload) {
       <label>Tamaño<select name="preset"><option value="1600x900">Presentación · 1600 × 900</option><option value="1920x1080">Full HD · 1920 × 1080</option><option value="1200x800">Informe · 1200 × 800</option><option value="1200x1200">Cuadrado · 1200 × 1200</option><option value="custom">Personalizado</option></select></label>
       <div class="export-field-row"><label>Ancho · px<input name="width" type="number" min="640" max="3840" step="1" value="1600" required></label><label>Alto · px<input name="height" type="number" min="360" max="2160" step="1" value="900" required></label></div>
       <div class="export-field-row"><label>Etiquetas<select name="labels"><option value="selected" ${isBar ? "hidden" : ""}>Fechas elegidas</option><option value="all" ${isBar ? "selected" : ""}>Todos los valores</option><option value="none">Sin etiquetas</option></select></label><label>Decimales<select name="decimals"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label></div>
+      <label class="export-check"><input type="checkbox" name="labelBackground" checked> Fondo sutil en las etiquetas</label>
       ${
         isBar
           ? ""
@@ -363,6 +371,21 @@ export function openChartExport(payload) {
     previewUrl,
     timer,
     busy = false;
+  const setPreviewImage = (value) => {
+    if (!value) return;
+    svg = value;
+    const next = URL.createObjectURL(
+      new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
+    );
+    dialog.querySelector(".export-preview-surface img").src = next;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = next;
+  };
+  const drawingEditor = createDrawingEditor(
+    dialog.querySelector(".chart-export-preview"),
+    form,
+    setPreviewImage,
+  );
   const selectedDates = new Set(date ? [date] : []);
   const comparisons = [];
   let nextComparisonId = 0;
@@ -375,6 +398,7 @@ export function openChartExport(payload) {
     fontSize: Number(field("fontSize").value),
     background: field("background").value,
     labels: field("labels").value,
+    labelBackground: field("labelBackground").checked,
     selectedDates: [...selectedDates],
     comparisons: comparisons.map((item) => ({ ...item })),
     format: field("format").value,
@@ -438,13 +462,9 @@ export function openChartExport(payload) {
         return;
       }
       chart.setOption(option, true);
-      svg = chart.renderToSVGString();
-      const next = URL.createObjectURL(
-        new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
+      setPreviewImage(
+        drawingEditor.setBase(chart.renderToSVGString(), s.width, s.height),
       );
-      dialog.querySelector("img").src = next;
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      previewUrl = next;
       dialog.querySelector(".export-preview-size").textContent =
         `${s.width} × ${s.height} px · ${s.format.toUpperCase()}`;
       const selectedSeries = spec.comparison
@@ -499,6 +519,7 @@ export function openChartExport(payload) {
         ${spec.comparison ? `<label>Serie<select data-growth-field="seriesIndex">${allSeries.map((series, i) => `<option value="${i}" ${i === Number(item.seriesIndex) ? "selected" : ""}>${escape(series.name)}</option>`).join("")}</select></label>` : ""}
         <div class="export-field-row"><label>Desde<select data-growth-field="from">${dateOptions(item.from)}</select></label><label>Hasta<select data-growth-field="to">${dateOptions(item.to)}</select></label></div>
         <label>Trazo<select data-growth-field="style"><option value="arrow" ${item.style === "arrow" ? "selected" : ""}>Flecha</option><option value="line" ${item.style === "line" ? "selected" : ""}>Línea</option></select></label>
+        <label>Color del trazo<input type="color" data-growth-field="color" value="${drawingColor(item.color)}"></label>
         <div class="export-growth-result"><span data-growth-result="${item.id}"></span><button type="button" data-remove-growth="${item.id}">Quitar</button></div>
       </div>`,
       )
@@ -529,6 +550,9 @@ export function openChartExport(payload) {
         from,
         to,
         style: "arrow",
+        color: spec.comparison
+          ? drawingColor(spec.series[0]?.color)
+          : field("color")?.value || "#1c7ff2",
       });
       renderComparisons();
     } else if (button.dataset.removeGrowth) {
@@ -645,6 +669,7 @@ export function openChartExport(payload) {
     "close",
     () => {
       clearTimeout(timer);
+      drawingEditor.destroy();
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       dialog.remove();
       unlockScroll();
