@@ -22,6 +22,7 @@ import {
 } from "./analytics.js";
 import { lineChart, bars, clearCharts, mountCharts } from "./charts.js";
 import { accountTable, wrapTable } from "./tables.js";
+import { initMobileTopbar } from "./mobile-topbar.js";
 
 const $ = (id) => document.getElementById(id);
 const topbar = document.querySelector(".topbar");
@@ -35,6 +36,7 @@ syncToolbarOffset();
 if (window.ResizeObserver)
   new window.ResizeObserver(syncToolbarOffset).observe(topbar);
 window.addEventListener("resize", syncToolbarOffset);
+initMobileTopbar(topbar);
 
 let baseOverview,
   baseFinancial,
@@ -1524,7 +1526,7 @@ async function render() {
     $("account-controls").hidden = state.view !== "balance";
     $("account-controls").innerHTML =
       state.view === "balance" ? accountControls() : "";
-    mountCharts();
+    mountCharts({ entity: entityName(), date: state.date });
     urlState();
   } catch (err) {
     if (id === renderId) {

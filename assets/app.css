@@ -1,5 +1,11 @@
 /* Treasury Hub: tokens from the supplied TC Contable reference. */
 :root {
+  /* Preserve literal SBS formulas such as (a)+(b)+(c). Manrope has symbol ligatures. */
+  font-variant-ligatures: none;
+  font-feature-settings:
+    "liga" 0,
+    "clig" 0,
+    "dlig" 0;
   font-family: Manrope, Inter, "Segoe UI", Roboto, Arial, sans-serif;
   font-size: 16px;
   color-scheme: light;
@@ -875,7 +881,7 @@ th.number {
   white-space: nowrap;
 }
 tbody tr:last-child td {
-  border-bottom: 0;
+  border-bottom: 1px solid var(--grid);
 }
 tbody tr:hover td {
   background: var(--soft);
@@ -2221,7 +2227,7 @@ dialog::backdrop {
   width: 100%;
   min-width: 660px;
   table-layout: fixed;
-  border-collapse: collapse;
+  border-collapse: separate;
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
@@ -2367,13 +2373,299 @@ dialog::backdrop {
   }
 }
 
-.structure-controls { flex-wrap: wrap; }
-.structure-controls label { display: flex; align-items: center; gap: 8px; }
-.structure-table { min-width: 640px; }
-.structure-table th, .structure-table td { padding: 7px 10px; }
-.structure-table tbody th { text-align: left; font-weight: 500; }
-.structure-table .text-button { text-align: left; font-size: inherit; }
-.structure-table button[aria-pressed="true"] { background: transparent; border-color: transparent; color: var(--cyan); }
-.structure-table .structure-selected { background: var(--selected); box-shadow: inset 3px 0 var(--cyan); }
-.structure-table .structure-child th { padding-left: 26px; color: var(--muted); }
-@media(max-width:760px) { .structure-controls, .structure-controls label { width: 100%; } .structure-controls select { min-width: 0; flex: 1; } }
+.structure-controls {
+  flex-wrap: wrap;
+}
+.structure-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.structure-table {
+  min-width: 640px;
+}
+.structure-table th,
+.structure-table td {
+  padding: 7px 10px;
+}
+.structure-table tbody th {
+  text-align: left;
+  font-weight: 500;
+}
+.structure-table .text-button {
+  text-align: left;
+  font-size: inherit;
+}
+.structure-table button[aria-pressed="true"] {
+  background: transparent;
+  border-color: transparent;
+  color: var(--cyan);
+}
+.structure-table .structure-selected {
+  background: var(--selected);
+  box-shadow: inset 3px 0 var(--cyan);
+}
+.structure-table .structure-child th {
+  padding-left: 26px;
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .structure-controls,
+  .structure-controls label {
+    width: 100%;
+  }
+  .structure-controls select {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+/* Persistent row labels in every horizontally scrollable analysis table. */
+.table-wrap table:not(.account-table) tr > :first-child,
+.composition-table tr > :first-child {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--panel);
+  box-shadow: 1px 0 0 var(--line2);
+}
+.table-wrap table:not(.account-table) thead tr > :first-child,
+.composition-table thead tr > :first-child {
+  background: var(--soft);
+  z-index: 4;
+}
+.composition-table tbody th {
+  top: auto;
+}
+.table-wrap table:not(.account-table) tbody tr > :first-child {
+  top: auto;
+}
+.table-wrap .peer-highlight > :first-child,
+.table-wrap .structure-selected > :first-child,
+.account-table tbody tr:not(.root):not(.net-result):hover td:first-child {
+  background: color-mix(in srgb, var(--panel) 90%, var(--cyan));
+}
+.composition-table .composition-plot-title,
+.composition-table .composition-plot {
+  border-left: 1px solid var(--line2);
+  border-right: 1px solid var(--line2);
+}
+.composition-table tbody tr:last-child > * {
+  border-bottom: 1px solid var(--line2);
+}
+.table-wrap table:not(.account-table) tbody tr:hover > :first-child,
+.composition-table tbody tr:hover > :first-child {
+  background: var(--soft);
+}
+@media (max-width: 760px) {
+  .topbar {
+    transition: transform 180ms ease;
+  }
+  .analysis-toolbar-dock {
+    transition: top 180ms ease;
+  }
+  :root.topbar-hidden .topbar {
+    transform: translateY(-100%);
+  }
+  :root.topbar-hidden .analysis-toolbar-dock {
+    top: 0;
+  }
+  .composition-col-label {
+    width: 145px;
+  }
+  .composition-table {
+    min-width: 720px;
+  }
+  .composition-table .text-button {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .composition-table th:first-child {
+    padding-left: 5px;
+    padding-right: 8px;
+  }
+  .table-wrap table:not(.account-table) tr > :first-child {
+    min-width: 120px;
+    max-width: 160px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar,
+  .analysis-toolbar-dock {
+    transition: none;
+  }
+}
+@media print {
+  :root.topbar-hidden .topbar {
+    transform: none;
+  }
+}
+
+.chart-export-dialog {
+  width: min(1160px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: auto;
+}
+.chart-export-dialog::backdrop {
+  background: rgba(3, 15, 26, 0.68);
+}
+.chart-export-head,
+.chart-export-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--panel);
+}
+.chart-export-head {
+  border-bottom: 1px solid var(--line);
+}
+.chart-export-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.chart-export-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.chart-export-head button {
+  min-width: 36px;
+}
+.chart-export-layout {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+}
+.chart-export-controls {
+  padding: 18px 20px;
+  border-right: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+}
+.chart-export-controls label {
+  display: grid;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.chart-export-controls input,
+.chart-export-controls select {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 7px 9px;
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  background: var(--soft);
+  color: var(--ink);
+  font-size: 0.8rem;
+}
+.chart-export-controls input:invalid {
+  border-color: var(--red);
+}
+.export-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.chart-export-controls details {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.chart-export-controls summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.chart-export-controls details[open] > :not(summary) {
+  margin-top: 12px;
+}
+.chart-export-controls .export-check {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+.chart-export-controls input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+}
+.chart-export-controls input[type="color"] {
+  padding: 3px;
+}
+.chart-export-preview {
+  min-width: 0;
+  padding: 24px;
+  background: var(--soft);
+}
+.export-preview-surface {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  background: repeating-conic-gradient(#edf0f3 0% 25%, #fff 0% 50%) 50% / 16px
+    16px;
+}
+.export-preview-surface img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.export-preview-size,
+.export-preview-status {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 10px 0;
+}
+.chart-export-footer {
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid var(--line);
+}
+.chart-export-footer span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.chart-export-footer button {
+  background: var(--navy3);
+  color: #fff;
+  min-height: 40px;
+}
+@media (max-width: 760px) {
+  .chart-export-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .chart-export-layout {
+    grid-template-columns: 1fr;
+  }
+  .chart-export-preview {
+    order: -1;
+    padding: 12px;
+  }
+  .chart-export-controls {
+    border-right: 0;
+    padding: 14px;
+  }
+  .chart-export-controls input,
+  .chart-export-controls select {
+    font-size: 16px;
+    height: 40px;
+  }
+  .chart-export-head,
+  .chart-export-footer {
+    padding: 12px 14px;
+  }
+  .chart-export-footer span {
+    max-width: 45%;
+  }
+}

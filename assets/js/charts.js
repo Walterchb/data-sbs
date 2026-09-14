@@ -1,10 +1,12 @@
 import { escape, format, month, num, units } from "./format.js";
 import { finite } from "./analytics.js";
+import { openChartExport } from "./chart-export.js";
 
 // ECharts matches TC Treasury; SVG remains available if the CDN is unavailable.
 const specifications = new Map();
 const mounted = new Map();
 let chartId = 0;
+let exportContext = {};
 export function clearCharts() {
   for (const { chart, observer } of mounted.values()) {
     observer?.disconnect();
@@ -39,7 +41,7 @@ export function chartOptions(points, unit, label, palette, mobile = false) {
   if (finite(last)) refs.unshift(reference("Selección", last, palette.ink));
   return {
     animationDuration: 540,
-    textStyle: { fontFamily: 'Manrope, "Segoe UI", Arial, sans-serif' },
+    textStyle: { fontFamily: '"Segoe UI", Arial, sans-serif' },
     grid: {
       left: mobile ? 10 : 14,
       right: mobile ? 10 : 18,
@@ -78,17 +80,10 @@ export function chartOptions(points, unit, label, palette, mobile = false) {
           title: { zoom: "Zoom", back: "Atrás" },
         },
         restore: { title: "Restaurar" },
-        saveAsImage: {
+        myExport: {
           title: "Descargar",
-          pixelRatio: 3,
-          backgroundColor: palette.panel,
-          name:
-            "SBS_" +
-            label
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .replace(/[^a-z0-9]+/gi, "_")
-              .replace(/^_+|_+$/g, ""),
+          show: true,
+          icon: "path://M4,14 L4,20 L20,20 L20,14 M12,2 L12,15 M6,9 L12,15 L18,9",
         },
       },
     },
@@ -197,7 +192,8 @@ export function chartOptions(points, unit, label, palette, mobile = false) {
     ],
   };
 }
-export function mountCharts() {
+export function mountCharts(context) {
+  if (context?.entity) exportContext = context;
   if (!window.echarts) return;
   const palette = {
     navy: css("--navy3"),
@@ -255,6 +251,37 @@ export function mountCharts() {
           ),
       true,
     );
+    entry.chart.setOption({
+      toolbox: {
+        feature: {
+          myExport: {
+            onclick: () =>
+              openChartExport({
+                spec,
+                context: { ...exportContext },
+                zoom: entry.chart.getOption()?.dataZoom,
+                makeOptions: (colors) =>
+                  spec.comparison
+                    ? comparisonOptions(
+                        spec.series,
+                        spec.unit,
+                        spec.label,
+                        colors,
+                        spec.kind,
+                        false,
+                      )
+                    : chartOptions(
+                        spec.points,
+                        spec.unit,
+                        spec.label,
+                        colors,
+                        false,
+                      ),
+              }),
+          },
+        },
+      },
+    });
     if (zoom?.length)
       entry.chart.setOption({
         dataZoom: zoom.map((z) => ({ start: z.start, end: z.end })),
