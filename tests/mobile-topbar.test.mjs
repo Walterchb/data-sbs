@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { initMobileTopbar } from "../assets/js/mobile-topbar.js";
-test("mobile header hides down, reveals up, ignores jitter and stays visible on desktop or near top", () => {
+test("mobile header moves proportionally, clamps at its height and resets on desktop or at page top", () => {
   const dom = new JSDOM("<header><button>Theme</button></header><main></main>");
   globalThis.window = dom.window;
   globalThis.document = dom.window.document;
@@ -29,24 +29,32 @@ test("mobile header hides down, reveals up, ignores jitter and stays visible on 
     window.dispatchEvent(new window.Event("scroll"));
     frame();
   };
-  const hidden = () =>
-    document.documentElement.classList.contains("topbar-hidden");
+  const offset = () =>
+    parseFloat(
+      document.documentElement.style.getPropertyValue("--topbar-offset"),
+    );
+  scroll(40);
+  assert.equal(offset(), 40);
+  scroll(55);
+  assert.equal(offset(), 55);
+  scroll(50);
+  assert.equal(offset(), 50);
   scroll(400);
-  assert.equal(hidden(), true);
-  scroll(397);
-  assert.equal(hidden(), true);
-  scroll(382);
-  assert.equal(hidden(), false);
-  scroll(410);
-  assert.equal(hidden(), true);
+  assert.equal(offset(), 120);
+  scroll(380);
+  assert.equal(offset(), 100);
+  scroll(375);
+  assert.equal(offset(), 95);
   scroll(20);
-  assert.equal(hidden(), false);
+  assert.equal(offset(), 0);
+  scroll(50);
+  assert.equal(offset(), 30);
   matches = false;
   scroll(500);
-  assert.equal(hidden(), false);
+  assert.equal(offset(), 0);
   matches = true;
   scroll(600);
-  assert.equal(hidden(), true);
+  assert.equal(offset(), 100);
   header.querySelector("button").focus();
-  assert.equal(hidden(), false);
+  assert.equal(offset(), 0);
 });

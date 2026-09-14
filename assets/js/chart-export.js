@@ -1,5 +1,7 @@
 import { escape, month, units } from "./format.js";
 import { finite } from "./analytics.js";
+import { exportComparisons } from "./chart-annotations.js";
+import { lockPageScroll } from "./modal-scroll.js";
 
 export const exportFilename = (title) =>
   "SBS_" +
@@ -56,9 +58,10 @@ export function buildExportOptions(payload, settings) {
   const palette = palettes[settings.background === "dark" ? "dark" : "light"];
   const option = payload.makeOptions(palette);
   const font = settings.fontSize;
-  const title = wrap(settings.title, settings.width - 64, font * 1.65);
+  const titleSize = Math.min(72, font * 1.65);
+  const title = wrap(settings.title, settings.width - 64, titleSize);
   const subtitle = wrap(settings.subtitle, settings.width - 64, font);
-  const titleHeight = title ? title.split("\n").length * font * 2 : 0;
+  const titleHeight = title ? title.split("\n").length * titleSize * 1.22 : 0;
   const subtitleHeight = subtitle
     ? subtitle.split("\n").length * font * 1.5
     : 0;
@@ -81,9 +84,9 @@ export function buildExportOptions(payload, settings) {
       top: 20,
       textStyle: {
         color: palette.ink,
-        fontSize: font * 1.65,
+        fontSize: titleSize,
         fontWeight: 650,
-        lineHeight: font * 2,
+        lineHeight: titleSize * 1.22,
       },
     },
     {
@@ -121,7 +124,7 @@ export function buildExportOptions(payload, settings) {
       spec.kind === "bar" && settings.labels === "all"
         ? font * 8
         : settings.labels === "selected" && spec.kind !== "bar"
-          ? 110
+          ? Math.max(110, font * 5.5)
           : 38,
     top: headingBottom + (spec.comparison && settings.legend ? font * 2.5 : 15),
     bottom: footerHeight + 40,
@@ -172,6 +175,7 @@ export function buildExportOptions(payload, settings) {
     option.xAxis.axisLabel.formatter = (v) =>
       settings.dateFormat === "year-month" ? v : month(v);
   }
+  const comparisons = exportComparisons(spec, settings.comparisons);
   option.series.forEach((series, index) => {
     const points = spec.comparison ? spec.series[index].points : spec.points;
     const valueLabel = (v) =>
@@ -211,49 +215,91 @@ export function buildExportOptions(payload, settings) {
         lineHeight: font,
       };
     }
-    // Label the exact chosen date, never a previous non-null observation.
-    const selectedIndex = points.findIndex(
-      (p) => p.date === settings.selectedDate,
+    const ownComparisons = comparisons.filter(
+      (c) => c.valid && c.seriesIndex === index,
     );
-    const selected = points[selectedIndex];
-    if (
-      settings.labels === "selected" &&
-      selected &&
-      finite(selected.value) &&
-      spec.kind !== "bar"
-    ) {
-      const value = series.data[selectedIndex];
-      series.markPoint = {
-        symbol: "circle",
-        symbolSize: 8,
-        itemStyle: {
-          color: series.lineStyle.color || palette.ink,
-          borderColor: palette.panel,
-          borderWidth: 2,
-        },
-        data: [
+    const dates = new Set(settings.selectedDates || [settings.selectedDate]);
+    for (const c of ownComparisons) {
+      dates.add(c.from);
+      dates.add(c.to);
+    }
+    const selectedPoints = points
+      .map((p, i) => ({ ...p, index: i }))
+      .filter((p) => dates.has(p.date) && finite(p.value));
+    series.markPoint = {
+      symbol: "circle",
+      symbolSize: 8,
+      itemStyle: {
+        color: series.lineStyle?.color || palette.ink,
+        borderColor: palette.panel,
+        borderWidth: 2,
+      },
+      data:
+        settings.labels === "selected" && spec.kind !== "bar"
+          ? selectedPoints.map((p) => ({
+              coord: [p.index, series.data[p.index]],
+              value: series.data[p.index],
+              label: {
+                show: true,
+                position: "top",
+                distance: 12,
+                color: palette.ink,
+                fontSize: font * 0.85,
+                lineHeight: font * 1.25,
+                backgroundColor:
+                  settings.background === "transparent"
+                    ? "transparent"
+                    : palette.panel,
+                padding: [4, 6],
+                borderRadius: 2,
+                formatter:
+                  month(p.date) + "\n" + valueLabel(series.data[p.index]),
+              },
+            }))
+          : [],
+    };
+    if (ownComparisons.length) {
+      series.markLine ||= { silent: true, symbol: "none", data: [] };
+      series.markLine.data ||= [];
+      for (const comparison of ownComparisons) {
+        const text = `Var. ${comparison.percent > 0 ? "+" : ""}${number(comparison.percent)}%`;
+        const color =
+          series.lineStyle?.color || series.itemStyle?.color || palette.ink;
+        series.markLine.data.push([
           {
-            coord: [selectedIndex, value],
-            value,
+            coord: [comparison.fromIndex, series.data[comparison.fromIndex]],
+            symbol: "none",
+            name: text,
+            lineStyle: {
+              color,
+              width: Math.max(1.5, settings.lineWidth),
+              type: comparison.style === "line" ? "dashed" : "solid",
+              opacity: 0.9,
+            },
             label: {
               show: true,
-              position: "top",
-              distance: 12,
+              formatter: text,
+              position: "middle",
+              rotate: 0,
               color: palette.ink,
-              fontSize: font * 0.85,
-              lineHeight: font * 1.25,
+              fontSize: font * 0.9,
+              lineHeight: font * 1.2,
               backgroundColor:
                 settings.background === "transparent"
                   ? "transparent"
                   : palette.panel,
-              padding: [4, 6],
+              padding: [5, 8],
               borderRadius: 2,
-              formatter: month(selected.date) + "\n" + valueLabel(value),
             },
           },
-        ],
-      };
-    } else series.markPoint = { data: [] };
+          {
+            coord: [comparison.toIndex, series.data[comparison.toIndex]],
+            symbol: comparison.style === "line" ? "none" : "arrow",
+            symbolSize: Math.max(8, font * 0.6),
+          },
+        ]);
+      }
+    }
   });
   return option;
 }
@@ -290,10 +336,15 @@ export function openChartExport(payload) {
       <div class="export-field-row"><label>Formato<select name="format"><option value="png">PNG</option><option value="jpeg">JPG</option><option value="svg">SVG · vectorial</option></select></label><label>Fondo<select name="background"><option value="light">Claro</option><option value="dark">Oscuro</option><option value="transparent">Transparente</option></select></label></div>
       <label>Tamaño<select name="preset"><option value="1600x900">Presentación · 1600 × 900</option><option value="1920x1080">Full HD · 1920 × 1080</option><option value="1200x800">Informe · 1200 × 800</option><option value="1200x1200">Cuadrado · 1200 × 1200</option><option value="custom">Personalizado</option></select></label>
       <div class="export-field-row"><label>Ancho · px<input name="width" type="number" min="640" max="3840" step="1" value="1600" required></label><label>Alto · px<input name="height" type="number" min="360" max="2160" step="1" value="900" required></label></div>
-      <div class="export-field-row"><label>Etiquetas<select name="labels"><option value="selected" ${isBar ? "hidden" : ""}>Fecha elegida</option><option value="all" ${isBar ? "selected" : ""}>Todos los valores</option><option value="none">Sin etiquetas</option></select></label><label>Decimales<select name="decimals"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label></div>
-      ${isBar ? "" : `<label>Fecha de la etiqueta<select name="selectedDate">${dates.map((d) => `<option value="${escape(d)}" ${d === date ? "selected" : ""}>${escape(month(d))}</option>`).join("")}</select></label>`}
+      <div class="export-field-row"><label>Etiquetas<select name="labels"><option value="selected" ${isBar ? "hidden" : ""}>Fechas elegidas</option><option value="all" ${isBar ? "selected" : ""}>Todos los valores</option><option value="none">Sin etiquetas</option></select></label><label>Decimales<select name="decimals"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label></div>
+      ${
+        isBar
+          ? ""
+          : `<fieldset class="export-label-dates"><legend>Fechas de etiqueta</legend><div class="export-date-chips"></div><div class="export-date-add"><select name="labelDate" aria-label="Fecha para agregar una etiqueta"></select><button type="button" data-add-date>Agregar</button></div></fieldset>
+      <fieldset class="export-growth"><legend>Variación entre fechas</legend><div class="export-growth-rows"></div><button type="button" data-add-growth>Agregar comparación</button><p class="export-control-note">Cada comparación también etiqueta sus extremos.</p></fieldset>`
+      }
       <details><summary>Más opciones</summary>
-        <div class="export-field-row"><label>Tamaño de texto<input name="fontSize" type="number" min="12" max="28" value="18" required></label><label>Fechas<select name="dateFormat" ${isBar ? "disabled" : ""}><option value="month">Jul 2026</option><option value="year-month">2026-07</option></select></label></div>
+        <div class="export-field-row"><label>Tamaño de texto<input name="fontSize" type="number" min="12" max="72" value="18" required></label><label>Fechas<select name="dateFormat" ${isBar ? "disabled" : ""}><option value="month">Jul 2026</option><option value="year-month">2026-07</option></select></label></div>
         ${isBar ? "" : `<div class="export-field-row"><label>Grosor de línea<input name="lineWidth" type="number" min="1" max="6" step="0.5" value="2.5"></label>${spec.comparison ? "" : '<label>Color de línea<input name="color" type="color" value="#1c7ff2"></label>'}</div>`}
         <label class="export-check"><input name="grid" type="checkbox" checked> Mostrar cuadrícula</label>
         ${spec.comparison ? '<label class="export-check"><input name="legend" type="checkbox" checked> Mostrar leyenda</label>' : '<label class="export-check"><input name="references" type="checkbox" checked> Promedio, máximo y mínimo</label>'}
@@ -302,6 +353,7 @@ export function openChartExport(payload) {
     </form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
     <footer class="chart-export-footer"><span>La imagen incluye el rango visible del gráfico.</span><button type="button" data-download>Descargar imagen</button></footer>`;
   const trigger = document.activeElement;
+  const unlockScroll = lockPageScroll();
   document.body.append(dialog);
   const form = dialog.querySelector("form");
   const field = (name) => form.elements.namedItem(name);
@@ -311,6 +363,9 @@ export function openChartExport(payload) {
     previewUrl,
     timer,
     busy = false;
+  const selectedDates = new Set(date ? [date] : []);
+  const comparisons = [];
+  let nextComparisonId = 0;
   const settings = () => ({
     title: field("title").value.trim(),
     subtitle: field("subtitle").value.trim(),
@@ -320,7 +375,8 @@ export function openChartExport(payload) {
     fontSize: Number(field("fontSize").value),
     background: field("background").value,
     labels: field("labels").value,
-    selectedDate: field("selectedDate")?.value,
+    selectedDates: [...selectedDates],
+    comparisons: comparisons.map((item) => ({ ...item })),
     format: field("format").value,
     decimals: Number(field("decimals").value),
     dateFormat: field("dateFormat").value,
@@ -339,8 +395,9 @@ export function openChartExport(payload) {
     transparent.disabled = field("format").value === "jpeg";
     if (transparent.disabled && field("background").value === "transparent")
       field("background").value = "light";
-    if (field("selectedDate"))
-      field("selectedDate").disabled = field("labels").value !== "selected";
+    if (dialog.querySelector(".export-label-dates"))
+      dialog.querySelector(".export-label-dates").disabled =
+        field("labels").value !== "selected";
     if (!form.checkValidity()) {
       status.textContent =
         "Revisa las dimensiones y el tamaño de texto indicados.";
@@ -348,6 +405,22 @@ export function openChartExport(payload) {
       return;
     }
     const s = settings();
+    const calculated = exportComparisons(spec, s.comparisons);
+    for (let i = 0; i < calculated.length; i++) {
+      const result = dialog.querySelector(
+        `[data-growth-result="${comparisons[i].id}"]`,
+      );
+      if (result)
+        result.textContent = calculated[i].valid
+          ? `Var. ${calculated[i].percent > 0 ? "+" : ""}${calculated[i].percent.toFixed(s.decimals)}%`
+          : calculated[i].reason;
+    }
+    const invalid = calculated.find((c) => !c.valid);
+    if (invalid) {
+      status.textContent = invalid.reason;
+      download.disabled = true;
+      return;
+    }
     const host = document.createElement("div");
     // Detached SVG renderer avoids any effect on the visible chart or page width.
     let chart;
@@ -379,14 +452,14 @@ export function openChartExport(payload) {
         : [{ points: spec.points }];
       const missing =
         s.labels === "selected" &&
-        selectedSeries.some(
-          (series) =>
-            !finite(
-              series.points.find((p) => p.date === s.selectedDate)?.value,
-            ),
+        selectedSeries.some((series) =>
+          s.selectedDates.some(
+            (date) =>
+              !finite(series.points.find((p) => p.date === date)?.value),
+          ),
         );
       status.textContent = missing
-        ? "Las series sin dato en esa fecha no muestran etiqueta."
+        ? "Las fechas sin dato en una serie no muestran etiqueta."
         : "Vista previa lista.";
       download.disabled = busy;
     } catch (error) {
@@ -397,6 +470,86 @@ export function openChartExport(payload) {
       chart?.dispose();
     }
   }
+  const dateOptions = (selected, available = dates) =>
+    available
+      .map(
+        (d) =>
+          `<option value="${escape(d)}" ${d === selected ? "selected" : ""}>${escape(month(d))}</option>`,
+      )
+      .join("");
+  function renderDates() {
+    if (isBar) return;
+    dialog.querySelector(".export-date-chips").innerHTML = [...selectedDates]
+      .sort()
+      .map(
+        (d) =>
+          `<button type="button" data-remove-date="${escape(d)}" aria-label="Quitar etiqueta ${escape(month(d))}">${escape(month(d))} ×</button>`,
+      )
+      .join("");
+    const available = dates.filter((d) => !selectedDates.has(d));
+    field("labelDate").innerHTML = dateOptions(available.at(-1), available);
+    dialog.querySelector("[data-add-date]").disabled = !available.length;
+  }
+  function renderComparisons() {
+    const allSeries = spec.comparison ? spec.series : [{ name: spec.label }];
+    dialog.querySelector(".export-growth-rows").innerHTML = comparisons
+      .map(
+        (item) =>
+          `<div class="export-growth-row" data-growth-row="${item.id}">
+        ${spec.comparison ? `<label>Serie<select data-growth-field="seriesIndex">${allSeries.map((series, i) => `<option value="${i}" ${i === Number(item.seriesIndex) ? "selected" : ""}>${escape(series.name)}</option>`).join("")}</select></label>` : ""}
+        <div class="export-field-row"><label>Desde<select data-growth-field="from">${dateOptions(item.from)}</select></label><label>Hasta<select data-growth-field="to">${dateOptions(item.to)}</select></label></div>
+        <label>Trazo<select data-growth-field="style"><option value="arrow" ${item.style === "arrow" ? "selected" : ""}>Flecha</option><option value="line" ${item.style === "line" ? "selected" : ""}>Línea</option></select></label>
+        <div class="export-growth-result"><span data-growth-result="${item.id}"></span><button type="button" data-remove-growth="${item.id}">Quitar</button></div>
+      </div>`,
+      )
+      .join("");
+  }
+  form.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    if (button.hasAttribute("data-add-date")) {
+      selectedDates.add(field("labelDate").value);
+      renderDates();
+    } else if (button.dataset.removeDate) {
+      selectedDates.delete(button.dataset.removeDate);
+      renderDates();
+    } else if (button.hasAttribute("data-add-growth")) {
+      const chosen = [...selectedDates].sort();
+      const to = chosen.at(-1) || dates.at(-1);
+      const priorYear = to ? `${Number(to.slice(0, 4)) - 1}${to.slice(4)}` : "";
+      const from =
+        chosen.length > 1
+          ? chosen[0]
+          : dates.includes(priorYear)
+            ? priorYear
+            : dates[0];
+      comparisons.push({
+        id: ++nextComparisonId,
+        seriesIndex: 0,
+        from,
+        to,
+        style: "arrow",
+      });
+      renderComparisons();
+    } else if (button.dataset.removeGrowth) {
+      const index = comparisons.findIndex(
+        (c) => c.id === Number(button.dataset.removeGrowth),
+      );
+      if (index >= 0) comparisons.splice(index, 1);
+      renderComparisons();
+    } else return;
+    renderPreview();
+  });
+  // Wheel gestures over the fixed preview scroll options instead of the page.
+  dialog.addEventListener(
+    "wheel",
+    (event) => {
+      if (event.ctrlKey || form.contains(event.target)) return;
+      form.scrollTop += event.deltaY * (event.deltaMode === 1 ? 16 : 1);
+      event.preventDefault();
+    },
+    { passive: false },
+  );
   form.addEventListener("submit", (event) => event.preventDefault());
   form.addEventListener("input", (event) => {
     if (["width", "height"].includes(event.target.name))
@@ -406,6 +559,13 @@ export function openChartExport(payload) {
     timer = setTimeout(renderPreview, 160);
   });
   form.addEventListener("change", (event) => {
+    if (event.target.dataset.growthField) {
+      const row = event.target.closest("[data-growth-row]");
+      const item = comparisons.find(
+        (c) => c.id === Number(row.dataset.growthRow),
+      );
+      if (item) item[event.target.dataset.growthField] = event.target.value;
+    }
     if (event.target.name === "preset" && event.target.value !== "custom") {
       const [width, height] = event.target.value.split("x");
       field("width").value = width;
@@ -487,11 +647,13 @@ export function openChartExport(payload) {
       clearTimeout(timer);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       dialog.remove();
+      unlockScroll();
       if (activeDialog === dialog) activeDialog = null;
       if (trigger?.isConnected) trigger.focus({ preventScroll: true });
     },
     { once: true },
   );
+  renderDates();
   dialog.showModal();
   renderPreview();
 }

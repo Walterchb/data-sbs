@@ -66,6 +66,10 @@ test("real ECharts mounts, exports, restores, remounts and disposes without bind
       value: dom.window[key],
       configurable: true,
     });
+  window.scrollTo = (x, y) => {
+    window.scrollX = x;
+    window.scrollY = y;
+  };
   window.HTMLDialogElement.prototype.showModal = function () {
     this.open = true;
   };
@@ -114,9 +118,18 @@ test("real ECharts mounts, exports, restores, remounts and disposes without bind
         dialog.querySelector('[role="status"]').textContent,
         "Vista previa lista.",
       );
+      if (kind !== "bar") {
+        dialog.querySelector("[data-add-growth]").click();
+        assert.equal(
+          dialog.querySelector("[data-growth-result]").textContent,
+          "Var. +200.00%",
+        );
+        assert.equal(dialog.querySelector("[data-download]").disabled, false);
+      }
       const svg = await (await fetch(dialog.querySelector("img").src)).text();
       assert.match(svg, /<svg/);
       assert.match(svg, /Activos/);
+      if (kind !== "bar") assert.match(svg, /Var\. \+200\.00%/);
       dialog.querySelector("[data-close]").click();
       assert.equal(document.querySelector("dialog"), null);
       if (kind !== "bar")

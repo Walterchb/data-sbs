@@ -94,3 +94,22 @@ test("comparison exports and bars apply monetary scaling once and preserve categ
     }
   }
 });
+
+test("multiple exact dates and growth arrows retain units, signs and source data", () => {
+  const option = buildExportOptions(single, {
+    ...settings,
+    selectedDates: ["2026-01", "2026-03", "2026-01"],
+    comparisons: [
+      { from: "2026-01", to: "2026-03", seriesIndex: 0, style: "arrow" },
+    ],
+  });
+  assert.equal(option.series[0].markPoint.data.length, 2);
+  const arrow = option.series[0].markLine.data.find(Array.isArray);
+  assert.match(arrow[0].label.formatter, /Var\. \+33\.33%/);
+  assert.deepEqual(arrow[0].coord, [0, 1500000]);
+  assert.deepEqual(arrow[1].coord, [2, 2000000]);
+  assert.equal(arrow[1].symbol, "arrow");
+  const big = buildExportOptions(single, { ...settings, fontSize: 72 });
+  assert.equal(big.textStyle.fontSize, 72);
+  assert.equal(big.title[0].textStyle.fontSize, 72);
+});
