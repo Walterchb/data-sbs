@@ -146,3 +146,28 @@ test("quick styles preserve data and dates while applying distinct typography, p
     "#ff0011",
   );
 });
+
+test("Bloomberg uses terminal area, straight lines and right scale; Economist has a thicker rule; Vox is removed", () => {
+  assert.equal(QUICK_STYLES.vox, undefined);
+  const option = buildExportOptions(single, {
+    ...settings,
+    ...quickStyleFields("bloomberg"),
+    quickStyle: "bloomberg",
+  });
+  assert.equal(option.yAxis.position, "right");
+  assert.equal(option.xAxis.splitLine.lineStyle.type, "dotted");
+  assert.equal(option.series[0].smooth, false);
+  assert.equal(option.series[0].lineStyle.color, "#f4f7f8");
+  assert.equal(option.series[0].areaStyle.color.colorStops[0].color, "#148698");
+  assert.equal(option.backgroundColor, "#000000");
+  assert.deepEqual(option.series[0].data, [1500000, null, 2000000]);
+  const economist = buildExportOptions(single, {
+    ...settings,
+    ...quickStyleFields("economist"),
+    quickStyle: "economist",
+  });
+  assert.equal(
+    economist.graphic.find((g) => g.type === "rect").shape.height,
+    10,
+  );
+});

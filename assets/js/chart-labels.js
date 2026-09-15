@@ -45,6 +45,9 @@ export function collectExportLabels(
     let y = right ? anchor[1] - height / 2 : anchor[1] - height - 14;
     x = Math.max(0, Math.min(settings.width - width, x));
     y = Math.max(0, Math.min(settings.height - height, y));
+    // Keep terminal labels inside the plot, clear of the values on the right axis.
+    if (option.yAxis.position === "right" && anchor[0] > settings.width * 0.6)
+      x = Math.max(0, anchor[0] - width - 12);
     // Separate nearby labels at their initial position. Manual positions are restored by the editor.
     for (
       let tries = 0;

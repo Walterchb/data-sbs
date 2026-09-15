@@ -2965,3 +2965,11 @@ dialog::backdrop {
 .drawing-canvas.pan-mode *, .drawing-canvas.pan-mode { cursor: grab !important; }
 .drawing-canvas.pan-mode:active { cursor: grabbing !important; }
 .preview-zoom [aria-pressed="true"] { background: var(--ink, #102033); color: var(--panel, #fff); }
+
+.chart-export-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.chart-export-actions [data-copy-chart] { background: var(--panel); color: var(--ink); border: 1px solid var(--line); min-width: 136px; }
+@media (max-width: 760px) {
+  .chart-export-footer > span { display: none; }
+  .chart-export-actions { width: 100%; }
+  .chart-export-actions button { flex: 1; min-width: 0; padding: 10px 8px; font-size: .8rem; }
+}

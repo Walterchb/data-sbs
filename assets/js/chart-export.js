@@ -66,10 +66,53 @@ const wrap = (text, width, size) => {
   return lines.join("\n");
 };
 
+export async function exportImageBlob(svg, s) {
+  let rasterUrl;
+  try {
+    let blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+    if (s.format === "svg") return blob;
+    const size = presentationSize(s.width, s.height, s);
+    const pixels = rasterSize(size.width, size.height, s.exportScale);
+    if (!pixels.valid)
+      throw new Error(
+        "La imagen supera 48 megapíxeles. Reduce la resolución o el tamaño.",
+      );
+    rasterUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = rasterUrl;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = pixels.width;
+    canvas.height = pixels.height;
+    const ctx = canvas.getContext("2d");
+    if (s.format === "jpeg") {
+      ctx.fillStyle =
+        s.frameType === "shadow"
+          ? "#fff"
+          : s.background === "dark"
+            ? palettes.dark.panel
+            : "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, `image/${s.format}`, 1),
+    );
+    if (!blob) throw new Error("No se pudo generar la imagen.");
+    return blob;
+  } finally {
+    if (rasterUrl) URL.revokeObjectURL(rasterUrl);
+  }
+}
+
 // Always build a separate chart, preserving the dashboard's zoom, palette and series.
 export function buildExportOptions(payload, settings) {
   const { spec, zoom } = payload;
   const style = QUICK_STYLES[settings.quickStyle];
+  const terminal = settings.quickStyle === "bloomberg";
   const palette = {
     ...palettes[settings.background === "dark" ? "dark" : "light"],
   };
@@ -93,7 +136,7 @@ export function buildExportOptions(payload, settings) {
     settings.labelBackground === false
       ? "transparent"
       : `rgba(${channels.join(",")},0.82)`;
-  const titleSize = Math.min(72, font * 1.65);
+  const titleSize = Math.min(72, font * (terminal ? 1.15 : 1.65));
   const title = wrap(settings.title, settings.width - 64, titleSize);
   const subtitle = wrap(settings.subtitle, settings.width - 64, font);
   const titleHeight = title ? title.split("\n").length * titleSize * 1.22 : 0;
@@ -118,7 +161,7 @@ export function buildExportOptions(payload, settings) {
       left: 27,
       top: 20,
       textStyle: {
-        color: palette.ink,
+        color: terminal ? "#ffb433" : palette.ink,
         fontSize: titleSize,
         fontWeight: style?.weight || 650,
         fontFamily: titleFont,
@@ -154,17 +197,14 @@ export function buildExportOptions(payload, settings) {
         },
       ]
     : [];
-  if (style)
+  if (style && !terminal)
     option.graphic.push({
       type: "rect",
       left: 32,
       top: 6,
       shape: {
-        width:
-          style === QUICK_STYLES.economist || style === QUICK_STYLES.vox
-            ? 76
-            : settings.width - 64,
-        height: style === QUICK_STYLES.vox ? 9 : 4,
+        width: style === QUICK_STYLES.economist ? 76 : settings.width - 64,
+        height: style === QUICK_STYLES.economist ? 10 : 4,
       },
       style: { fill: style.rule },
       silent: true,
@@ -226,6 +266,37 @@ export function buildExportOptions(payload, settings) {
     option.xAxis.axisLabel.formatter = (v) =>
       settings.dateFormat === "year-month" ? v : month(v);
   }
+  if (terminal) {
+    Object.assign(option.grid, {
+      show: true,
+      borderWidth: 1,
+      borderColor: "#66747a",
+      backgroundColor: {
+        type: "linear",
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
+        colorStops: [
+          { offset: 0, color: "#26373d" },
+          { offset: 1, color: "#050b0f" },
+        ],
+      },
+    });
+    for (const axis of [option.xAxis, option.yAxis]) {
+      axis.axisLabel.color = "#f3f3f3";
+      axis.axisLine = { show: true, lineStyle: { color: "#c5ced1", width: 1 } };
+      axis.axisTick = { show: true, lineStyle: { color: "#c5ced1" } };
+      axis.splitLine = {
+        show: settings.grid,
+        lineStyle: { color: "#77868c", type: "dotted", width: 1, opacity: 0.8 },
+      };
+    }
+    if (spec.kind !== "bar") {
+      option.yAxis.position = "right";
+      option.xAxis.axisLabel.showMinLabel = false;
+    }
+  }
   const comparisons = exportComparisons(spec, settings.comparisons);
   option.series.forEach((series, index) => {
     const points = spec.comparison ? spec.series[index].points : spec.points;
@@ -267,6 +338,25 @@ export function buildExportOptions(payload, settings) {
             opacity: style ? 0 : 0.12,
           };
       }
+    }
+    if (terminal && spec.kind !== "bar") {
+      series.smooth = false;
+      series.areaStyle = {
+        origin: "start",
+        opacity: spec.comparison ? 0.32 : 0.85,
+        color: {
+          type: "linear",
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: "#148698" },
+            { offset: 0.55, color: "#064763" },
+            { offset: 1, color: "#020728" },
+          ],
+        },
+      };
     }
     if (series.markLine) {
       series.markLine.data = settings.references
@@ -458,7 +548,7 @@ export function openChartExport(payload) {
       <label>Sombra<input type="range" name="frameShadow" min="0" max="100" value="25" aria-label="Intensidad de sombra"></label>
       <p class="export-control-note">Los fondos y patrones son vectoriales. 0 elimina la sombra o el redondeado. Solo sombra conserva la transparencia exterior en PNG y SVG; JPG usa fondo blanco.</p>
     </div></details></form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
-    <footer class="chart-export-footer"><span>La imagen incluye el rango visible del gráfico.</span><button type="button" data-download>Descargar imagen</button></footer>`;
+    <footer class="chart-export-footer"><span>La imagen incluye el rango visible del gráfico.</span><div class="chart-export-actions"><button type="button" data-copy-chart>Copiar gráfico</button><button type="button" data-download>Descargar imagen</button></div></footer>`;
   const trigger = document.activeElement;
   const unlockScroll = lockPageScroll();
   document.body.append(dialog);
@@ -466,6 +556,19 @@ export function openChartExport(payload) {
   const field = (name) => form.elements.namedItem(name);
   const status = dialog.querySelector(".export-preview-status");
   const download = dialog.querySelector("[data-download]");
+  const copy = dialog.querySelector("[data-copy-chart]");
+  const clipboardAvailable = !!(
+    window.isSecureContext &&
+    navigator.clipboard?.write &&
+    window.ClipboardItem
+  );
+  copy.title = clipboardAvailable
+    ? "Copiar como PNG a la resolución elegida"
+    : "Este navegador no permite copiar imágenes. Usa Descargar imagen.";
+  const setDisabled = (value) => {
+    download.disabled = value;
+    copy.disabled = value || !clipboardAvailable;
+  };
   let svg = "",
     previewUrl,
     timer,
@@ -612,7 +715,7 @@ export function openChartExport(payload) {
     if (!form.checkValidity()) {
       status.textContent =
         "Revisa las dimensiones y el tamaño de texto indicados.";
-      download.disabled = true;
+      setDisabled(true);
       return;
     }
     const s = settings();
@@ -621,7 +724,7 @@ export function openChartExport(payload) {
     if (s.format !== "svg" && !pixels.valid) {
       status.textContent =
         "La imagen supera 48 megapíxeles. Reduce la resolución, el tamaño o elige SVG.";
-      download.disabled = true;
+      setDisabled(true);
       return;
     }
     const calculated = exportComparisons(spec, s.comparisons);
@@ -637,7 +740,7 @@ export function openChartExport(payload) {
     const invalid = calculated.find((c) => !c.valid);
     if (invalid) {
       status.textContent = invalid.reason;
-      download.disabled = true;
+      setDisabled(true);
       return;
     }
     const host = document.createElement("div");
@@ -653,7 +756,7 @@ export function openChartExport(payload) {
       if (s.height - option.grid.top - option.grid.bottom < 120) {
         status.textContent =
           "Aumenta el alto o reduce el texto para dejar espacio al gráfico.";
-        download.disabled = true;
+        setDisabled(true);
         return;
       }
       const background = option.backgroundColor;
@@ -703,11 +806,11 @@ export function openChartExport(payload) {
       status.textContent = missing
         ? "Las fechas sin dato en una serie no muestran etiqueta."
         : "Vista previa lista.";
-      download.disabled = busy;
+      setDisabled(busy);
     } catch (error) {
       status.textContent =
         "No se pudo preparar la imagen. Ajusta las opciones e inténtalo nuevamente.";
-      download.disabled = true;
+      setDisabled(true);
     } finally {
       chart?.dispose();
     }
@@ -811,7 +914,7 @@ export function openChartExport(payload) {
   form.addEventListener("input", (event) => {
     if (["width", "height"].includes(event.target.name))
       field("preset").value = "custom";
-    download.disabled = true;
+    setDisabled(true);
     clearTimeout(timer);
     timer = setTimeout(renderPreview, 160);
   });
@@ -864,46 +967,49 @@ export function openChartExport(payload) {
     }
     renderPreview();
   });
+  copy.addEventListener("click", async () => {
+    if (busy || !clipboardAvailable) return;
+    renderPreview();
+    if (copy.disabled) return;
+    const s = { ...settings(), format: "png" };
+    const size = presentationSize(s.width, s.height, s);
+    if (!rasterSize(size.width, size.height, s.exportScale).valid) {
+      status.textContent =
+        "La copia supera 48 megapíxeles. Reduce la resolución o el tamaño.";
+      return;
+    }
+    busy = true;
+    setDisabled(true);
+    copy.textContent = "Copiando…";
+    try {
+      // Start clipboard.write in the user gesture; Safari accepts the pending PNG promise.
+      const png = exportImageBlob(svg, s);
+      png.catch(() => {});
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": png }),
+      ]);
+      if (dialog.open)
+        status.textContent = "Gráfico copiado. Pégalo con Ctrl+V o Pegar.";
+    } catch {
+      if (dialog.open)
+        status.textContent =
+          "No se pudo copiar. Revisa el permiso del portapapeles o usa Descargar imagen.";
+    } finally {
+      busy = false;
+      copy.textContent = "Copiar gráfico";
+      setDisabled(false);
+    }
+  });
   download.addEventListener("click", async () => {
     if (busy) return;
     renderPreview();
     if (download.disabled) return;
     busy = true;
-    download.disabled = true;
+    setDisabled(true);
     download.textContent = "Preparando…";
     const s = settings();
-    let rasterUrl;
     try {
-      let blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-      if (s.format !== "svg") {
-        rasterUrl = URL.createObjectURL(blob);
-        const img = new Image();
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          img.src = rasterUrl;
-        });
-        const canvas = document.createElement("canvas");
-        const size = presentationSize(s.width, s.height, s);
-        const pixels = rasterSize(size.width, size.height, s.exportScale);
-        canvas.width = pixels.width;
-        canvas.height = pixels.height;
-        const ctx = canvas.getContext("2d");
-        if (s.format === "jpeg") {
-          ctx.fillStyle =
-            s.frameType === "shadow"
-              ? "#fff"
-              : s.background === "dark"
-                ? palettes.dark.panel
-                : "#fff";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        blob = await new Promise((resolve) =>
-          canvas.toBlob(resolve, `image/${s.format}`, 1),
-        );
-        if (!blob) throw new Error("No image");
-      }
+      const blob = await exportImageBlob(svg, s);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -918,9 +1024,8 @@ export function openChartExport(payload) {
         status.textContent =
           "No se pudo descargar. Inténtalo nuevamente o elige SVG.";
     } finally {
-      if (rasterUrl) URL.revokeObjectURL(rasterUrl);
       busy = false;
-      download.disabled = false;
+      setDisabled(false);
       download.textContent = "Descargar imagen";
     }
   });

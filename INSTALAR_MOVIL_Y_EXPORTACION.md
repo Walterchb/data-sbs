@@ -87,7 +87,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 
 ## Validación
 
-52 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+53 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
@@ -104,7 +104,7 @@ Control de calidad en Chromium: se comparó el área del gráfico original a 1×
 
 ## Estilos rápidos y edición libre
 
-- «Ajustes rápidos» aparece antes de las opciones. Incluye McKinsey, The Economist, Goldman Sachs, J.P. Morgan, The New York Times, Bloomberg y Vox editorial. Son interpretaciones visuales con colores, jerarquía, formato y tipografías compatibles; no plantillas oficiales ni fuentes propietarias.
+- «Ajustes rápidos» aparece antes de las opciones. Incluye McKinsey, The Economist, Goldman Sachs, J.P. Morgan, The New York Times y Bloomberg. Son interpretaciones visuales con colores, jerarquía, formato y tipografías compatibles; no plantillas oficiales ni fuentes propietarias.
 - «Ninguno» está seleccionado al abrir y recupera los ajustes personalizados previos al primer estilo. Los títulos, fechas, valores, anotaciones y formato de descarga se conservan. Puedes cambiar las tipografías del título y del cuerpo por separado.
 - Solo una sección permanece abierta, incluida la edición de anotaciones. Su borde señala la configuración activa.
 - En PC, arrastra una zona libre de la vista ampliada con el mouse. «Mover vista» permite arrastrarla incluso sobre una anotación; desactívalo para editar los elementos. También puedes desplazarla con el botón central del mouse.
@@ -113,4 +113,15 @@ Control de calidad en Chromium: se comparó el área del gráfico original a 1×
 - Los patrones admiten opacidad de 0 a 100 %. Noche y Blanco se conservan; Océano, Piedra y Bosque sustituyen los otros fondos.
 - Se conserva la exportación directa a resolución final, PNG 2× predeterminado y SVG vectorial.
 
-Verificado en navegador: siete estilos y retorno a Ninguno, color de etiquetas en SVG, acordeón exclusivo, arrastre con mouse, extremos libres y flechas verticales, opacidad 100 %, descarga SVG y vista móvil.
+Verificado en navegador: seis estilos y retorno a Ninguno, color de etiquetas en SVG, acordeón exclusivo, arrastre con mouse, extremos libres y flechas verticales, opacidad 100 %, descarga SVG y vista móvil.
+
+
+## Copiar gráfico y ajustes editoriales
+
+- «Copiar gráfico» lleva la imagen directamente al portapapeles como PNG, con la resolución elegida (2× por defecto), fondos y anotaciones. Después, usa Ctrl+V o Pegar. Aunque selecciones SVG o JPG para descargar, la copia utiliza PNG para compatibilidad con aplicaciones.
+- La copia y la descarga se generan desde el mismo SVG a resolución final. Se mantiene la transparencia en PNG. Los navegadores que no admiten copiar imágenes conservan la descarga; si el permiso del portapapeles está bloqueado, el modal lo indica.
+- La franja roja de The Economist pasa de 4 a 10 px de alto.
+- Bloomberg se adapta a la captura proporcionada: fondo negro, área de trazado oscura, línea blanca sin suavizado, relleno azul degradado, cuadrícula punteada, eje derecho y título ámbar. Se conservan las series reales y sus unidades.
+- Se elimina Vox editorial del selector.
+
+Validado en Chromium: escritura y lectura reales del portapapeles como PNG, mismas dimensiones y píxeles que la descarga, copia con marco/anotaciones al seleccionar SVG, rechazo de permisos, navegador sin soporte y botones visibles en móvil.
