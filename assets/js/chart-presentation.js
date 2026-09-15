@@ -2,10 +2,10 @@ const color = (v, fallback) => (/^#[0-9a-f]{6}$/i.test(v || "") ? v : fallback);
 const bounded = (v, lo, hi, fallback) =>
   Number.isFinite(Number(v)) ? Math.max(lo, Math.min(hi, Number(v))) : fallback;
 export const PRESENTATION_PRESETS = {
-  blue: { name: "Azul", start: "#dceeff", end: "#9dc8f2" },
+  blue: { name: "Océano", start: "#537895", end: "#12334c" },
   white: { name: "Blanco", start: "#ffffff", end: "#ffffff", type: "solid" },
-  sand: { name: "Arena", start: "#fff3df", end: "#e9cfa8" },
-  mint: { name: "Menta", start: "#dcf5ed", end: "#9bcdc5" },
+  sand: { name: "Piedra", start: "#e7e4df", end: "#a8a29a" },
+  mint: { name: "Bosque", start: "#52796f", end: "#183f38" },
   night: { name: "Noche", start: "#233d60", end: "#0b1729" },
 };
 export function presentationGeometry(width, height, s = {}) {
@@ -62,7 +62,7 @@ export function patternMarkup(width, height, s = {}) {
   const n = bounded(s.patternSize, 10, 160, 32),
     a = n / 2;
   const ink = color(s.patternColor, "#ffffff"),
-    opacity = bounded(s.patternOpacity, 0, 60, 15) / 100;
+    opacity = bounded(s.patternOpacity, 0, 100, 15) / 100;
   const stroke = bounded(s.patternStroke, 0.5, 4, 1);
   const shapes = {
     dots: `<circle cx="${a}" cy="${a}" r="${stroke * 1.6}" fill="${ink}"/>`,

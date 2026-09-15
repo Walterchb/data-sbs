@@ -113,3 +113,36 @@ test("multiple exact dates and growth arrows retain units, signs and source data
   assert.equal(big.textStyle.fontSize, 72);
   assert.equal(big.title[0].textStyle.fontSize, 72);
 });
+
+import {
+  QUICK_STYLES,
+  quickStyleFields,
+  EXPORT_FONTS,
+} from "../assets/js/chart-styles.js";
+test("quick styles preserve data and dates while applying distinct typography, palettes and labels", () => {
+  const before = JSON.stringify(single.spec);
+  for (const [id, style] of Object.entries(QUICK_STYLES)) {
+    const config = { ...settings, ...quickStyleFields(id), quickStyle: id };
+    const option = buildExportOptions(single, config);
+    assert.deepEqual(option.series[0].data, [1500000, null, 2000000]);
+    assert.equal(
+      option.title[0].textStyle.fontFamily,
+      EXPORT_FONTS[style.titleFont],
+    );
+    assert.equal(option.backgroundColor, style.panel);
+    assert.equal(option.series[0].markPoint.data[0].label.color, style.ink);
+    assert.equal(option.dataZoom[0].start, 50);
+  }
+  assert.equal(JSON.stringify(single.spec), before);
+  const option = buildExportOptions(single, {
+    ...settings,
+    labelTextColor: "#ff0011",
+    comparisons: [{ from: "2026-01", to: "2026-03", style: "arrow" }],
+  });
+  assert.equal(option.series[0].label.color, "#ff0011");
+  assert.equal(option.series[0].markPoint.data[0].label.color, "#ff0011");
+  assert.equal(
+    option.series[0].markLine.data.find(Array.isArray)[0].label.color,
+    "#ff0011",
+  );
+});

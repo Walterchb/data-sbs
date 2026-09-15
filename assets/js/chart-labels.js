@@ -28,7 +28,8 @@ export function collectExportLabels(
       return;
     const fontSize = style.fontSize || settings.fontSize;
     const lines = String(text).split("\n");
-    if (ctx) ctx.font = `${fontSize}px Segoe UI, Arial, sans-serif`;
+    if (ctx)
+      ctx.font = `${fontSize}px ${style.fontFamily || option.textStyle?.fontFamily || "Segoe UI, Arial, sans-serif"}`;
     const width = Math.ceil(
       Math.max(
         ...lines.map(
@@ -73,6 +74,10 @@ export function collectExportLabels(
       anchorX: anchor[0],
       anchorY: anchor[1],
       fontSize,
+      fontFamily:
+        style.fontFamily ||
+        option.textStyle?.fontFamily ||
+        "Segoe UI, Arial, sans-serif",
       lineHeight: style.lineHeight || fontSize * 1.25,
       stroke: style.color || "#102033",
       background: style.backgroundColor || "transparent",
@@ -146,7 +151,7 @@ export function labelMarkup(item) {
       .split("\n")
       .map(
         (line, i) =>
-          `<text x="${x + w / 2}" y="${y + 4 + item.fontSize + i * item.lineHeight}" text-anchor="middle" fill="${escape(item.stroke)}" font-size="${item.fontSize}" font-family="Segoe UI, Arial, sans-serif">${escape(line)}</text>`,
+          `<text x="${x + w / 2}" y="${y + 4 + item.fontSize + i * item.lineHeight}" text-anchor="middle" fill="${escape(item.stroke)}" font-size="${item.fontSize}" font-family="${escape(item.fontFamily || "Segoe UI, Arial, sans-serif")}">${escape(line)}</text>`,
       )
       .join("")
   );

@@ -110,3 +110,19 @@ test("all six patterns use vector paths with bounded spacing, color, opacity and
     assert.doesNotMatch(svg, /<image/);
   }
 });
+
+test("patterns accept full opacity without rasterizing or shrinking the chart", () => {
+  const svg = frameChartSvg(
+    '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+    1600,
+    900,
+    {
+      frameType: "gradient",
+      framePattern: "dots",
+      patternOpacity: 100,
+      frameMargin: 48,
+    },
+  );
+  assert.match(svg, /data-presentation-pattern="true"[^>]*opacity="1"/);
+  assert.match(svg, /scale\(1\)/);
+});

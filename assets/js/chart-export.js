@@ -1,4 +1,9 @@
 import {
+  EXPORT_FONTS,
+  QUICK_STYLES,
+  quickStyleFields,
+} from "./chart-styles.js";
+import {
   PRESENTATION_PRESETS,
   PRESENTATION_PATTERNS,
   presentationSize,
@@ -64,7 +69,20 @@ const wrap = (text, width, size) => {
 // Always build a separate chart, preserving the dashboard's zoom, palette and series.
 export function buildExportOptions(payload, settings) {
   const { spec, zoom } = payload;
-  const palette = palettes[settings.background === "dark" ? "dark" : "light"];
+  const style = QUICK_STYLES[settings.quickStyle];
+  const palette = {
+    ...palettes[settings.background === "dark" ? "dark" : "light"],
+  };
+  if (style && settings.background === (style.background || "light"))
+    Object.assign(palette, {
+      ink: style.ink,
+      panel: style.panel,
+      grid: style.grid,
+      muted: style.muted,
+    });
+  const fontFamily = EXPORT_FONTS[settings.fontFamily] || EXPORT_FONTS.humanist;
+  const titleFont = EXPORT_FONTS[settings.titleFont] || fontFamily;
+  const labelTextColor = drawingColor(settings.labelTextColor, palette.ink);
   const option = payload.makeOptions(palette);
   const font = settings.fontSize;
   const labelColor = drawingColor(settings.labelBackgroundColor, palette.panel);
@@ -88,7 +106,7 @@ export function buildExportOptions(payload, settings) {
     settings.background === "transparent" ? "transparent" : palette.panel;
   // Use a font without the (c) symbol ligature in the exported canvas/SVG too.
   option.textStyle = {
-    fontFamily: "Segoe UI, Arial, sans-serif",
+    fontFamily,
     fontSize: font,
     color: palette.ink,
   };
@@ -102,7 +120,8 @@ export function buildExportOptions(payload, settings) {
       textStyle: {
         color: palette.ink,
         fontSize: titleSize,
-        fontWeight: 650,
+        fontWeight: style?.weight || 650,
+        fontFamily: titleFont,
         lineHeight: titleSize * 1.22,
       },
     },
@@ -129,12 +148,27 @@ export function buildExportOptions(payload, settings) {
           style: {
             text: footer,
             fill: palette.muted,
-            font: `${font * 0.8}px Segoe UI, Arial, sans-serif`,
+            font: `${font * 0.8}px ${fontFamily}`,
             lineHeight: font * 1.2,
           },
         },
       ]
     : [];
+  if (style)
+    option.graphic.push({
+      type: "rect",
+      left: 32,
+      top: 6,
+      shape: {
+        width:
+          style === QUICK_STYLES.economist || style === QUICK_STYLES.vox
+            ? 76
+            : settings.width - 64,
+        height: style === QUICK_STYLES.vox ? 9 : 4,
+      },
+      style: { fill: style.rule },
+      silent: true,
+    });
   option.grid = {
     left: 32,
     right:
@@ -175,7 +209,7 @@ export function buildExportOptions(payload, settings) {
   });
   const number = (v) => decimal.format(v);
   for (const axis of [option.xAxis, option.yAxis]) {
-    axis.axisLabel = { ...axis.axisLabel, fontSize: font * 0.85 };
+    axis.axisLabel = { ...axis.axisLabel, fontSize: font * 0.85, fontFamily };
     if (axis.type === "value") {
       axis.axisLabel.formatter = (v) =>
         number(
@@ -200,10 +234,19 @@ export function buildExportOptions(payload, settings) {
         !spec.comparison && spec.unit.endsWith("THOUSAND") ? v / 1000 : v,
       ) + (spec.unit === "PERCENT" ? "%" : "");
     series.animation = false;
+    if (style) {
+      const color = spec.comparison
+        ? style.colors[index % style.colors.length]
+        : settings.color;
+      series.itemStyle = { ...series.itemStyle, color };
+      series.lineStyle = { ...series.lineStyle, color };
+      if (series.areaStyle) series.areaStyle = { opacity: 0 };
+    }
     series.label = {
       show: settings.labels === "all",
       position: spec.kind === "bar" ? "right" : "top",
-      color: palette.ink,
+      color: labelTextColor,
+      fontFamily,
       fontSize: font * 0.8,
       backgroundColor: labelBackground,
       borderRadius: 3,
@@ -219,7 +262,10 @@ export function buildExportOptions(payload, settings) {
         series.lineStyle.color = settings.color;
         series.itemStyle = { color: settings.color };
         if (series.areaStyle)
-          series.areaStyle = { color: settings.color, opacity: 0.12 };
+          series.areaStyle = {
+            color: settings.color,
+            opacity: style ? 0 : 0.12,
+          };
       }
     }
     if (series.markLine) {
@@ -263,7 +309,8 @@ export function buildExportOptions(payload, settings) {
                 show: true,
                 position: "top",
                 distance: 12,
-                color: palette.ink,
+                color: labelTextColor,
+                fontFamily,
                 fontSize: font * 0.85,
                 lineHeight: font * 1.25,
                 backgroundColor: labelBackground,
@@ -301,7 +348,8 @@ export function buildExportOptions(payload, settings) {
               formatter: text,
               position: "middle",
               rotate: 0,
-              color: palette.ink,
+              color: labelTextColor,
+              fontFamily,
               fontSize: font * 0.9,
               lineHeight: font * 1.2,
               backgroundColor: labelBackground,
@@ -349,7 +397,16 @@ export function openChartExport(payload) {
   dialog.setAttribute("aria-labelledby", "chart-export-heading");
   dialog.innerHTML = `<header class="chart-export-head"><div><h2 id="chart-export-heading">Preparar imagen</h2><p>Configura la imagen y añade anotaciones en la vista previa.</p></div><button type="button" data-close aria-label="Cerrar">✕</button></header>
     <div class="chart-export-layout"><form class="chart-export-controls">
-      <details class="export-section" open><summary>1 · Título y fuente</summary><div class="export-section-body"><label>Título<input name="title" maxlength="160" value="${escape(spec.label)}"></label>
+      <details class="export-section" open><summary>Ajustes rápidos</summary><div class="export-section-body">
+      <label>Estilo<select name="quickStyle"><option value="none">Ninguno · personalizado</option>${Object.entries(
+        QUICK_STYLES,
+      )
+        .map(([id, p]) => `<option value="${id}">${p.name}</option>`)
+        .join("")}</select></label>
+      <p class="export-control-note" data-style-note>Elige una base visual y personalízala en las secciones siguientes. Ninguno recupera tus ajustes anteriores.</p>
+      <p class="export-control-note">Estilos inspirados en las referencias, con tipografías compatibles.</p>
+      </div></details>
+      <details class="export-section"><summary>1 · Título y fuente</summary><div class="export-section-body"><label>Título<input name="title" maxlength="160" value="${escape(spec.label)}"></label>
       <label>Subtítulo<input name="subtitle" maxlength="220" value="${escape(description)}"></label>
       <label>Fuente o nota<input name="source" maxlength="300" value="${escape("Fuente: SBS · " + description)}"></label></div></details>
       <details class="export-section"><summary>2 · Formato y tamaño</summary><div class="export-section-body"><div class="export-field-row"><label>Formato<select name="format"><option value="png">PNG</option><option value="jpeg">JPG</option><option value="svg">SVG · vectorial</option></select></label><label>Fondo<select name="background"><option value="light">Claro</option><option value="dark">Oscuro</option><option value="transparent">Transparente</option></select></label></div>
@@ -359,6 +416,7 @@ export function openChartExport(payload) {
       <div class="export-field-row"><label>Ancho · px<input name="width" type="number" min="640" max="3840" step="1" value="1600" required></label><label>Alto · px<input name="height" type="number" min="360" max="2160" step="1" value="900" required></label></div>
       </div></details><details class="export-section"><summary>3 · Etiquetas y comparaciones</summary><div class="export-section-body"><div class="export-field-row"><label>Etiquetas<select name="labels"><option value="selected" ${isBar ? "hidden" : ""}>Fechas elegidas</option><option value="all" ${isBar ? "selected" : ""}>Todos los valores</option><option value="none">Sin etiquetas</option></select></label><label>Decimales<select name="decimals"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label></div>
       <label class="export-check"><input type="checkbox" name="labelBackground" checked> Fondo sutil en las etiquetas</label>
+      <label>Color del texto de etiquetas<input name="labelTextColor" type="color" value="#102033"></label>
       <label>Color del fondo de etiquetas<input name="labelBackgroundColor" type="color" value="#ffffff"></label>
       <label class="export-check"><input name="labelConnectors" type="checkbox"> Líneas de unión en las etiquetas</label>
       <p class="export-control-note">Toca una etiqueta en la vista previa para moverla o ajustar su línea de unión.</p>
@@ -369,8 +427,9 @@ export function openChartExport(payload) {
       <fieldset class="export-growth"><legend>Variación entre fechas</legend><div class="export-growth-rows"></div><button type="button" data-add-growth>Agregar comparación</button><p class="export-control-note">Cada comparación también etiqueta sus extremos.</p></fieldset>`
       }
       </div></details><details class="export-section"><summary>4 · Estilo del gráfico</summary><div class="export-section-body">
-        <div class="export-field-row"><label>Tamaño de texto<input name="fontSize" type="number" min="12" max="72" value="18" required></label><label>Fechas<select name="dateFormat" ${isBar ? "disabled" : ""}><option value="month">Jul 2026</option><option value="year-month">2026-07</option></select></label></div>
+        <div class="export-field-row"><label>Tamaño de texto<input name="fontSize" type="number" min="12" max="72" value="28" required></label><label>Fechas<select name="dateFormat" ${isBar ? "disabled" : ""}><option value="month">Jul 2026</option><option value="year-month">2026-07</option></select></label></div>
         ${isBar ? "" : `<div class="export-field-row"><label>Grosor de línea<input name="lineWidth" type="number" min="1" max="6" step="0.5" value="2.5"></label>${spec.comparison ? "" : '<label>Color de línea<input name="color" type="color" value="#1c7ff2"></label>'}</div>`}
+        <div class="export-field-row"><label>Tipografía<select name="fontFamily"><option value="humanist">Segoe UI</option><option value="sans">Arial</option><option value="serif">Georgia</option><option value="times">Times New Roman</option><option value="mono">Consolas</option></select></label><label>Tipografía del título<select name="titleFont"><option value="humanist">Segoe UI</option><option value="sans">Arial</option><option value="serif">Georgia</option><option value="times">Times New Roman</option><option value="mono">Consolas</option></select></label></div>
         <label class="export-check"><input name="grid" type="checkbox" checked> Mostrar cuadrícula</label>
         ${spec.comparison ? '<label class="export-check"><input name="legend" type="checkbox" checked> Mostrar leyenda</label>' : '<label class="export-check"><input name="references" type="checkbox" checked> Promedio, máximo y mínimo</label>'}
       </div></details>
@@ -384,7 +443,7 @@ export function openChartExport(payload) {
             `<button type="button" data-frame-preset="${id}" style="--frame-start:${p.start};--frame-end:${p.end}" title="${p.name}"><span></span>${p.name}</button>`,
         )
         .join("")}</div>
-      <div class="export-field-row"><label>Color inicial<input type="color" name="frameStart" value="#dceeff"></label><label>Color final<input type="color" name="frameEnd" value="#9dc8f2"></label></div>
+      <div class="export-field-row"><label>Color inicial<input type="color" name="frameStart" value="#537895"></label><label>Color final<input type="color" name="frameEnd" value="#12334c"></label></div>
       <label>Dirección del degradado<select name="frameAngle"><option value="0">Horizontal</option><option value="90">Vertical</option><option value="45">Diagonal ↘</option><option value="135" selected>Diagonal ↙</option></select></label>
       <div class="export-field-row"><label>Margen exterior · px<input type="number" name="frameMargin" value="48" min="0" max="160" step="1"></label><label>Esquinas · px<input type="number" name="frameRadius" value="18" min="0" max="80" step="1"></label></div>
       <label class="export-check"><input type="checkbox" name="framePreserveSize" checked> Conservar el tamaño del gráfico</label>
@@ -395,7 +454,7 @@ export function openChartExport(payload) {
         .map(([id, name]) => `<option value="${id}">${name}</option>`)
         .join("")}</select></label>
       <div class="export-field-row"><label>Color del patrón<input type="color" name="patternColor" value="#64748b"></label><label>Separación · px<input type="number" name="patternSize" min="10" max="160" value="32"></label></div>
-      <div class="export-field-row"><label>Opacidad · %<input type="number" name="patternOpacity" min="0" max="60" value="15"></label><label>Grosor · px<input type="number" name="patternStroke" min="0.5" max="4" step="0.5" value="1"></label></div>
+      <div class="export-field-row"><label>Opacidad · %<input type="number" name="patternOpacity" min="0" max="100" value="15"></label><label>Grosor · px<input type="number" name="patternStroke" min="0.5" max="4" step="0.5" value="1"></label></div>
       <label>Sombra<input type="range" name="frameShadow" min="0" max="100" value="25" aria-label="Intensidad de sombra"></label>
       <p class="export-control-note">Los fondos y patrones son vectoriales. 0 elimina la sombra o el redondeado. Solo sombra conserva la transparencia exterior en PNG y SVG; JPG usa fondo blanco.</p>
     </div></details></form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
@@ -427,10 +486,41 @@ export function openChartExport(payload) {
     setPreviewImage,
   );
   const previewResize = initPreviewResize(dialog);
+  const sections = [...form.querySelectorAll(".export-section")];
+  for (const section of sections) {
+    section.setAttribute("name", "chart-export-settings");
+    section.addEventListener("toggle", () => {
+      if (section.open)
+        for (const other of sections) if (other !== section) other.open = false;
+    });
+  }
+  let customStyle = null;
+  const readStyleFields = () =>
+    Object.fromEntries(
+      Object.keys(quickStyleFields("mckinsey")).map((name) => {
+        const input = field(name);
+        return [
+          name,
+          input?.type === "checkbox" ? input.checked : input?.value,
+        ];
+      }),
+    );
+  const applyStyleFields = (values) => {
+    for (const [name, value] of Object.entries(values)) {
+      const input = field(name);
+      if (!input || value == null) continue;
+      if (input.type === "checkbox") input.checked = value;
+      else input.value = value;
+    }
+  };
   const selectedDates = new Set(date ? [date] : []);
   const comparisons = [];
   let nextComparisonId = 0;
   const settings = () => ({
+    quickStyle: field("quickStyle").value,
+    fontFamily: field("fontFamily").value,
+    titleFont: field("titleFont").value,
+    labelTextColor: field("labelTextColor").value,
     title: field("title").value.trim(),
     subtitle: field("subtitle").value.trim(),
     source: field("source").value.trim(),
@@ -666,8 +756,11 @@ export function openChartExport(payload) {
       field("frameType").value = preset.type || "gradient";
       field("frameStart").value = preset.start;
       field("frameEnd").value = preset.end;
-      field("patternColor").value =
-        button.dataset.framePreset === "night" ? "#ffffff" : "#64748b";
+      field("patternColor").value = ["night", "blue", "mint"].includes(
+        button.dataset.framePreset,
+      )
+        ? "#ffffff"
+        : "#64748b";
     } else if (button.hasAttribute("data-add-date")) {
       selectedDates.add(field("labelDate").value);
       renderDates();
@@ -723,6 +816,19 @@ export function openChartExport(payload) {
     timer = setTimeout(renderPreview, 160);
   });
   form.addEventListener("change", (event) => {
+    if (event.target.name === "quickStyle") {
+      const preset = quickStyleFields(event.target.value);
+      if (preset) {
+        customStyle ||= readStyleFields();
+        applyStyleFields(preset);
+      } else if (customStyle) {
+        applyStyleFields(customStyle);
+        customStyle = null;
+      }
+      dialog.querySelector("[data-style-note]").textContent =
+        QUICK_STYLES[event.target.value]?.note ||
+        "Tus ajustes personalizados. Puedes partir de un estilo y seguir editándolo.";
+    }
     if (event.target.dataset.growthField) {
       const row = event.target.closest("[data-growth-row]");
       const item = comparisons.find(
@@ -741,6 +847,14 @@ export function openChartExport(payload) {
           ? palettes.dark.panel
           : palettes.light.panel;
     }
+    if (
+      event.target.name === "background" &&
+      !field("labelTextColor").dataset.custom
+    )
+      field("labelTextColor").value =
+        event.target.value === "dark" ? palettes.dark.ink : palettes.light.ink;
+    if (event.target.name === "labelTextColor")
+      field("labelTextColor").dataset.custom = "true";
     if (event.target.name === "labelBackgroundColor")
       field("labelBackgroundColor").dataset.custom = "true";
     if (event.target.name === "preset" && event.target.value !== "custom") {

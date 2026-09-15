@@ -56,8 +56,20 @@ export function fitDrawing(item, width, height) {
     return item;
   }
   item.fontSize = clamp(number(item.fontSize, 28), 12, 72);
-  item.width = Math.round(clamp(number(item.width, 200), 20, width));
-  item.height = Math.round(clamp(number(item.height, 100), 8, height));
+  item.width = Math.round(
+    clamp(
+      number(item.width, 200),
+      ["line", "arrow"].includes(item.type) ? 1 : 20,
+      width,
+    ),
+  );
+  item.height = Math.round(
+    clamp(
+      number(item.height, 100),
+      ["line", "arrow"].includes(item.type) ? 1 : 8,
+      height,
+    ),
+  );
   if (item.type === "circle")
     item.height = item.width = Math.min(item.width, height);
   if (item.type === "text")
@@ -103,6 +115,43 @@ export function newDrawing(type, id, width, height) {
   if (type === "text") item.stroke = "#102033";
   return fitDrawing(item, width, height);
 }
+export function lineEndpoints(item) {
+  const { x, y, width: w, height: h } = item;
+  if (item.endpoints)
+    return item.endpoints.map(([a, b]) => [x + a * w, y + b * h]);
+  let start = [x, y + h],
+    end = [x + w, y];
+  if (item.direction === "down") {
+    start = [x, y];
+    end = [x + w, y + h];
+  }
+  if (item.direction === "horizontal") {
+    start = [x, y + h / 2];
+    end = [x + w, y + h / 2];
+  }
+  if (item.direction === "vertical") {
+    start = [x + w / 2, y + h];
+    end = [x + w / 2, y];
+  }
+  if (item.reverse) [start, end] = [end, start];
+  return [start, end];
+}
+export function moveLineEndpoint(item, index, point, width, height) {
+  const points = lineEndpoints(item);
+  points[index] = [clamp(point.x, 0, width), clamp(point.y, 0, height)];
+  item.x = Math.min(points[0][0], points[1][0]);
+  item.y = Math.min(points[0][1], points[1][1]);
+  item.width = Math.max(1, Math.abs(points[1][0] - points[0][0]));
+  item.height = Math.max(1, Math.abs(points[1][1] - points[0][1]));
+  item.endpoints = points.map(([x, y]) => [
+    (x - item.x) / item.width,
+    (y - item.y) / item.height,
+  ]);
+  item.direction = "free";
+  item.reverse = false;
+  return item;
+}
+
 function markup(item) {
   if (item.type === "label") return labelMarkup(item);
   const { x, y, width: w, height: h } = item;
@@ -114,21 +163,7 @@ function markup(item) {
   if (item.type === "rect" || item.type === "highlight")
     return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${item.type === "highlight" ? 4 : 0}" ${paint}/>`;
   if (item.type === "line" || item.type === "arrow") {
-    let start = [x, y + h],
-      end = [x + w, y];
-    if (item.direction === "down") {
-      start = [x, y];
-      end = [x + w, y + h];
-    }
-    if (item.direction === "horizontal") {
-      start = [x, y + h / 2];
-      end = [x + w, y + h / 2];
-    }
-    if (item.direction === "vertical") {
-      start = [x + w / 2, y + h];
-      end = [x + w / 2, y];
-    }
-    if (item.reverse) [start, end] = [end, start];
+    const [start, end] = lineEndpoints(item);
     const [x1, y1] = start,
       [x2, y2] = end;
     let head = "";
@@ -255,15 +290,20 @@ export function createDrawingEditor(preview, form, onChange) {
     <div class="export-field-row"><label>Fondo<input type="color" data-prop="fill"></label><label>Opacidad · %<input type="number" data-prop="fillOpacity" min="0" max="100" step="5"></label></div>
     <label class="export-check" data-for-text><input type="checkbox" data-prop="underline"> Subrayado resaltado detrás del texto</label>
     <label data-for-text>Color del resaltado<input type="color" data-prop="highlightColor"></label>
-    <label data-for-line>Orientación<select data-prop="direction"><option value="up">Ascendente</option><option value="down">Descendente</option><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></label>
+    <label data-for-line>Orientación<select data-prop="direction"><option value="free">Libre · arrastra los extremos</option><option value="up">Ascendente</option><option value="down">Descendente</option><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></label>
     <label class="export-check" data-for-line><input type="checkbox" data-prop="reverse"> Invertir dirección</label>
     <label data-for-manual>Capa<select data-prop="layer"><option value="back">Detrás del gráfico</option><option value="front">Delante del gráfico</option></select></label>
     <label class="export-check" data-for-label><input type="checkbox" data-prop="connector"> Línea de unión con su referencia</label>
     <button type="button" data-reset-label data-for-label>Restablecer posición</button>
     <div class="drawing-nudge"><select data-step aria-label="Paso de movimiento"><option value="1">1 px</option><option value="5">5 px</option><option value="10" selected>10 px</option><option value="25">25 px</option></select><button type="button" data-move="left" aria-label="Mover a la izquierda">←</button><button type="button" data-move="up" aria-label="Mover arriba">↑</button><button type="button" data-move="down" aria-label="Mover abajo">↓</button><button type="button" data-move="right" aria-label="Mover a la derecha">→</button></div>
     <div class="drawing-actions"><button type="button" data-layer="back">Al fondo</button><button type="button" data-layer="front">Al frente</button><button type="button" data-duplicate>Duplicar</button><button type="button" data-delete>Eliminar</button><button type="button" data-done>Listo</button></div>
-    <p class="export-control-note">Arrastra para mover; usa la esquina para cambiar el tamaño. La capa «Detrás del gráfico» coloca el elemento debajo del título, curvas y etiquetas.</p>`;
-  form.prepend(inspector);
+    <p class="export-control-note">Arrastra para mover; usa la esquina para cambiar el tamaño. En líneas y flechas, arrastra cualquiera de los dos extremos para girar libremente. La capa «Detrás del gráfico» coloca el elemento debajo del título, curvas y etiquetas.</p>`;
+  const inspectorSection = document.createElement("details");
+  inspectorSection.className = "export-section drawing-section";
+  inspectorSection.hidden = true;
+  inspectorSection.innerHTML = "<summary>Elemento seleccionado</summary>";
+  inspectorSection.append(inspector);
+  form.append(inspectorSection);
   const selected = () => items.find((item) => item.id === selectedId);
   const composed = () =>
     baseSvg
@@ -277,6 +317,7 @@ export function createDrawingEditor(preview, form, onChange) {
   function syncInspector() {
     const item = selected();
     inspector.hidden = !item;
+    inspectorSection.hidden = !item;
     toolbar.querySelector("[data-select-label]").disabled = !items.some(
       (i) => i.type === "label",
     );
@@ -337,6 +378,9 @@ export function createDrawingEditor(preview, form, onChange) {
     ].includes(item.type);
     inspector.querySelector('[data-prop="x"]').max = width - item.width;
     inspector.querySelector('[data-prop="y"]').max = height - item.height;
+    const isLine = ["line", "arrow"].includes(item.type);
+    inspector.querySelector('[data-prop="width"]').min = isLine ? 1 : 20;
+    inspector.querySelector('[data-prop="height"]').min = isLine ? 1 : 8;
     inspector.querySelector('[data-prop="width"]').max = width;
     inspector.querySelector('[data-prop="height"]').max = height;
   }
@@ -383,14 +427,25 @@ export function createDrawingEditor(preview, form, onChange) {
           (a.type === "label") - (b.type === "label") ||
           (a.layer !== "back") - (b.layer !== "back"),
       )
-      .map(
-        (item) =>
-          `<rect data-hit="${escape(item.id)}" x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="transparent" style="cursor:move"/>`,
-      )
+      .map((item) => {
+        if (["line", "arrow"].includes(item.type)) {
+          const [a, b] = lineEndpoints(item);
+          return `<line data-hit="${item.id}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="transparent" stroke-width="24" vector-effect="non-scaling-stroke" style="cursor:move"/>`;
+        }
+        return `<rect data-hit="${escape(item.id)}" x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="transparent" style="cursor:move"/>`;
+      })
       .join("");
     const item = selected();
-    if (item)
+    if (item && ["line", "arrow"].includes(item.type)) {
+      controls.innerHTML += lineEndpoints(item)
+        .map(
+          ([x, y], i) =>
+            `<circle data-endpoint="${i}" data-hit="${item.id}" cx="${x}" cy="${y}" r="${h * 0.8}" fill="#fff" stroke="#1c7ff2" stroke-width="2" vector-effect="non-scaling-stroke" style="cursor:crosshair"/>`,
+        )
+        .join("");
+    } else if (item) {
       controls.innerHTML += `<rect data-selection-frame="true" x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" fill="none" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="5 3" pointer-events="none"/>${item.type === "label" ? "" : `<rect data-resize="${escape(item.id)}" x="${item.x + item.width - h / 2}" y="${item.y + item.height - h / 2}" width="${h}" height="${h}" rx="${2 / scale}" fill="#fff" stroke="#1c7ff2" stroke-width="1.5" vector-effect="non-scaling-stroke" style="cursor:nwse-resize"/>`}`;
+    }
     artboard.append(controls);
   }
   function changed(sync = true) {
@@ -408,7 +463,10 @@ export function createDrawingEditor(preview, form, onChange) {
     selectedId = id;
     paint();
     syncInspector();
-    if (selected()) form.scrollTop = 0;
+    if (selected()) {
+      inspectorSection.open = true;
+      inspectorSection.scrollIntoView({ block: "nearest" });
+    }
   }
   toolbar.addEventListener("click", (event) => {
     if (event.target.closest("[data-select-label]")) {
@@ -426,7 +484,8 @@ export function createDrawingEditor(preview, form, onChange) {
     items.push(item);
     selectedId = item.id;
     changed();
-    form.scrollTop = 0;
+    inspectorSection.open = true;
+    inspectorSection.scrollIntoView({ block: "nearest" });
   });
   inspector.addEventListener("input", (event) => {
     event.stopPropagation();
@@ -438,6 +497,10 @@ export function createDrawingEditor(preview, form, onChange) {
       (input.value === "" || !input.validity.valid)
     )
       return;
+    if (input.dataset.prop === "direction" && input.value !== "free")
+      delete item.endpoints;
+    if (input.dataset.prop === "reverse" && item.endpoints)
+      item.endpoints.reverse();
     item[input.dataset.prop] =
       input.type === "checkbox"
         ? input.checked
@@ -522,6 +585,9 @@ export function createDrawingEditor(preview, form, onChange) {
       start: p,
       original: { ...selected() },
       resize: target.hasAttribute("data-resize"),
+      endpoint: target.hasAttribute("data-endpoint")
+        ? Number(target.dataset.endpoint)
+        : null,
     };
     canvas.classList.add("is-dragging");
     canvas.setPointerCapture(event.pointerId);
@@ -535,7 +601,9 @@ export function createDrawingEditor(preview, form, onChange) {
     if (!p || !item) return;
     const dx = p.x - drag.start.x,
       dy = p.y - drag.start.y;
-    if (drag.resize) {
+    if (drag.endpoint !== null) {
+      moveLineEndpoint(item, drag.endpoint, p, width, height);
+    } else if (drag.resize) {
       item.width = drag.original.width + dx;
       item.height = drag.original.height + dy;
     } else {

@@ -3,17 +3,20 @@ export function initPreviewViewport(canvas, surface, toolbar, cancelDrawing) {
   let zoom = 1,
     x = 0,
     y = 0,
-    gesture = null;
+    gesture = null,
+    panMode = false;
   const touches = new Map();
   const controls = document.createElement("div");
   controls.className = "preview-zoom";
   controls.innerHTML =
-    '<button type="button" data-zoom="out" aria-label="Alejar vista previa">−</button><button type="button" data-zoom="reset" title="Ajustar a la ventana">100%</button><button type="button" data-zoom="in" aria-label="Acercar vista previa">+</button>';
+    '<button type="button" data-zoom="out" aria-label="Alejar vista previa">−</button><button type="button" data-zoom="reset" title="Ajustar a la ventana">100%</button><button type="button" data-zoom="in" aria-label="Acercar vista previa">+</button><button type="button" data-zoom="pan" aria-pressed="false" title="Arrastra la imagen ampliada, incluso sobre anotaciones">Mover vista</button>';
   toolbar.after(controls);
   function paint() {
     const r = surface.getBoundingClientRect();
     x = Math.max(r.width * (1 - zoom), Math.min(0, x));
     y = Math.max(r.height * (1 - zoom), Math.min(0, y));
+    canvas.classList.toggle("can-pan", zoom > 1);
+    canvas.classList.toggle("pan-mode", panMode);
     canvas.style.transform = `translate(${x}px,${y}px) scale(${zoom})`;
     controls.querySelector("[data-zoom=reset]").textContent =
       `${Math.round(zoom * 100)}%`;
@@ -31,7 +34,11 @@ export function initPreviewViewport(canvas, surface, toolbar, cancelDrawing) {
     const b = e.target.closest("[data-zoom]");
     if (!b) return;
     const r = surface.getBoundingClientRect();
-    if (b.dataset.zoom === "reset") {
+    if (b.dataset.zoom === "pan") {
+      panMode = !panMode;
+      b.setAttribute("aria-pressed", String(panMode));
+      paint();
+    } else if (b.dataset.zoom === "reset") {
       zoom = 1;
       x = y = 0;
       paint();
@@ -57,7 +64,8 @@ export function initPreviewViewport(canvas, surface, toolbar, cancelDrawing) {
   canvas.addEventListener(
     "pointerdown",
     (e) => {
-      if (e.pointerType !== "touch") return;
+      if (e.pointerType === "mouse" && ![0, 1].includes(e.button)) return;
+      canvas.setPointerCapture(e.pointerId);
       touches.set(e.pointerId, local(e));
       if (touches.size >= 2) {
         const p = pair();
@@ -66,7 +74,13 @@ export function initPreviewViewport(canvas, surface, toolbar, cancelDrawing) {
         canvas.setPointerCapture(e.pointerId);
         e.preventDefault();
         e.stopImmediatePropagation();
-      } else if (zoom > 1 && !e.target.closest("[data-hit],[data-resize]")) {
+      } else if (
+        zoom > 1 &&
+        (panMode ||
+          e.button === 1 ||
+          !e.target.closest("[data-hit],[data-resize],[data-endpoint]"))
+      ) {
+        cancelDrawing();
         gesture = { ...local(e), oldX: x, oldY: y, pan: true };
         canvas.setPointerCapture(e.pointerId);
         e.preventDefault();
@@ -107,6 +121,10 @@ export function initPreviewViewport(canvas, surface, toolbar, cancelDrawing) {
     if (canvas.hasPointerCapture(e.pointerId))
       canvas.releasePointerCapture(e.pointerId);
     if (!touches.size) gesture = null;
+    else {
+      const remaining = [...touches.values()][0];
+      gesture = { ...remaining, oldX: x, oldY: y, pan: true };
+    }
     e.stopImmediatePropagation();
   };
   canvas.addEventListener("pointerup", end, true);

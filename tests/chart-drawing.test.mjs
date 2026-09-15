@@ -97,3 +97,35 @@ test("comparison stroke and label background are independent of the series color
     /rgba/,
   );
 });
+
+import { lineEndpoints, moveLineEndpoint } from "../assets/js/chart-drawing.js";
+test("line endpoints rotate freely through every quadrant and translate together", () => {
+  for (const type of ["line", "arrow"]) {
+    const item = newDrawing(type, 1, 1600, 900);
+    moveLineEndpoint(item, 0, { x: 800, y: 450 }, 1600, 900);
+    for (const [x, y] of [
+      [1000, 450],
+      [1000, 700],
+      [800, 700],
+      [500, 700],
+      [500, 450],
+      [500, 200],
+      [800, 200],
+      [1000, 200],
+    ]) {
+      moveLineEndpoint(item, 1, { x, y }, 1600, 900);
+      fitDrawing(item, 1600, 900);
+      assert.deepEqual(lineEndpoints(item), [
+        [800, 450],
+        [x, y],
+      ]);
+    }
+    item.x += 20;
+    item.y += 10;
+    assert.deepEqual(lineEndpoints(item), [
+      [820, 460],
+      [1020, 210],
+    ]);
+    assert.doesNotMatch(drawingMarkup([item]), /NaN|undefined/);
+  }
+});

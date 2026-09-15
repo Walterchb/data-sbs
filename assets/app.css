@@ -2954,3 +2954,14 @@ dialog::backdrop {
 .frame-presets button { display:block; }
 .frame-presets button span { width:100%; }
 .chart-export-dialog:focus { outline:none; }
+
+/* One clearly identified configuration at a time. */
+.chart-export-controls .export-section { border: 1px solid transparent; border-bottom-color: var(--line, #d9e3ec); border-radius: 8px; margin-bottom: 4px; }
+.chart-export-controls .export-section[open] { border-color: color-mix(in srgb, var(--muted, #64748b) 42%, transparent); background: color-mix(in srgb, var(--ink, #102033) 3%, transparent); }
+.chart-export-controls .export-section[open] > summary { font-weight: 700; }
+.chart-export-controls .drawing-inspector { border: 0; margin: 0; }
+.chart-export-controls .drawing-inspector > legend { display: none; }
+.drawing-canvas.can-pan { cursor: grab; }
+.drawing-canvas.pan-mode *, .drawing-canvas.pan-mode { cursor: grab !important; }
+.drawing-canvas.pan-mode:active { cursor: grabbing !important; }
+.preview-zoom [aria-pressed="true"] { background: var(--ink, #102033); color: var(--panel, #fff); }

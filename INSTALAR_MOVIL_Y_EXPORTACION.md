@@ -18,7 +18,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 - «Agregar comparación» permite elegir fecha inicial, final y flecha o línea. En gráficos de varias series, también se elige la serie. Se pueden agregar varias comparaciones.
 - La Var % se calcula como (valor final / valor inicial − 1) × 100. Se usan las observaciones exactas de cada fecha y la misma serie. Si faltan datos, el periodo declarado no coincide o la base es cero o negativa, se indica el motivo y se solicita corregir o quitar la comparación antes de exportar.
 - Las comparaciones etiquetan sus extremos cuando se elige «Fechas elegidas».
-- El tamaño de texto admite valores de 12 a 72. Para textos grandes, se puede aumentar el ancho/alto de la imagen. El editor avisa si el texto no deja espacio suficiente para el gráfico.
+- El tamaño de texto inicia en 28 y admite valores de 12 a 72. Para textos grandes, se puede aumentar el ancho/alto de la imagen. El editor avisa si el texto no deja espacio suficiente para el gráfico.
 - Se mantienen PNG, JPG y SVG, títulos, subtítulos, fondos, dimensiones, fuente, decimales, cuadrícula y opciones de línea. La imagen exportada conserva el rango visible.
 
 ## Anotaciones y colores
@@ -68,7 +68,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 ## Fondo y presentación
 
 - Nueva sección «5 · Fondo y presentación»: Sin marco, Solo sombra, Color sólido, Degradado lineal y Degradado radial.
-- Presets Azul, Blanco, Arena, Menta y Noche; colores inicial/final y dirección personalizables.
+- Presets Océano, Blanco, Piedra, Bosque y Noche; colores inicial/final y dirección personalizables.
 - Margen exterior, radio de esquinas y sombra regulables. Un valor de 0 elimina el redondeado o la sombra.
 - Por defecto, «Conservar el tamaño del gráfico» añade el margen alrededor y amplía el lienzo final sin reducir el gráfico ni sus anotaciones. Puedes desactivarlo para ajustar proporcionalmente todo al tamaño elegido.
 - El fondo del gráfico se elige en «Formato y tamaño». Al elegir Transparente, el fondo exterior se ve a través del gráfico y no se añade una tarjeta opaca con sombra.
@@ -87,7 +87,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 
 ## Validación
 
-49 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+52 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
@@ -100,3 +100,17 @@ Verificado en Chromium móvil/escritorio: añadir y quitar series, unidades mixt
 Se verificaron también el tirador con gesto táctil, sus límites y restablecimiento; fondos y presets; esquinas y sombras; arrastre de anotaciones dentro del marco y exportación a los tres formatos.
 
 Control de calidad en Chromium: se comparó el área del gráfico original a 1× con la misma área dentro del marco (sin redondeado ni sombra) y hubo 0 diferencias de píxeles. Se comprobaron además la transparencia de Solo sombra, los seis patrones vectoriales y las dimensiones exactas de las salidas a 2× y 3×.
+
+
+## Estilos rápidos y edición libre
+
+- «Ajustes rápidos» aparece antes de las opciones. Incluye McKinsey, The Economist, Goldman Sachs, J.P. Morgan, The New York Times, Bloomberg y Vox editorial. Son interpretaciones visuales con colores, jerarquía, formato y tipografías compatibles; no plantillas oficiales ni fuentes propietarias.
+- «Ninguno» está seleccionado al abrir y recupera los ajustes personalizados previos al primer estilo. Los títulos, fechas, valores, anotaciones y formato de descarga se conservan. Puedes cambiar las tipografías del título y del cuerpo por separado.
+- Solo una sección permanece abierta, incluida la edición de anotaciones. Su borde señala la configuración activa.
+- En PC, arrastra una zona libre de la vista ampliada con el mouse. «Mover vista» permite arrastrarla incluso sobre una anotación; desactívalo para editar los elementos. También puedes desplazarla con el botón central del mouse.
+- Las flechas y líneas manuales tienen tiradores en ambos extremos, con orientación libre en cualquier dirección. Arrastra el trazo para moverlo completo; el panel conserva los controles en píxeles y las orientaciones habituales.
+- «Color del texto de etiquetas» se aplica a fechas, valores y porcentajes de variación, independientemente del fondo sutil.
+- Los patrones admiten opacidad de 0 a 100 %. Noche y Blanco se conservan; Océano, Piedra y Bosque sustituyen los otros fondos.
+- Se conserva la exportación directa a resolución final, PNG 2× predeterminado y SVG vectorial.
+
+Verificado en navegador: siete estilos y retorno a Ninguno, color de etiquetas en SVG, acordeón exclusivo, arrastre con mouse, extremos libres y flechas verticales, opacidad 100 %, descarga SVG y vista móvil.
