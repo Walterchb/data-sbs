@@ -320,3 +320,39 @@ test("Paper adapts automatic line and gradient to dark backgrounds and keeps cus
     ["#f0f3f7", "#ccd7e0", "#aabac8", "#8fa2b4"],
   );
 });
+
+import { PAPER_SERIES_STYLES } from "../assets/js/chart-styles.js";
+test("Paper has eight distinct series signatures mirrored by a line-based legend with enough sample width", () => {
+  assert.equal(
+    new Set(PAPER_SERIES_STYLES.map((s) => JSON.stringify(s))).size,
+    8,
+  );
+  const series = Array.from({ length: 8 }, (_, i) => ({
+    name: `Banco ${i + 1}`,
+    points,
+    color: "#222222",
+  }));
+  for (const background of ["light", "dark"]) {
+    const payload = {
+      spec: { comparison: true, series, unit: "PEN_THOUSAND", kind: "line" },
+      makeOptions: (p) => comparisonOptions(series, "PEN_THOUSAND", "Paper", p),
+    };
+    const option = buildExportOptions(payload, {
+      ...settings,
+      ...quickStyleFields("paper"),
+      quickStyle: "paper",
+      background,
+    });
+    assert.equal(option.legend.icon, "inherit");
+    assert.ok(option.legend.itemWidth >= 64);
+    const entries = option.legend.data.filter((e) => e !== "\n");
+    assert.equal(entries.length, 8);
+    option.series.forEach((s, i) => {
+      assert.deepEqual(s.lineStyle.type, PAPER_SERIES_STYLES[i].lineType);
+      assert.equal(s.symbol, PAPER_SERIES_STYLES[i].symbol);
+      assert.equal(entries[i].name, series[i].name);
+      assert.equal(entries[i].itemStyle.opacity, s.symbol === "none" ? 0 : 1);
+      assert.deepEqual(s.data, [1500, null, 2000]);
+    });
+  }
+});

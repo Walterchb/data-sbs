@@ -87,7 +87,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 
 ## Validación
 
-58 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+59 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
@@ -156,3 +156,13 @@ Verificado en navegador: nombres del selector, relleno activado/desactivado en l
 - La cuadrícula de ambos ejes es punteada, fina y de baja opacidad, adaptada a claro/oscuro. Se activa al elegir Paper y puede ocultarse con «Mostrar cuadrícula».
 
 Verificado: contraste de línea, relleno y etiquetas; comparaciones en oscuro; retorno a claro; cuadrícula activada/desactivada; nombres y exportación SVG.
+
+
+## Leyenda de Paper para ocho series
+
+- En gráficos de líneas, Paper reemplaza los recuadros por muestras de línea con los mismos trazos y marcadores de cada serie.
+- Ocho combinaciones, en orden: continua; trazos largos; trazos cortos; raya-punto; continua con cuadrados; continua con triángulos; continua con círculos; trazos largos con rombos.
+- Las muestras de la leyenda son más anchas. Su espacio se incluye al calcular las filas para que la leyenda siga separada del gráfico.
+- La representación usa trazos vectoriales y se conserva en claro/oscuro, copia y descarga. Las leyendas de gráficos de barras conservan sus símbolos de barras.
+
+Verificado con ocho series en el motor gráfico real: trazos y marcadores de la leyenda corresponden a cada línea, sin marcadores extra en las cuatro primeras muestras. Revisión visual clara/oscura, SVG y móvil.

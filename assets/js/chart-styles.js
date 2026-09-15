@@ -144,3 +144,15 @@ export function quickStyleFields(id) {
     preset: p.width === 1600 ? "1600x900" : "custom",
   };
 }
+
+// Eight distinct line/marker combinations, also readable without color.
+export const PAPER_SERIES_STYLES = [
+  { lineType: "solid", symbol: "none" },
+  { lineType: [12, 6], symbol: "none" },
+  { lineType: [4, 4], symbol: "none" },
+  { lineType: [10, 4, 2, 4], symbol: "none" },
+  { lineType: "solid", symbol: "rect" },
+  { lineType: "solid", symbol: "triangle" },
+  { lineType: "solid", symbol: "circle" },
+  { lineType: [12, 6], symbol: "diamond" },
+];

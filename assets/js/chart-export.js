@@ -1,5 +1,6 @@
 import {
   EXPORT_FONTS,
+  PAPER_SERIES_STYLES,
   QUICK_STYLES,
   quickStyleFields,
 } from "./chart-styles.js";
@@ -109,7 +110,13 @@ export async function exportImageBlob(svg, s) {
 }
 
 // Match legend wrapping to its actual font and reserve every row above the plot.
-export function exportLegendLayout(names, width, fontSize, fontFamily) {
+export function exportLegendLayout(
+  names,
+  width,
+  fontSize,
+  fontFamily,
+  itemWidth = 25,
+) {
   const ctx =
     typeof window !== "undefined" &&
     typeof window.CanvasRenderingContext2D === "function"
@@ -119,7 +126,6 @@ export function exportLegendLayout(names, width, fontSize, fontFamily) {
   const measure = (text) =>
     ctx ? ctx.measureText(text).width : text.length * fontSize * 0.62;
   const available = width - 64,
-    itemWidth = 25,
     gap = 20,
     lineHeight = Math.ceil(fontSize * 1.35);
   const textWidth = Math.min(440, available - itemWidth - 18);
@@ -298,6 +304,7 @@ export function buildExportOptions(payload, settings) {
           settings.width,
           font * 0.85,
           fontFamily,
+          paper && spec.kind !== "bar" ? Math.max(64, font * 2.4) : 25,
         )
       : null;
   const legendTop = headingBottom + Math.max(24, font * 0.8);
@@ -337,8 +344,8 @@ export function buildExportOptions(payload, settings) {
       left: 32,
       right: 32,
       padding: 0,
-      itemWidth: 25,
-      itemHeight: 12,
+      itemWidth: legend?.itemWidth || 25,
+      itemHeight: paper && spec.kind !== "bar" ? Math.max(14, font * 0.55) : 12,
       itemGap: legend?.gap || 20,
       data: legend?.data,
       formatter: legend?.formatter,
@@ -349,6 +356,25 @@ export function buildExportOptions(payload, settings) {
         lineHeight: legend?.lineHeight,
       },
     });
+  if (option.legend && paper && spec.kind !== "bar") {
+    option.legend.icon = "inherit";
+    option.legend.lineStyle = {
+      width: "inherit",
+      color: "inherit",
+      type: "inherit",
+      opacity: "inherit",
+    };
+    option.legend.data = legend?.data.map((name) => {
+      if (name === "\n") return name;
+      const index = option.series.findIndex((series) => series.name === name);
+      const encoding = PAPER_SERIES_STYLES[index % PAPER_SERIES_STYLES.length];
+      return {
+        name,
+        icon: "inherit",
+        itemStyle: { opacity: encoding.symbol === "none" ? 0 : 1 },
+      };
+    });
+  }
   const decimal = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: settings.decimals,
     maximumFractionDigits: settings.decimals,
@@ -524,10 +550,13 @@ export function buildExportOptions(payload, settings) {
       }
       if (paper) {
         series.smooth = false;
-        series.lineStyle.type = ["solid", "dashed", "dotted"][index % 3];
-        series.symbol = ["circle", "rect", "triangle", "diamond"][index % 4];
-        series.symbolSize = 4;
-        series.showSymbol = true;
+        const encoding =
+          PAPER_SERIES_STYLES[index % PAPER_SERIES_STYLES.length];
+        series.lineStyle.type = encoding.lineType;
+        series.lineStyle.cap = "butt";
+        series.symbol = encoding.symbol;
+        series.symbolSize = Math.max(6, font * 0.24);
+        series.showSymbol = encoding.symbol !== "none";
       }
       if (settings.areaFill === false) series.areaStyle = { opacity: 0 };
     }
