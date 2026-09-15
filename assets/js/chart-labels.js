@@ -45,26 +45,51 @@ export function collectExportLabels(
     let y = right ? anchor[1] - height / 2 : anchor[1] - height - 14;
     x = Math.max(0, Math.min(settings.width - width, x));
     y = Math.max(0, Math.min(settings.height - height, y));
-    // Keep terminal labels inside the plot, clear of the values on the right axis.
-    if (option.yAxis.position === "right" && anchor[0] > settings.width * 0.6)
-      x = Math.max(0, anchor[0] - width - 12);
-    // Separate nearby labels at their initial position. Manual positions are restored by the editor.
-    for (
-      let tries = 0;
-      tries < 12 &&
+    const topLimit = Number(option.grid?.top) + 8 || 0;
+    const bottomLimit = Math.max(
+      topLimit,
+      settings.height -
+        Number(option.grid?.bottom || 0) -
+        Number(option.xAxis?.axisLabel?.margin || 0) -
+        settings.fontSize * 1.1 -
+        height,
+    );
+    y = Math.max(topLimit, Math.min(bottomLimit, y));
+    const overlaps = (x, y) =>
       labels.some(
         (l) =>
-          x < l.x + l.width + 4 &&
-          x + width + 4 > l.x &&
-          y < l.y + l.height + 4 &&
-          y + height + 4 > l.y,
+          x < l.x + l.width + 6 &&
+          x + width + 6 > l.x &&
+          y < l.y + l.height + 6 &&
+          y + height + 6 > l.y,
       );
-      tries++
-    ) {
-      y =
-        y >= height + 6
-          ? y - height - 6
-          : Math.min(settings.height - height, y + height + 20);
+    // Find a nearby free position instead of alternating between two occupied rows.
+    // Manual positions are restored by the editor after the initial layout.
+    if (overlaps(x, y)) {
+      const candidates = [];
+      for (let col = -2; col <= 2; col++)
+        for (let row = -12; row <= 12; row++) {
+          const cx = x + col * (width + 12),
+            cy = y + row * (height + 8);
+          if (
+            cx >= 0 &&
+            cx + width <= settings.width &&
+            cy >= topLimit &&
+            cy <= bottomLimit
+          )
+            candidates.push({
+              x: cx,
+              y: cy,
+              distance: Math.hypot(cx - x, cy - y),
+            });
+        }
+      const free = candidates
+        .sort((a, b) => a.distance - b.distance)
+        .find((p) => !overlaps(p.x, p.y));
+      if (free) {
+        x = free.x;
+        y = free.y;
+      }
     }
     labels.push({
       id,
@@ -84,7 +109,7 @@ export function collectExportLabels(
       lineHeight: style.lineHeight || fontSize * 1.25,
       stroke: style.color || "#102033",
       background: style.backgroundColor || "transparent",
-      connector: !!settings.labelConnectors,
+      connector: settings.labelConnectors !== false,
       layer: "front",
     });
   }

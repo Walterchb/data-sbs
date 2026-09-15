@@ -89,7 +89,7 @@ export const QUICK_STYLES = {
   },
   bloomberg: {
     name: "Bloomberg",
-    note: "Terminal clásico: línea blanca, área azul, cuadrícula punteada y escala derecha.",
+    note: "Terminal clásico: línea blanca, área azul, cuadrícula punteada y escala izquierda.",
     titleFont: "mono",
     fontFamily: "sans",
     color: "#f4f7f8",

@@ -87,7 +87,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 
 ## Validación
 
-53 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+55 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
@@ -121,7 +121,18 @@ Verificado en navegador: seis estilos y retorno a Ninguno, color de etiquetas en
 - «Copiar gráfico» lleva la imagen directamente al portapapeles como PNG, con la resolución elegida (2× por defecto), fondos y anotaciones. Después, usa Ctrl+V o Pegar. Aunque selecciones SVG o JPG para descargar, la copia utiliza PNG para compatibilidad con aplicaciones.
 - La copia y la descarga se generan desde el mismo SVG a resolución final. Se mantiene la transparencia en PNG. Los navegadores que no admiten copiar imágenes conservan la descarga; si el permiso del portapapeles está bloqueado, el modal lo indica.
 - La franja roja de The Economist pasa de 4 a 10 px de alto.
-- Bloomberg se adapta a la captura proporcionada: fondo negro, área de trazado oscura, línea blanca sin suavizado, relleno azul degradado, cuadrícula punteada, eje derecho y título ámbar. Se conservan las series reales y sus unidades.
+- Bloomberg se adapta a la captura proporcionada: fondo negro, área de trazado oscura, línea blanca sin suavizado, relleno azul degradado, cuadrícula punteada, eje izquierdo y título ámbar. Se conservan las series reales y sus unidades.
 - Se elimina Vox editorial del selector.
 
 Validado en Chromium: escritura y lectura reales del portapapeles como PNG, mismas dimensiones y píxeles que la descarga, copia con marco/anotaciones al seleccionar SVG, rechazo de permisos, navegador sin soporte y botones visibles en móvil.
+
+
+## Contraste y espacio entre elementos
+
+- Bloomberg vuelve a la escala izquierda. Su título usa el mismo tamaño destacado que los otros estilos.
+- El fondo Claro adapta los ejes, título, cuadrícula, área y color inicial de la línea; el modo Oscuro mantiene el aspecto de terminal.
+- Se amplía la separación entre subtítulo, leyenda y gráfico. La leyenda organiza los nombres en filas según el ancho disponible y la tipografía; cada fila reserva espacio antes del área de datos.
+- Los meses del eje X y las cifras del eje Y tienen márgenes mayores. Las etiquetas se colocan inicialmente debajo de la leyenda y buscan posiciones libres; sus posiciones manuales siguen conservándose.
+- «Líneas de unión en las etiquetas» está activado al abrir. Puedes desactivarlo para todas o para la etiqueta elegida.
+
+Verificado en navegador: Bloomberg claro/oscuro, título ampliado, eje izquierdo, conexiones predeterminadas, leyenda de ocho series y separación medida en lienzos anchos y estrechos.

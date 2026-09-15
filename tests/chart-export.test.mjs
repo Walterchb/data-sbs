@@ -147,14 +147,14 @@ test("quick styles preserve data and dates while applying distinct typography, p
   );
 });
 
-test("Bloomberg uses terminal area, straight lines and right scale; Economist has a thicker rule; Vox is removed", () => {
+test("Bloomberg uses terminal area, straight lines and left scale; Economist has a thicker rule; Vox is removed", () => {
   assert.equal(QUICK_STYLES.vox, undefined);
   const option = buildExportOptions(single, {
     ...settings,
     ...quickStyleFields("bloomberg"),
     quickStyle: "bloomberg",
   });
-  assert.equal(option.yAxis.position, "right");
+  assert.equal(option.yAxis.position, "left");
   assert.equal(option.xAxis.splitLine.lineStyle.type, "dotted");
   assert.equal(option.series[0].smooth, false);
   assert.equal(option.series[0].lineStyle.color, "#f4f7f8");
@@ -170,4 +170,55 @@ test("Bloomberg uses terminal area, straight lines and right scale; Economist ha
     economist.graphic.find((g) => g.type === "rect").shape.height,
     10,
   );
+});
+
+test("Bloomberg light theme changes axes, plot and automatic line color while retaining title hierarchy", () => {
+  const config = {
+    ...settings,
+    ...quickStyleFields("bloomberg"),
+    quickStyle: "bloomberg",
+  };
+  const dark = buildExportOptions(single, config);
+  const light = buildExportOptions(single, { ...config, background: "light" });
+  assert.equal(light.yAxis.position, "left");
+  assert.equal(light.xAxis.axisLabel.color, "#102033");
+  assert.equal(light.yAxis.axisLabel.color, "#102033");
+  assert.equal(light.series[0].lineStyle.color, "#155e75");
+  assert.equal(light.series[0].markPoint.data[0].label.color, "#102033");
+  assert.equal(light.grid.backgroundColor.colorStops[1].color, "#ffffff");
+  assert.equal(dark.series[0].lineStyle.color, "#f4f7f8");
+  assert.equal(light.title[0].textStyle.fontSize, 28 * 1.65);
+  assert.ok(light.xAxis.axisLabel.margin >= 18);
+});
+
+import { exportLegendLayout } from "../assets/js/chart-export.js";
+test("legend reserves multiple rows and wrapped names as series increase or output narrows", () => {
+  const names = Array.from(
+    { length: 8 },
+    (_, i) =>
+      `Banco ${i + 1} · Créditos directos y obligaciones con el público`,
+  );
+  const full = exportLegendLayout(names, 1600, 24, "Arial");
+  const narrow = exportLegendLayout(names, 900, 24, "Arial");
+  const one = exportLegendLayout(names.slice(0, 1), 1600, 24, "Arial");
+  assert.ok(full.height > one.height);
+  assert.ok(narrow.height > full.height);
+  assert.deepEqual(
+    full.data.filter((n) => n !== "\n"),
+    names,
+  );
+  const series = names.map((name) => ({ name, points, color: "#2251ff" }));
+  const payload = {
+    spec: { comparison: true, series, unit: "PEN_THOUSAND" },
+    makeOptions: (p) =>
+      comparisonOptions(series, "PEN_THOUSAND", "Créditos", p),
+  };
+  const option = buildExportOptions(payload, { ...settings, fontSize: 28 });
+  assert.ok(option.grid.top > option.legend.top + full.height);
+  const noLegend = buildExportOptions(payload, {
+    ...settings,
+    fontSize: 28,
+    legend: false,
+  });
+  assert.ok(noLegend.grid.top < option.grid.top);
 });

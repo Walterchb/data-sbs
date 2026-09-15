@@ -108,6 +108,69 @@ export async function exportImageBlob(svg, s) {
   }
 }
 
+// Match legend wrapping to its actual font and reserve every row above the plot.
+export function exportLegendLayout(names, width, fontSize, fontFamily) {
+  const ctx =
+    typeof window !== "undefined" &&
+    typeof window.CanvasRenderingContext2D === "function"
+      ? document.createElement("canvas").getContext("2d")
+      : null;
+  if (ctx) ctx.font = `${fontSize}px ${fontFamily}`;
+  const measure = (text) =>
+    ctx ? ctx.measureText(text).width : text.length * fontSize * 0.62;
+  const available = width - 64,
+    itemWidth = 25,
+    gap = 20,
+    lineHeight = Math.ceil(fontSize * 1.35);
+  const textWidth = Math.min(440, available - itemWidth - 18);
+  const formatted = new Map();
+  const data = [];
+  let used = 0,
+    rowHeight = 0,
+    height = 0,
+    rows = 1;
+  for (const name of names) {
+    const lines = [];
+    let line = "";
+    for (const word of name.split(/\s+/)) {
+      if (line && measure(line + " " + word) > textWidth) {
+        lines.push(line);
+        line = "";
+      }
+      if (line) line += " ";
+      for (const char of word) {
+        if (line && measure(line + char) > textWidth) {
+          lines.push(line);
+          line = "";
+        }
+        line += char;
+      }
+    }
+    if (line || !lines.length) lines.push(line.trim());
+    formatted.set(name, lines.join("\n"));
+    const entryWidth = Math.max(...lines.map(measure)) + itemWidth + 18;
+    if (used && used + gap + entryWidth > available) {
+      data.push("\n");
+      height += rowHeight + gap;
+      rows++;
+      used = 0;
+      rowHeight = 0;
+    }
+    data.push(name);
+    used += (used ? gap : 0) + entryWidth;
+    rowHeight = Math.max(rowHeight, lines.length * lineHeight);
+  }
+  return {
+    data,
+    height: height + rowHeight,
+    rows,
+    gap,
+    lineHeight,
+    itemWidth,
+    formatter: (name) => formatted.get(name) || name,
+  };
+}
+
 // Always build a separate chart, preserving the dashboard's zoom, palette and series.
 export function buildExportOptions(payload, settings) {
   const { spec, zoom } = payload;
@@ -125,7 +188,18 @@ export function buildExportOptions(payload, settings) {
     });
   const fontFamily = EXPORT_FONTS[settings.fontFamily] || EXPORT_FONTS.humanist;
   const titleFont = EXPORT_FONTS[settings.titleFont] || fontFamily;
-  const labelTextColor = drawingColor(settings.labelTextColor, palette.ink);
+  const terminalDark = terminal && settings.background === "dark";
+  const terminalColors = terminalDark
+    ? style?.colors
+    : ["#155e75", "#007e9a", "#986c00", "#466b19"];
+  const primaryColor =
+    terminal && !terminalDark && settings.color === style.color
+      ? terminalColors[0]
+      : settings.color;
+  const labelTextColor =
+    terminal && !terminalDark && settings.labelTextColor === style.ink
+      ? palette.ink
+      : drawingColor(settings.labelTextColor, palette.ink);
   const option = payload.makeOptions(palette);
   const font = settings.fontSize;
   const labelColor = drawingColor(settings.labelBackgroundColor, palette.panel);
@@ -136,7 +210,7 @@ export function buildExportOptions(payload, settings) {
     settings.labelBackground === false
       ? "transparent"
       : `rgba(${channels.join(",")},0.82)`;
-  const titleSize = Math.min(72, font * (terminal ? 1.15 : 1.65));
+  const titleSize = Math.min(72, font * 1.65);
   const title = wrap(settings.title, settings.width - 64, titleSize);
   const subtitle = wrap(settings.subtitle, settings.width - 64, font);
   const titleHeight = title ? title.split("\n").length * titleSize * 1.22 : 0;
@@ -161,7 +235,7 @@ export function buildExportOptions(payload, settings) {
       left: 27,
       top: 20,
       textStyle: {
-        color: terminal ? "#ffb433" : palette.ink,
+        color: terminal ? (terminalDark ? "#ffb433" : "#946000") : palette.ink,
         fontSize: titleSize,
         fontWeight: style?.weight || 650,
         fontFamily: titleFont,
@@ -209,6 +283,19 @@ export function buildExportOptions(payload, settings) {
       style: { fill: style.rule },
       silent: true,
     });
+  const legend =
+    option.legend && settings.legend
+      ? exportLegendLayout(
+          option.series.map((series) => series.name),
+          settings.width,
+          font * 0.85,
+          fontFamily,
+        )
+      : null;
+  const legendTop = headingBottom + Math.max(24, font * 0.8);
+  const plotTop = legend
+    ? legendTop + legend.height + Math.max(32, font * 1.1)
+    : headingBottom + Math.max(30, font);
   option.grid = {
     left: 32,
     right:
@@ -217,7 +304,7 @@ export function buildExportOptions(payload, settings) {
         : settings.labels === "selected" && spec.kind !== "bar"
           ? Math.max(110, font * 5.5)
           : 38,
-    top: headingBottom + (spec.comparison && settings.legend ? font * 2.5 : 15),
+    top: plotTop,
     bottom: footerHeight + 40,
     containLabel: true,
   };
@@ -238,10 +325,21 @@ export function buildExportOptions(payload, settings) {
     Object.assign(option.legend, {
       show: settings.legend,
       type: "plain",
-      top: headingBottom,
+      top: legendTop,
       left: 32,
       right: 32,
-      textStyle: { color: palette.ink, fontSize: font * 0.85 },
+      padding: 0,
+      itemWidth: 25,
+      itemHeight: 12,
+      itemGap: legend?.gap || 20,
+      data: legend?.data,
+      formatter: legend?.formatter,
+      textStyle: {
+        color: palette.ink,
+        fontSize: font * 0.85,
+        fontFamily,
+        lineHeight: legend?.lineHeight,
+      },
     });
   const decimal = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: settings.decimals,
@@ -266,11 +364,13 @@ export function buildExportOptions(payload, settings) {
     option.xAxis.axisLabel.formatter = (v) =>
       settings.dateFormat === "year-month" ? v : month(v);
   }
+  option.xAxis.axisLabel.margin = Math.max(18, font * 0.75);
+  option.yAxis.axisLabel.margin = Math.max(16, font * 0.65);
   if (terminal) {
     Object.assign(option.grid, {
       show: true,
       borderWidth: 1,
-      borderColor: "#66747a",
+      borderColor: terminalDark ? "#66747a" : "#bac7cf",
       backgroundColor: {
         type: "linear",
         x: 0,
@@ -278,22 +378,33 @@ export function buildExportOptions(payload, settings) {
         x2: 0,
         y2: 1,
         colorStops: [
-          { offset: 0, color: "#26373d" },
-          { offset: 1, color: "#050b0f" },
+          { offset: 0, color: terminalDark ? "#26373d" : "#f0f6f8" },
+          { offset: 1, color: terminalDark ? "#050b0f" : "#ffffff" },
         ],
       },
     });
     for (const axis of [option.xAxis, option.yAxis]) {
-      axis.axisLabel.color = "#f3f3f3";
-      axis.axisLine = { show: true, lineStyle: { color: "#c5ced1", width: 1 } };
-      axis.axisTick = { show: true, lineStyle: { color: "#c5ced1" } };
+      axis.axisLabel.color = palette.ink;
+      axis.axisLine = {
+        show: true,
+        lineStyle: { color: terminalDark ? "#c5ced1" : "#81919d", width: 1 },
+      };
+      axis.axisTick = {
+        show: true,
+        lineStyle: { color: terminalDark ? "#c5ced1" : "#81919d" },
+      };
       axis.splitLine = {
         show: settings.grid,
-        lineStyle: { color: "#77868c", type: "dotted", width: 1, opacity: 0.8 },
+        lineStyle: {
+          color: terminalDark ? "#77868c" : "#aebcc5",
+          type: "dotted",
+          width: 1,
+          opacity: 0.8,
+        },
       };
     }
     if (spec.kind !== "bar") {
-      option.yAxis.position = "right";
+      option.yAxis.position = "left";
       option.xAxis.axisLabel.showMinLabel = false;
     }
   }
@@ -307,8 +418,10 @@ export function buildExportOptions(payload, settings) {
     series.animation = false;
     if (style) {
       const color = spec.comparison
-        ? style.colors[index % style.colors.length]
-        : settings.color;
+        ? (terminal ? terminalColors : style.colors)[
+            index % style.colors.length
+          ]
+        : primaryColor;
       series.itemStyle = { ...series.itemStyle, color };
       series.lineStyle = { ...series.lineStyle, color };
       if (series.areaStyle) series.areaStyle = { opacity: 0 };
@@ -330,11 +443,11 @@ export function buildExportOptions(payload, settings) {
       series.showSymbol = settings.labels === "all";
       series.symbolSize = 5;
       if (!spec.comparison) {
-        series.lineStyle.color = settings.color;
-        series.itemStyle = { color: settings.color };
+        series.lineStyle.color = primaryColor;
+        series.itemStyle = { color: primaryColor };
         if (series.areaStyle)
           series.areaStyle = {
-            color: settings.color,
+            color: primaryColor,
             opacity: style ? 0 : 0.12,
           };
       }
@@ -343,7 +456,7 @@ export function buildExportOptions(payload, settings) {
       series.smooth = false;
       series.areaStyle = {
         origin: "start",
-        opacity: spec.comparison ? 0.32 : 0.85,
+        opacity: spec.comparison ? 0.25 : terminalDark ? 0.85 : 0.45,
         color: {
           type: "linear",
           x: 0,
@@ -351,9 +464,9 @@ export function buildExportOptions(payload, settings) {
           x2: 0,
           y2: 1,
           colorStops: [
-            { offset: 0, color: "#148698" },
-            { offset: 0.55, color: "#064763" },
-            { offset: 1, color: "#020728" },
+            { offset: 0, color: terminalDark ? "#148698" : "#5bb8c9" },
+            { offset: 0.55, color: terminalDark ? "#064763" : "#9bcddd" },
+            { offset: 1, color: terminalDark ? "#020728" : "#e4f1f7" },
           ],
         },
       };
@@ -508,7 +621,7 @@ export function openChartExport(payload) {
       <label class="export-check"><input type="checkbox" name="labelBackground" checked> Fondo sutil en las etiquetas</label>
       <label>Color del texto de etiquetas<input name="labelTextColor" type="color" value="#102033"></label>
       <label>Color del fondo de etiquetas<input name="labelBackgroundColor" type="color" value="#ffffff"></label>
-      <label class="export-check"><input name="labelConnectors" type="checkbox"> Líneas de unión en las etiquetas</label>
+      <label class="export-check"><input name="labelConnectors" type="checkbox" checked> Líneas de unión en las etiquetas</label>
       <p class="export-control-note">Toca una etiqueta en la vista previa para moverla o ajustar su línea de unión.</p>
       ${
         isBar
