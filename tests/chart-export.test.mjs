@@ -253,7 +253,7 @@ test("Paper uses centered serif headings and fine axes without a decorative rule
       "Corporativo",
       "Prensa",
       "Trading",
-      "Paper · académico",
+      "Paper",
     ],
   );
   const option = buildExportOptions(single, {
@@ -266,6 +266,57 @@ test("Paper uses centered serif headings and fine axes without a decorative rule
   assert.equal(option.title[0].textStyle.fontWeight, 400);
   assert.equal(option.series[0].lineStyle.width, 1.5);
   assert.equal(option.yAxis.axisLine.show, true);
-  assert.equal(option.yAxis.splitLine.show, false);
+  assert.equal(option.yAxis.splitLine.show, true);
   assert.equal(option.graphic.filter((g) => g.type === "rect").length, 0);
+});
+
+test("Paper adapts automatic line and gradient to dark backgrounds and keeps custom colors and optional dotted grid", () => {
+  const config = {
+    ...settings,
+    ...quickStyleFields("paper"),
+    quickStyle: "paper",
+  };
+  const light = buildExportOptions(single, config);
+  const dark = buildExportOptions(single, { ...config, background: "dark" });
+  assert.equal(light.series[0].lineStyle.color, "#222222");
+  assert.equal(dark.series[0].lineStyle.color, "#f0f3f7");
+  assert.match(
+    dark.series[0].areaStyle.color.colorStops[0].color,
+    /240,243,247/,
+  );
+  assert.equal(dark.series[0].markPoint.data[0].label.color, "#e8f1f8");
+  for (const option of [light, dark])
+    for (const axis of [option.xAxis, option.yAxis]) {
+      assert.equal(axis.splitLine.show, true);
+      assert.equal(axis.splitLine.lineStyle.type, "dotted");
+      assert.ok(axis.splitLine.lineStyle.opacity < 0.5);
+    }
+  const custom = buildExportOptions(single, {
+    ...config,
+    background: "dark",
+    color: "#ff9900",
+    grid: false,
+    areaFill: false,
+  });
+  assert.equal(custom.series[0].lineStyle.color, "#ff9900");
+  assert.equal(custom.series[0].areaStyle.opacity, 0);
+  assert.equal(custom.xAxis.splitLine.show, false);
+  assert.equal(custom.yAxis.splitLine.show, false);
+  const series = Array.from({ length: 4 }, (_, i) => ({
+    name: "Banco " + i,
+    points,
+    color: "#222222",
+  }));
+  const payload = {
+    spec: { comparison: true, series, unit: "PEN_THOUSAND", kind: "line" },
+    makeOptions: (p) => comparisonOptions(series, "PEN_THOUSAND", "Paper", p),
+  };
+  const multiple = buildExportOptions(payload, {
+    ...config,
+    background: "dark",
+  });
+  assert.deepEqual(
+    multiple.series.map((s) => s.lineStyle.color),
+    ["#f0f3f7", "#ccd7e0", "#aabac8", "#8fa2b4"],
+  );
 });

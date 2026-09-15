@@ -87,7 +87,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 
 ## Validación
 
-57 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+58 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
@@ -105,7 +105,7 @@ Control de calidad en Chromium: se comparó el área del gráfico original a 1×
 ## Estilos rápidos y edición libre
 
 - «Ajustes rápidos» aparece antes de las opciones. Incluye Consultoría, Revista, Finanzas, Corporativo, Prensa y Trading. Son interpretaciones visuales con colores, jerarquía, formato y tipografías compatibles; no plantillas oficiales ni fuentes propietarias.
-- «Ninguno» está seleccionado al abrir y recupera los ajustes personalizados previos al primer estilo. Los títulos, fechas, valores, anotaciones y formato de descarga se conservan. Puedes cambiar las tipografías del título y del cuerpo por separado.
+- «Personalizado» está seleccionado al abrir y recupera los ajustes personalizados previos al primer estilo. Los títulos, fechas, valores, anotaciones y formato de descarga se conservan. Puedes cambiar las tipografías del título y del cuerpo por separado.
 - Solo una sección permanece abierta, incluida la edición de anotaciones. Su borde señala la configuración activa.
 - En PC, arrastra una zona libre de la vista ampliada con el mouse. «Mover vista» permite arrastrarla incluso sobre una anotación; desactívalo para editar los elementos. También puedes desplazarla con el botón central del mouse.
 - Las flechas y líneas manuales tienen tiradores en ambos extremos, con orientación libre en cualquier dirección. Arrastra el trazo para moverlo completo; el panel conserva los controles en píxeles y las orientaciones habituales.
@@ -140,10 +140,19 @@ Verificado en navegador: Trading claro/oscuro, título ampliado, eje izquierdo, 
 
 ## Categorías de estilo, relleno opcional y Paper
 
-- Ajustes rápidos: Consultoría, Revista, Finanzas, Corporativo, Prensa, Trading y Paper · académico. Ninguno · personalizado sigue siendo la opción inicial.
+- Ajustes rápidos: Consultoría, Revista, Finanzas, Corporativo, Prensa, Trading y Paper. Personalizado sigue siendo la opción inicial.
 - La casilla «Degradado bajo las líneas» sustituye el texto de referencias y está activada inicialmente. En los estilos genera un relleno degradado acorde al color de cada serie; Trading conserva su degradado azul.
 - En Personalizado mantiene el relleno anterior. Desactivar la casilla lo oculta; activarla lo recupera. Al regresar a Ninguno se recupera también el estado previo de la casilla. En gráficos de barras aparece deshabilitada.
 - Paper utiliza fondo blanco, Times New Roman con alternativas serif, título y subtítulo centrados, trazos finos, marcadores y ejes discretos; no añade la franja decorativa. Su relleno gris sutil se puede desactivar para obtener una figura académica de solo líneas. Es un estilo visual tipo paper, no un motor de composición LaTeX.
 - El cambio de relleno no altera datos, etiquetas, conexiones, ni resolución de copia o descarga.
 
 Verificado en navegador: nombres del selector, relleno activado/desactivado en los siete estilos, recuperación de Personalizado, apariencia de Paper en móvil y escritorio y exportación SVG.
+
+
+## Paper: nombres y modo oscuro
+
+- Las opciones se muestran como «Paper» y «Personalizado».
+- Paper adapta la línea y el degradado al fondo oscuro con tonos claros; las comparaciones también usan una paleta clara. Se mantienen los colores elegidos manualmente y el control para ocultar el relleno.
+- La cuadrícula de ambos ejes es punteada, fina y de baja opacidad, adaptada a claro/oscuro. Se activa al elegir Paper y puede ocultarse con «Mostrar cuadrícula».
+
+Verificado: contraste de línea, relleno y etiquetas; comparaciones en oscuro; retorno a claro; cuadrícula activada/desactivada; nombres y exportación SVG.

@@ -193,12 +193,19 @@ export function buildExportOptions(payload, settings) {
   const terminalColors = terminalDark
     ? style?.colors
     : ["#155e75", "#007e9a", "#986c00", "#466b19"];
+  const paperDark = paper && settings.background === "dark";
+  const paperColors = paperDark
+    ? ["#f0f3f7", "#ccd7e0", "#aabac8", "#8fa2b4"]
+    : style?.colors;
   const primaryColor =
     terminal && !terminalDark && settings.color === style.color
       ? terminalColors[0]
-      : settings.color;
+      : paperDark && settings.color === style.color
+        ? paperColors[0]
+        : settings.color;
   const labelTextColor =
-    terminal && !terminalDark && settings.labelTextColor === style.ink
+    ((terminal && !terminalDark) || paperDark) &&
+    settings.labelTextColor === style.ink
       ? palette.ink
       : drawingColor(settings.labelTextColor, palette.ink);
   const option = payload.makeOptions(palette);
@@ -418,6 +425,15 @@ export function buildExportOptions(payload, settings) {
       };
       axis.axisTick = { show: true, lineStyle: { color: palette.ink } };
       axis.axisLabel.color = palette.ink;
+      axis.splitLine = {
+        show: settings.grid,
+        lineStyle: {
+          type: "dotted",
+          width: 1,
+          color: paperDark ? "#788a9b" : "#a6afb7",
+          opacity: paperDark ? 0.38 : 0.45,
+        },
+      };
     }
   }
   const comparisons = exportComparisons(spec, settings.comparisons);
@@ -430,7 +446,7 @@ export function buildExportOptions(payload, settings) {
     series.animation = false;
     if (style) {
       const color = spec.comparison
-        ? (terminal ? terminalColors : style.colors)[
+        ? (terminal ? terminalColors : paper ? paperColors : style.colors)[
             index % style.colors.length
           ]
         : primaryColor;
@@ -645,12 +661,12 @@ export function openChartExport(payload) {
   dialog.innerHTML = `<header class="chart-export-head"><div><h2 id="chart-export-heading">Preparar imagen</h2><p>Configura la imagen y añade anotaciones en la vista previa.</p></div><button type="button" data-close aria-label="Cerrar">✕</button></header>
     <div class="chart-export-layout"><form class="chart-export-controls">
       <details class="export-section" open><summary>Ajustes rápidos</summary><div class="export-section-body">
-      <label>Estilo<select name="quickStyle"><option value="none">Ninguno · personalizado</option>${Object.entries(
+      <label>Estilo<select name="quickStyle"><option value="none">Personalizado</option>${Object.entries(
         QUICK_STYLES,
       )
         .map(([id, p]) => `<option value="${id}">${p.name}</option>`)
         .join("")}</select></label>
-      <p class="export-control-note" data-style-note>Elige una base visual y personalízala en las secciones siguientes. Ninguno recupera tus ajustes anteriores.</p>
+      <p class="export-control-note" data-style-note>Elige una base visual y personalízala en las secciones siguientes. Personalizado recupera tus ajustes anteriores.</p>
       <label class="export-check"><input name="areaFill" type="checkbox" checked ${isBar ? "disabled" : ""}> Degradado bajo las líneas</label>
       <p class="export-control-note">${isBar ? "Disponible en gráficos de líneas." : "En Personalizado conserva el relleno actual; puedes ocultarlo o volver a mostrarlo."}</p>
       </div></details>
