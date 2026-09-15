@@ -87,7 +87,7 @@ Este paquete conserva las mejoras anteriores y la corrección de los errores de 
 
 ## Validación
 
-55 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
+57 pruebas JavaScript aprobadas, incluida la integración con ECharts real y los casos de fechas múltiples, variaciones, bases inválidas y bloqueo de scroll. La validación de imports, sintaxis y datos también pasó.
 
 Se comprobó la interfaz en Chromium con tamaños de pantalla móvil y escritorio: topbar proporcional, encabezado y vista previa fijos, desplazamiento de opciones, restauración de la página y descargas PNG/JPG/SVG. Se revisó visualmente una exportación con dos fechas y flecha de variación porcentual.
 
@@ -104,7 +104,7 @@ Control de calidad en Chromium: se comparó el área del gráfico original a 1×
 
 ## Estilos rápidos y edición libre
 
-- «Ajustes rápidos» aparece antes de las opciones. Incluye McKinsey, The Economist, Goldman Sachs, J.P. Morgan, The New York Times y Bloomberg. Son interpretaciones visuales con colores, jerarquía, formato y tipografías compatibles; no plantillas oficiales ni fuentes propietarias.
+- «Ajustes rápidos» aparece antes de las opciones. Incluye Consultoría, Revista, Finanzas, Corporativo, Prensa y Trading. Son interpretaciones visuales con colores, jerarquía, formato y tipografías compatibles; no plantillas oficiales ni fuentes propietarias.
 - «Ninguno» está seleccionado al abrir y recupera los ajustes personalizados previos al primer estilo. Los títulos, fechas, valores, anotaciones y formato de descarga se conservan. Puedes cambiar las tipografías del título y del cuerpo por separado.
 - Solo una sección permanece abierta, incluida la edición de anotaciones. Su borde señala la configuración activa.
 - En PC, arrastra una zona libre de la vista ampliada con el mouse. «Mover vista» permite arrastrarla incluso sobre una anotación; desactívalo para editar los elementos. También puedes desplazarla con el botón central del mouse.
@@ -120,8 +120,8 @@ Verificado en navegador: seis estilos y retorno a Ninguno, color de etiquetas en
 
 - «Copiar gráfico» lleva la imagen directamente al portapapeles como PNG, con la resolución elegida (2× por defecto), fondos y anotaciones. Después, usa Ctrl+V o Pegar. Aunque selecciones SVG o JPG para descargar, la copia utiliza PNG para compatibilidad con aplicaciones.
 - La copia y la descarga se generan desde el mismo SVG a resolución final. Se mantiene la transparencia en PNG. Los navegadores que no admiten copiar imágenes conservan la descarga; si el permiso del portapapeles está bloqueado, el modal lo indica.
-- La franja roja de The Economist pasa de 4 a 10 px de alto.
-- Bloomberg se adapta a la captura proporcionada: fondo negro, área de trazado oscura, línea blanca sin suavizado, relleno azul degradado, cuadrícula punteada, eje izquierdo y título ámbar. Se conservan las series reales y sus unidades.
+- La franja roja de Revista pasa de 4 a 10 px de alto.
+- Trading se adapta a la captura proporcionada: fondo negro, área de trazado oscura, línea blanca sin suavizado, relleno azul degradado, cuadrícula punteada, eje izquierdo y título ámbar. Se conservan las series reales y sus unidades.
 - Se elimina Vox editorial del selector.
 
 Validado en Chromium: escritura y lectura reales del portapapeles como PNG, mismas dimensiones y píxeles que la descarga, copia con marco/anotaciones al seleccionar SVG, rechazo de permisos, navegador sin soporte y botones visibles en móvil.
@@ -129,10 +129,21 @@ Validado en Chromium: escritura y lectura reales del portapapeles como PNG, mism
 
 ## Contraste y espacio entre elementos
 
-- Bloomberg vuelve a la escala izquierda. Su título usa el mismo tamaño destacado que los otros estilos.
+- Trading vuelve a la escala izquierda. Su título usa el mismo tamaño destacado que los otros estilos.
 - El fondo Claro adapta los ejes, título, cuadrícula, área y color inicial de la línea; el modo Oscuro mantiene el aspecto de terminal.
 - Se amplía la separación entre subtítulo, leyenda y gráfico. La leyenda organiza los nombres en filas según el ancho disponible y la tipografía; cada fila reserva espacio antes del área de datos.
 - Los meses del eje X y las cifras del eje Y tienen márgenes mayores. Las etiquetas se colocan inicialmente debajo de la leyenda y buscan posiciones libres; sus posiciones manuales siguen conservándose.
 - «Líneas de unión en las etiquetas» está activado al abrir. Puedes desactivarlo para todas o para la etiqueta elegida.
 
-Verificado en navegador: Bloomberg claro/oscuro, título ampliado, eje izquierdo, conexiones predeterminadas, leyenda de ocho series y separación medida en lienzos anchos y estrechos.
+Verificado en navegador: Trading claro/oscuro, título ampliado, eje izquierdo, conexiones predeterminadas, leyenda de ocho series y separación medida en lienzos anchos y estrechos.
+
+
+## Categorías de estilo, relleno opcional y Paper
+
+- Ajustes rápidos: Consultoría, Revista, Finanzas, Corporativo, Prensa, Trading y Paper · académico. Ninguno · personalizado sigue siendo la opción inicial.
+- La casilla «Degradado bajo las líneas» sustituye el texto de referencias y está activada inicialmente. En los estilos genera un relleno degradado acorde al color de cada serie; Trading conserva su degradado azul.
+- En Personalizado mantiene el relleno anterior. Desactivar la casilla lo oculta; activarla lo recupera. Al regresar a Ninguno se recupera también el estado previo de la casilla. En gráficos de barras aparece deshabilitada.
+- Paper utiliza fondo blanco, Times New Roman con alternativas serif, título y subtítulo centrados, trazos finos, marcadores y ejes discretos; no añade la franja decorativa. Su relleno gris sutil se puede desactivar para obtener una figura académica de solo líneas. Es un estilo visual tipo paper, no un motor de composición LaTeX.
+- El cambio de relleno no altera datos, etiquetas, conexiones, ni resolución de copia o descarga.
+
+Verificado en navegador: nombres del selector, relleno activado/desactivado en los siete estilos, recuperación de Personalizado, apariencia de Paper en móvil y escritorio y exportación SVG.

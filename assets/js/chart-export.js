@@ -176,6 +176,7 @@ export function buildExportOptions(payload, settings) {
   const { spec, zoom } = payload;
   const style = QUICK_STYLES[settings.quickStyle];
   const terminal = settings.quickStyle === "bloomberg";
+  const paper = settings.quickStyle === "paper";
   const palette = {
     ...palettes[settings.background === "dark" ? "dark" : "light"],
   };
@@ -210,7 +211,7 @@ export function buildExportOptions(payload, settings) {
     settings.labelBackground === false
       ? "transparent"
       : `rgba(${channels.join(",")},0.82)`;
-  const titleSize = Math.min(72, font * 1.65);
+  const titleSize = Math.min(72, font * (paper ? 1.4 : 1.65));
   const title = wrap(settings.title, settings.width - 64, titleSize);
   const subtitle = wrap(settings.subtitle, settings.width - 64, font);
   const titleHeight = title ? title.split("\n").length * titleSize * 1.22 : 0;
@@ -232,7 +233,7 @@ export function buildExportOptions(payload, settings) {
   option.title = [
     {
       text: title,
-      left: 27,
+      left: paper ? "center" : 27,
       top: 20,
       textStyle: {
         color: terminal ? (terminalDark ? "#ffb433" : "#946000") : palette.ink,
@@ -244,7 +245,7 @@ export function buildExportOptions(payload, settings) {
     },
     {
       text: subtitle,
-      left: 27,
+      left: paper ? "center" : 27,
       top: 20 + titleHeight,
       textStyle: {
         color: palette.muted,
@@ -271,7 +272,7 @@ export function buildExportOptions(payload, settings) {
         },
       ]
     : [];
-  if (style && !terminal)
+  if (style && !terminal && !paper)
     option.graphic.push({
       type: "rect",
       left: 32,
@@ -408,6 +409,17 @@ export function buildExportOptions(payload, settings) {
       option.xAxis.axisLabel.showMinLabel = false;
     }
   }
+  if (paper) {
+    for (const axis of [option.xAxis, option.yAxis]) {
+      axis.axisLine = {
+        show: true,
+        onZero: false,
+        lineStyle: { color: palette.ink, width: 1 },
+      };
+      axis.axisTick = { show: true, lineStyle: { color: palette.ink } };
+      axis.axisLabel.color = palette.ink;
+    }
+  }
   const comparisons = exportComparisons(spec, settings.comparisons);
   option.series.forEach((series, index) => {
     const points = spec.comparison ? spec.series[index].points : spec.points;
@@ -470,6 +482,38 @@ export function buildExportOptions(payload, settings) {
           ],
         },
       };
+    }
+    if (spec.kind !== "bar") {
+      if (style && !terminal) {
+        const ink = drawingColor(series.lineStyle?.color, style.color);
+        const rgb = [1, 3, 5]
+          .map((i) => parseInt(ink.slice(i, i + 2), 16))
+          .join(",");
+        series.areaStyle = {
+          origin: "start",
+          opacity: spec.comparison ? 0.35 : paper ? 0.35 : 0.7,
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: `rgba(${rgb},0.55)` },
+              { offset: 0.55, color: `rgba(${rgb},0.2)` },
+              { offset: 1, color: `rgba(${rgb},0.015)` },
+            ],
+          },
+        };
+      }
+      if (paper) {
+        series.smooth = false;
+        series.lineStyle.type = ["solid", "dashed", "dotted"][index % 3];
+        series.symbol = ["circle", "rect", "triangle", "diamond"][index % 4];
+        series.symbolSize = 4;
+        series.showSymbol = true;
+      }
+      if (settings.areaFill === false) series.areaStyle = { opacity: 0 };
     }
     if (series.markLine) {
       series.markLine.data = settings.references
@@ -607,7 +651,8 @@ export function openChartExport(payload) {
         .map(([id, p]) => `<option value="${id}">${p.name}</option>`)
         .join("")}</select></label>
       <p class="export-control-note" data-style-note>Elige una base visual y personalízala en las secciones siguientes. Ninguno recupera tus ajustes anteriores.</p>
-      <p class="export-control-note">Estilos inspirados en las referencias, con tipografías compatibles.</p>
+      <label class="export-check"><input name="areaFill" type="checkbox" checked ${isBar ? "disabled" : ""}> Degradado bajo las líneas</label>
+      <p class="export-control-note">${isBar ? "Disponible en gráficos de líneas." : "En Personalizado conserva el relleno actual; puedes ocultarlo o volver a mostrarlo."}</p>
       </div></details>
       <details class="export-section"><summary>1 · Título y fuente</summary><div class="export-section-body"><label>Título<input name="title" maxlength="160" value="${escape(spec.label)}"></label>
       <label>Subtítulo<input name="subtitle" maxlength="220" value="${escape(description)}"></label>
@@ -734,6 +779,7 @@ export function openChartExport(payload) {
   let nextComparisonId = 0;
   const settings = () => ({
     quickStyle: field("quickStyle").value,
+    areaFill: field("areaFill").checked,
     fontFamily: field("fontFamily").value,
     titleFont: field("titleFont").value,
     labelTextColor: field("labelTextColor").value,

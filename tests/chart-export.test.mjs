@@ -222,3 +222,50 @@ test("legend reserves multiple rows and wrapped names as series increase or outp
   });
   assert.ok(noLegend.grid.top < option.grid.top);
 });
+
+test("area toggle applies to every preset and retains the existing personalized fill", () => {
+  const original = buildExportOptions(single, settings);
+  const enabled = buildExportOptions(single, { ...settings, areaFill: true });
+  assert.deepEqual(enabled.series[0].areaStyle, original.series[0].areaStyle);
+  assert.equal(
+    buildExportOptions(single, { ...settings, areaFill: false }).series[0]
+      .areaStyle.opacity,
+    0,
+  );
+  for (const id of Object.keys(QUICK_STYLES)) {
+    const config = { ...settings, ...quickStyleFields(id), quickStyle: id };
+    const on = buildExportOptions(single, config),
+      off = buildExportOptions(single, { ...config, areaFill: false });
+    assert.equal(on.series[0].areaStyle.color.type, "linear");
+    assert.ok(on.series[0].areaStyle.opacity > 0);
+    assert.equal(off.series[0].areaStyle.opacity, 0);
+    assert.deepEqual(on.series[0].data, off.series[0].data);
+    assert.deepEqual(on.series[0].lineStyle, off.series[0].lineStyle);
+  }
+});
+test("Paper uses centered serif headings and fine axes without a decorative rule", () => {
+  assert.deepEqual(
+    Object.values(QUICK_STYLES).map((p) => p.name),
+    [
+      "Consultoría",
+      "Revista",
+      "Finanzas",
+      "Corporativo",
+      "Prensa",
+      "Trading",
+      "Paper · académico",
+    ],
+  );
+  const option = buildExportOptions(single, {
+    ...settings,
+    ...quickStyleFields("paper"),
+    quickStyle: "paper",
+  });
+  assert.equal(option.title[0].left, "center");
+  assert.match(option.textStyle.fontFamily, /Times New Roman/);
+  assert.equal(option.title[0].textStyle.fontWeight, 400);
+  assert.equal(option.series[0].lineStyle.width, 1.5);
+  assert.equal(option.yAxis.axisLine.show, true);
+  assert.equal(option.yAxis.splitLine.show, false);
+  assert.equal(option.graphic.filter((g) => g.type === "rect").length, 0);
+});

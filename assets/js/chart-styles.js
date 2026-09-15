@@ -8,7 +8,7 @@ export const EXPORT_FONTS = {
 };
 export const QUICK_STYLES = {
   mckinsey: {
-    name: "McKinsey",
+    name: "Consultoría",
     note: "Azul profundo, título serif y composición de consultoría.",
     titleFont: "serif",
     fontFamily: "sans",
@@ -24,7 +24,7 @@ export const QUICK_STYLES = {
     width: 1600,
   },
   economist: {
-    name: "The Economist",
+    name: "Revista",
     note: "Rojo editorial, fondo papel y ejes discretos.",
     titleFont: "serif",
     fontFamily: "sans",
@@ -40,7 +40,7 @@ export const QUICK_STYLES = {
     width: 1200,
   },
   goldman: {
-    name: "Goldman Sachs",
+    name: "Finanzas",
     note: "Azules sobrios, tipografía serif y espacio amplio.",
     titleFont: "serif",
     fontFamily: "sans",
@@ -56,7 +56,7 @@ export const QUICK_STYLES = {
     width: 1600,
   },
   jpmorgan: {
-    name: "J.P. Morgan",
+    name: "Corporativo",
     note: "Azul marino y cobre, título clásico y líneas limpias.",
     titleFont: "times",
     fontFamily: "sans",
@@ -72,7 +72,7 @@ export const QUICK_STYLES = {
     width: 1600,
   },
   nyt: {
-    name: "The New York Times",
+    name: "Prensa",
     note: "Blanco, tinta oscura y jerarquía editorial serif.",
     titleFont: "serif",
     fontFamily: "sans",
@@ -88,7 +88,7 @@ export const QUICK_STYLES = {
     width: 1200,
   },
   bloomberg: {
-    name: "Bloomberg",
+    name: "Trading",
     note: "Terminal clásico: línea blanca, área azul, cuadrícula punteada y escala izquierda.",
     titleFont: "mono",
     fontFamily: "sans",
@@ -104,6 +104,21 @@ export const QUICK_STYLES = {
     height: 900,
     width: 1600,
   },
+  paper: {
+    name: "Paper · académico",
+    note: "Fondo blanco, tipografía serif, título centrado y trazos finos para informes académicos.",
+    titleFont: "times",
+    fontFamily: "times",
+    color: "#222222",
+    ink: "#222222",
+    panel: "#ffffff",
+    grid: "#dddddd",
+    muted: "#555555",
+    colors: ["#222222", "#555555", "#777777", "#999999"],
+    weight: 400,
+    height: 900,
+    width: 1200,
+  },
 };
 export function quickStyleFields(id) {
   const p = QUICK_STYLES[id];
@@ -117,11 +132,12 @@ export function quickStyleFields(id) {
     background: p.background || "light",
     labelBackgroundColor: p.panel,
     labelBackground: false,
-    lineWidth: id === "bloomberg" ? 1.5 : 3,
+    lineWidth: ["bloomberg", "paper"].includes(id) ? 1.5 : 3,
+    areaFill: true,
     frameType: "none",
     framePattern: "none",
     framePreserveSize: true,
-    grid: true,
+    grid: id !== "paper",
     references: false,
     width: p.width,
     height: p.height,
