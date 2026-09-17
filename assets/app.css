@@ -3000,3 +3000,105 @@ button.text-button.has-table-help { cursor:pointer; }
 .search-result small { color:var(--muted); font-size:11px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .search-footer { padding:11px 22px; font-size:11px; color:var(--muted); border-top:1px solid var(--line); }
 @media(max-width:600px) { .search-dialog { max-height:90dvh; } .search-head { padding:16px 16px 8px; } .search-input-wrap { padding:8px 16px 12px; } .top-actions { gap:4px; } }
+
+/* Keep help controls in the label line, without adding grid rows. */
+.row-title.row-with-help { grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:4px; }
+.row-title.row-with-help > .row-reference { grid-column:1 / -1; }
+.table-help-button { display:inline-flex; justify-content:center; align-items:center; vertical-align:middle; width:22px; height:22px; min-height:22px; flex:none; padding:2px; }
+.table-help-tooltip { background:#08283f; color:#edf5fc; border-color:#285575; box-shadow:0 10px 32px #0004; font-weight:400; }
+.table-help-tooltip[hidden],.table-help-tooltip:empty { display:none !important; }
+.table-wrap table tbody tr:is(.peer-highlight,.structure-selected,.selected) > *,
+.table-wrap table tbody tr:is(.peer-highlight,.structure-selected,.selected):hover > :first-child { background:color-mix(in srgb,var(--panel) 87%,var(--cyan)); }
+.table-wrap table.account-table tbody tr.selected > :first-child { box-shadow:inset 3px 0 var(--cyan),1px 0 var(--line); }
+.table-wrap table.account-table tbody tr.selected:is(.root,.net-result) > * { background:#123e58; }
+.search-options { display:flex; justify-content:space-between; gap:12px; padding:12px 22px 0; align-items:center; }
+.search-options label { display:flex; align-items:center; gap:8px; font-size:12px; }
+.search-options input { width:16px; height:16px; min-height:0; accent-color:var(--cyan); }
+.search-explain { font-size:11px; color:var(--muted); padding:0 22px; margin:9px 0; }
+.search-result strong { width:100%; display:flex; justify-content:space-between; gap:12px; }
+.search-result small { font-weight:400; }
+
+.calculator-dialog { width:min(1280px,calc(100vw - 24px)); height:min(900px,94dvh); padding:0; border:1px solid var(--line); border-radius:16px; background:var(--panel); color:var(--ink); overflow:hidden; }
+.calculator-dialog[open] { display:flex; flex-direction:column; }
+.calculator-dialog::backdrop { background:#061728aa; backdrop-filter:blur(3px); }
+.calc-header { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:16px 22px; border-bottom:1px solid var(--line); }
+.calc-header h2 { font-size:19px; margin:0; }
+.calc-header p { font-size:12px; color:var(--muted); margin:4px 0 0; }
+.calc-body { display:grid; grid-template-columns:minmax(280px,34%) 1fr; min-height:0; flex:1; }
+.calc-source { display:flex; flex-direction:column; min-height:0; padding:18px; border-right:1px solid var(--line); background:var(--soft); }
+.calculator-dialog h3 { font-size:14px; margin:0 0 10px; }
+.calc-source > p,.calc-composer > p { font-size:11px; color:var(--muted); margin:0 0 12px; line-height:1.5; }
+.calc-source-controls { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:8px; }
+.calc-source-controls select:last-child { grid-column:1 / -1; }
+.calc-source select,.calc-source input { min-width:0; width:100%; }
+.calc-tree { overflow:auto; overscroll-behavior:contain; scrollbar-width:none; flex:1; margin-top:12px; }
+.calc-account { display:flex; gap:6px; align-items:center; padding:6px 1px 6px calc(var(--depth)*10px); border-bottom:1px solid var(--line); }
+.calc-account > div { flex:1; min-width:0; }
+.calc-account strong { font-size:11px; display:block; }
+.calc-account small { display:block; font-size:10px; color:var(--muted); margin-top:2px; }
+.calc-account button { flex:none; padding:2px 6px; min-height:27px; }
+.calc-account[draggable=true] { cursor:grab; }
+.calc-account .calc-expand { width:19px; padding:0; background:transparent; border:0; }
+.calc-editor { overflow:auto; overscroll-behavior:contain; scrollbar-width:none; padding:20px; min-width:0; }
+.calc-editor label { display:block; font-size:12px; margin-bottom:12px; }
+.calc-editor input,.calc-editor textarea { display:block; width:100%; margin-top:5px; min-width:0; }
+.calculator-dialog textarea { background:var(--panel); color:var(--ink); border:1px solid var(--line2); border-radius:6px; font:inherit; font-size:13px; padding:10px; resize:vertical; }
+#calc-expression { width:100%; font:17px/1.6 ui-monospace,monospace; min-height:80px; }
+.calc-formula-head { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+.calc-formula-head label { margin:0; }
+.calc-formula-head button { border:0; background:transparent; color:var(--cyan); }
+.calc-operators { display:flex; flex-wrap:wrap; gap:5px; margin:10px 0; }
+.calc-operators button { min-width:32px; }
+.calc-variable { display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--line); padding:7px 0; }
+.calc-variable > div { flex:1; min-width:0; }
+.calc-variable strong { display:block; font-size:11px; }
+.calc-variable small { color:var(--muted); display:block; font-size:10px; margin-top:3px; }
+.calc-variable b { font-size:12px; white-space:nowrap; }
+.calc-variable input { width:100px; margin:0; }
+.calc-variable button { padding:2px 7px; min-height:28px; }
+.calc-result-row { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--soft); border:1px solid var(--line); padding:14px; margin:15px 0 6px; }
+.calc-result-row span { color:var(--muted); font-size:11px; }
+.calc-result-row output { display:block; font-size:22px; font-weight:750; color:var(--cyan); overflow-wrap:anywhere; }
+.calc-result-row label { margin:0; flex:none; }
+.calc-result-row select { display:block; margin-top:4px; max-width:180px; }
+#calc-message { min-height:16px; }
+.calc-review { margin-top:24px; padding-top:18px; border-top:1px solid var(--line); }
+.calc-review-fields { display:grid; grid-template-columns:1fr 170px; gap:12px; }
+.calc-saved { display:flex; gap:8px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+.calc-saved > div { flex:1; min-width:0; }
+.calc-saved strong { font-size:12px; }
+.calc-saved small { font-size:11px; display:block; color:var(--muted); overflow-wrap:anywhere; }
+.calc-saved b { font-size:14px; }
+.calc-footer { border-top:1px solid var(--line); padding:12px 20px; display:flex; justify-content:space-between; align-items:center; gap:14px; }
+.calc-footer > span { font-size:11px; color:var(--muted); }
+.calc-footer > div { display:flex; gap:8px; flex:none; }
+.calc-tree::-webkit-scrollbar,.calc-editor::-webkit-scrollbar { display:none; }
+@media(max-width:760px) {
+ .calculator-dialog { width:calc(100vw - 12px); height:96dvh; max-height:96dvh; }
+ .calc-header { padding:12px; }
+ .calc-body { display:block; overflow:auto; overscroll-behavior:contain; scrollbar-width:none; }
+ .calc-source { border-right:0; border-bottom:1px solid var(--line); padding:12px; }
+ .calc-tree { max-height:230px; min-height:130px; flex:auto; }
+ .calc-editor { padding:14px; overflow:visible; }
+ .calc-review-fields { grid-template-columns:1fr; gap:0; }
+ .calc-result-row { flex-wrap:wrap; }
+ .calc-result-row output { font-size:20px; }
+ .calc-saved { flex-wrap:wrap; }
+ .calc-saved > div { flex-basis:55%; }
+ .calc-footer { padding:10px; flex-wrap:wrap; gap:7px; }
+ .calc-footer > div { width:100%; }
+ .calc-footer button { flex:1; }
+ .calc-variable { flex-wrap:wrap; }
+ .calc-variable > div { flex-basis:55%; }
+ .search-options { padding-inline:15px; }
+ .top-actions { flex-wrap:wrap; }
+}
+.calc-mobile-nav { display:none; }
+@media(max-width:760px) { .calc-mobile-nav { display:flex; gap:5px; padding:6px 12px; border-bottom:1px solid var(--line); } .calc-mobile-nav button { flex:1; } }
+/* Sticky labels must retain the selected-row fill, including while hovered. */
+.table-wrap table tbody tr:is(.peer-highlight,.structure-selected,.selected) > :first-child,
+.table-wrap table tbody tr:is(.peer-highlight,.structure-selected,.selected):hover > :first-child {
+ background:color-mix(in srgb,var(--panel) 87%,var(--cyan));
+}
+.table-wrap table.account-table tbody tr.selected:is(.root,.net-result) > :first-child,
+.table-wrap table.account-table tbody tr.selected:is(.root,.net-result):hover > :first-child { background:#123e58; }

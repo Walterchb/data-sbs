@@ -44,12 +44,27 @@ const stop = new Set([
   "no",
   "se",
 ]);
-export function searchEntries(entries, query, limit = 40) {
+export function searchEntries(entries, query, limit = 40, exact = false) {
   const tokens = norm(query)
     .replace(/[^a-z0-9-]+/g, " ")
     .split(" ")
     .filter((t) => t && !stop.has(t));
   if (!tokens.length) return entries.filter((r) => r.featured).slice(0, 12);
+  if (exact && norm(query)) {
+    const phrase = norm(query)
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+    if (!phrase) return [];
+    return entries
+      .filter((r) =>
+        (
+          " " +
+          norm([r.title, r.aliases].join(" ")).replace(/[^a-z0-9]+/g, " ") +
+          " "
+        ).includes(" " + phrase + " "),
+      )
+      .slice(0, limit);
+  }
   const scored = entries
     .map((r) => {
       const title = norm(r.title),
@@ -118,7 +133,7 @@ export function buildEntries(financial, reports) {
         title: METRICS[key]?.label || key,
         path: `Ratios de análisis · ${group}`,
         description: RATIO_HELP[key],
-        aliases: aliases[key] || "",
+        aliases: (key.includes("_") ? "" : key) + " " + (aliases[key] || ""),
         target: { view: "reports", report: "derived", reportMetric: key },
         featured: ["car", "coverage", "credit_cost_12m"].includes(key),
       });
@@ -156,7 +171,7 @@ export function buildEntries(financial, reports) {
               : "";
       entries.push({
         title,
-        path: `Indicadores · ${REPORT_NAMES[code] || code}${metricGroup(code, r) ? " · " + metricGroup(code, r) : ""}`,
+        path: `${code === "B-2401" ? "Indicadores" : "Indicadores · " + (REPORT_NAMES[code] || code)}${metricGroup(code, r) ? " · " + metricGroup(code, r) : ""}`,
         description: metricHelp(code, r).replace(`${title}. `, ""),
         aliases: aliases[aliasKey] || "",
         target,
@@ -196,7 +211,7 @@ export function initGlobalSearch({ getContext, navigate }) {
   const dialog = document.createElement("dialog");
   dialog.className = "search-dialog";
   dialog.setAttribute("aria-labelledby", "global-search-title");
-  dialog.innerHTML = `<div class="search-head"><div><h2 id="global-search-title">Buscar en el análisis</h2><p>Indicadores, fórmulas, cuentas y fuentes</p></div><button type="button" data-search-close aria-label="Cerrar buscador">✕</button></div><div class="search-input-wrap"><label class="sr-only" for="global-search-input">Qué quieres consultar</label><input id="global-search-input" type="search" autocomplete="off" placeholder="ROE, costo de riesgo, depósitos…"><span class="search-context"></span></div><div class="search-results" aria-label="Resultados"></div><div class="search-footer" role="status" aria-live="polite"></div>`;
+  dialog.innerHTML = `<div class="search-head"><div><h2 id="global-search-title">Buscar en el análisis</h2><p>Indicadores, fórmulas, cuentas y fuentes</p></div><button type="button" data-search-close aria-label="Cerrar buscador">✕</button></div><div class="search-input-wrap"><label class="sr-only" for="global-search-input">Qué quieres consultar</label><input id="global-search-input" type="search" autocomplete="off" placeholder="ROE, costo de riesgo, depósitos…"><span class="search-context"></span></div><div class="search-options"><label><input type="checkbox" id="search-exact"> Coincidencia exacta</label><select id="search-category" aria-label="Tipo de resultado"><option value="">Todo</option><option>Ratios de análisis</option><option>Indicadores</option><option>Cuentas SBS</option><option>Secciones</option></select></div><p class="search-explain">Busca un concepto y abre el resultado para consultar su valor, fórmula y evolución.</p><div class="search-results" aria-label="Resultados"></div><div class="search-footer" role="status" aria-live="polite"></div>`;
   document.body.append(dialog);
   const input = dialog.querySelector("input"),
     results = dialog.querySelector(".search-results"),
@@ -228,7 +243,17 @@ export function initGlobalSearch({ getContext, navigate }) {
     return loading;
   }
   function show() {
-    found = searchEntries(entries, input.value);
+    const exact = dialog.querySelector("#search-exact").checked,
+      category = dialog.querySelector("#search-category").value;
+    found = searchEntries(
+      entries.filter((r) => !category || r.path.startsWith(category)),
+      input.value,
+      40,
+      exact,
+    );
+    dialog.querySelector(".search-explain").textContent = exact
+      ? "Frase o sigla completa en el nombre o sus alias. CAR no coincide con «cartera»."
+      : "Busca por nombre, sigla o concepto. Los resultados relacionados amplían la consulta.";
     const groups = new Map();
     for (const r of found) {
       const group = r.path.split(" · ")[0];
@@ -245,7 +270,7 @@ export function initGlobalSearch({ getContext, navigate }) {
             last = group;
             return (
               h +
-              `<button class="search-result" type="button" data-result="${i}"><strong>${e(r.title)}</strong><span>${e(r.path)}</span><small>${r.partial ? "Relacionado · " : ""}${e(r.description || "")}</small></button>`
+              `<button class="search-result" type="button" data-result="${i}"><strong>${e(r.title)} <span aria-hidden="true">→</span></strong><span>${e(r.path)}</span><small>${r.partial ? "Relacionado · " : ""}${e(r.description || "")}</small></button>`
             );
           })
           .join("")
@@ -292,6 +317,8 @@ export function initGlobalSearch({ getContext, navigate }) {
     dialog.close();
     await navigate(target);
   });
+  dialog.querySelector("#search-exact").addEventListener("change", show);
+  dialog.querySelector("#search-category").addEventListener("change", show);
   input.addEventListener("input", () => {
     clearTimeout(timer);
     timer = setTimeout(show, 90);

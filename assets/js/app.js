@@ -1,3 +1,4 @@
+import { initCalculator } from "./calculator.js";
 import { reportRows, metricLabel, metricHelp, REPORT_NAMES } from "./report-detail.js";
 import { RATIO_GROUPS, RATIO_HELP, EXTRA_RATIOS, withAnalysisRatios } from "./analysis-ratios.js";
 import { initGlobalSearch } from "./global-search.js";
@@ -545,7 +546,7 @@ function updateStatus() {
   $("health-label").textContent = health.errors
     ? `${health.errors} errores`
     : lastChecked
-      ? `Comprobado ${lastChecked}`
+      ? `Sync ${lastChecked}`
       : health.warnings
         ? "Fuentes con avisos"
         : "Fuentes verificadas";
@@ -1520,6 +1521,7 @@ function switchTheme() {
   } catch {}
 }
 function bind() {
+  initCalculator(() => ({financial, date:state.date, entity:state.entity, entityName:entitySbsName()||entityName()}));
   initGlobalSearch({
     getContext: () => ({ manifest, financial: baseFinancial, state }),
     navigate: async target => {
@@ -1876,7 +1878,7 @@ function derivedView() {
             const v = current()?.metrics[k]?.value;
             const group=Object.entries(RATIO_GROUPS).find(([,list])=>list.includes(k));
             const header=group[1][0]===k?`<tr class="table-group"><th colspan="4" scope="rowgroup">${e(group[0])}</th></tr>`:'';
-            return header+`<tr><td><button class="text-button" data-report-metric="${k}" data-help="${e(RATIO_HELP[k])}">${e(METRICS[k].label)}</button></td><td class="number">${format(v, unitOf(k))}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -1)), unitOf(k), k)}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -12)), unitOf(k), k)}</td></tr>`;
+            return header+`<tr class="${k === state.reportMetric ? "peer-highlight" : ""}"><td><button class="text-button" data-report-metric="${k}" data-help="${e(RATIO_HELP[k])}">${e(METRICS[k].label)}</button></td><td class="number">${format(v, unitOf(k))}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -1)), unitOf(k), k)}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -12)), unitOf(k), k)}</td></tr>`;
           })
           .join("")}</tbody></table>`,
         "Ratios calculados",

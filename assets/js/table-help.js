@@ -23,7 +23,9 @@ const headers = {
   MN: "Moneda nacional. En los EEFF B-2201 se expresa en soles.",
   ME: "Moneda extranjera. B-2201 expresa su equivalente en soles; RCL publica ME en dólares. Respeta la unidad indicada en cada dato.",
 };
-let tooltip, active, pinned=false;
+let tooltip,
+  active,
+  pinned = false;
 function close() {
   if (!tooltip) return;
   tooltip.hidden = true;
@@ -32,7 +34,10 @@ function close() {
   pinned = false;
 }
 function display(el, pin = false) {
-  if (!el) return;
+  if (!el?.dataset.help?.trim()) {
+    close();
+    return;
+  }
   if (!tooltip) {
     tooltip = document.createElement("div");
     tooltip.id = "table-help-tooltip";
@@ -60,6 +65,7 @@ export function enhanceTableHelp(root) {
         headers[text] ||
         Object.entries(headers).find(([k]) => text.startsWith(k + " "))?.[1] ||
         "";
+    if (!th.dataset.help?.trim()) th.removeAttribute("data-help");
     if (th.dataset.help) {
       th.tabIndex = 0;
       th.classList.add("has-table-help");
@@ -81,6 +87,8 @@ export function enhanceTableHelp(root) {
       b.dataset.help = cell.dataset.help;
       b.setAttribute("aria-label", "Definición de " + cell.textContent);
       cell.after(b);
+      if (cell.parentElement.classList.contains("row-title"))
+        cell.parentElement.classList.add("row-with-help");
     }
   }
   if (root.dataset.helpBound) return;
@@ -90,12 +98,19 @@ export function enhanceTableHelp(root) {
     display(ev.target.closest("[data-help]"));
   });
   root.addEventListener("pointerout", (ev) => {
-    if (!pinned && !ev.target.closest("[data-help]")?.contains(ev.relatedTarget)) close();
+    if (
+      !pinned &&
+      !ev.target.closest("[data-help]")?.contains(ev.relatedTarget)
+    )
+      close();
   });
-  root.addEventListener("focusin", (ev) =>
-    !pinned && display(ev.target.closest("[data-help]")),
+  root.addEventListener(
+    "focusin",
+    (ev) => !pinned && display(ev.target.closest("[data-help]")),
   );
-  root.addEventListener("focusout", () => { if(!pinned) close(); });
+  root.addEventListener("focusout", () => {
+    if (!pinned) close();
+  });
   root.addEventListener("click", (ev) => {
     const el = ev.target.closest(".table-help-button,th[data-help]");
     if (el) display(el, true);
@@ -106,5 +121,15 @@ export function enhanceTableHelp(root) {
   document.addEventListener("click", (ev) => {
     if (!ev.target.closest("[data-help]")) close();
   });
-  window.addEventListener("scroll", close, true);
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (pinned && active?.isConnected) {
+        const r = active.getBoundingClientRect();
+        if (r.bottom > 0 && r.top < window.innerHeight) display(active, true);
+        else close();
+      } else close();
+    },
+    true,
+  );
 }

@@ -66,7 +66,7 @@ const groupOrder = [
   "Financiación estable disponible",
   "Financiación estable requerida",
 ];
-export function metricHelp(code, row) {
+function sourceMetricHelp(code, row) {
   const label = metricLabel(row),
     s = norm(row.label);
   let help = `${label}. Fuente SBS ${code}. `;
@@ -189,4 +189,25 @@ export function reportRows(data, p, query = "") {
         : groupOrder.indexOf(a.group) - groupOrder.indexOf(b.group) ||
           a.index - b.index,
     );
+}
+
+export function metricHelp(code, row) {
+  const group = metricGroup(code, row);
+  const theory = {
+    Solvencia:
+      "La solvencia refleja la capacidad de absorber pérdidas con capital; distingue capital contable y regulatorio.",
+    "Calidad de activos":
+      "Estos indicadores muestran la exposición a problemas de pago. Una proporción más alta suele señalar mayor riesgo de deterioro; revisa también cobertura y evolución.",
+    Cobertura:
+      "Mide el respaldo de provisiones frente a la cartera problemática. 100% significa una unidad provisionada por cada unidad del denominador; no representa una garantía de recuperación.",
+    Rentabilidad:
+      "Mide el beneficio generado en relación con los recursos utilizados. ROE se refiere al patrimonio y ROA al activo; son porcentajes anualizados, no el rendimiento del mes.",
+    "Eficiencia y gestión":
+      "Relaciona costos, ingresos y recursos del banco. En ratios de gasto sobre margen, una menor proporción indica menos gasto por unidad de margen; en productividad, la lectura depende del denominador.",
+    Liquidez:
+      "Describe la capacidad para atender obligaciones de corto plazo. Importa la moneda y el horizonte, además del porcentaje.",
+  };
+  return (
+    sourceMetricHelp(code, row) + (theory[group] ? " " + theory[group] : "")
+  );
 }

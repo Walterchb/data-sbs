@@ -1,5 +1,7 @@
 # Indicadores y buscador global
 
+Para las novedades de esta entrega, consulta INSTALAR_CALCULADORA_Y_AYUDAS.md.
+
 ## Instalación
 
 1. En GitHub Desktop, ejecuta Fetch origin y Pull origin.
