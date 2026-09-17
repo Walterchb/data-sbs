@@ -7,7 +7,7 @@
 3. Haz Commit y Push origin.
 4. Cuando termine la publicación, recarga el dashboard con Ctrl+F5. En el móvil, recarga la página para cargar el código actualizado.
 
-Este paquete conserva las mejoras anteriores y la corrección de los errores de ECharts. No incluye datos históricos ni cambios en la sincronización SBS.
+Este paquete conserva las mejoras anteriores y la corrección de los errores de ECharts. No incluye estados financieros ni datos históricos. Esta revisión añade un índice de búsqueda y su regeneración durante la sincronización SBS. Consulta INSTALAR_INDICADORES_Y_BUSCADOR.md para los cambios más recientes.
 
 ## Cambios
 

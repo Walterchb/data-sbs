@@ -1,3 +1,7 @@
+import { reportRows, metricLabel, metricHelp, REPORT_NAMES } from "./report-detail.js";
+import { RATIO_GROUPS, RATIO_HELP, EXTRA_RATIOS, withAnalysisRatios } from "./analysis-ratios.js";
+import { initGlobalSearch } from "./global-search.js";
+import { enhanceTableHelp } from "./table-help.js";
 import {
   peerModel,
   peerChoices,
@@ -36,6 +40,7 @@ import {
 import { accountTable, wrapTable } from "./tables.js";
 import { initMobileTopbar } from "./mobile-topbar.js";
 
+Object.assign(METRICS, EXTRA_RATIOS);
 const $ = (id) => document.getElementById(id);
 const topbar = document.querySelector(".topbar");
 function syncToolbarOffset() {
@@ -957,12 +962,12 @@ function reportView() {
     );
   const currentIds = Object.keys(p.values);
   let catalog = reportData.catalog.filter((r) => currentIds.includes(r.id));
-  if (!catalog.some((r) => r.id === state.reportMetric))
+  if (!reportData.catalog.some((r) => r.id === state.reportMetric))
     state.reportMetric =
       state.report === "B-2402" && finite(p.values["calc:capital-tier1-share"])
         ? "calc:capital-tier1-share"
         : Object.values(p.keys)[0]?.id || catalog[0]?.id || "";
-  const metric = catalog.find((r) => r.id === state.reportMetric),
+  const metric = reportData.catalog.find((r) => r.id === state.reportMetric),
     unit = metric?.unit || "PEN_THOUSAND";
   const prev = reportData.periods.find((q) => q.date === shift(p.date, -1)),
     yoy = reportData.periods.find((q) => q.date === shift(p.date, -12));
@@ -983,55 +988,20 @@ function reportView() {
       all.push(byDate.get(d) || { date: d, value: null });
     series = all;
   }
-  const tokens = norm(state.reportQuery).split(" ").filter(Boolean);
-  catalog = catalog.filter((r) =>
-    tokens.every((t) => norm(r.label).includes(t)),
-  );
-  const rows = catalog.map((r) => {
-    const date = p.effective[r.id],
-      prior =
-        prev?.effective[r.id] === shift(date, -1) ? prev?.values[r.id] : null,
-      year =
-        yoy?.effective[r.id] === shift(date, -12) ? yoy?.values[r.id] : null;
-    const decemberDate = `${Number(date?.slice(0, 4)) - 1}-12`;
-    const december = reportData.periods.find((q) => q.date === decemberDate);
-    const yearStart =
-      !december?.warning && december?.effective[r.id] === decemberDate
-        ? december.values[r.id]
-        : null;
-    return { r, date, prior, year, yearStart };
-  });
+  const rows = reportRows(reportData, p, state.reportQuery);
+  const sector = state.report === "B-2336", quarterly = state.report === "B-230809", capital = state.report === "B-2402";
   exportRows = [
-    [
-      "archivo_periodo",
-      "dato_periodo",
-      "indicador",
-      "valor",
-      "unidad",
-      "mom",
-      "ytd",
-      "yoy",
-      ...(state.report === "B-2402" ? ["sistema_valor"] : []),
-      "fuente",
-    ],
-    ...rows.map(({ r, date, prior, year, yearStart }) => [
-      p.date,
-      date,
-      r.label,
-      p.values[r.id],
-      r.unit,
-      compare(p.values[r.id], prior, r.unit).value,
-      p.warning ? null : compare(p.values[r.id], yearStart, r.unit).value,
-      compare(p.values[r.id], year, r.unit).value,
-      ...(state.report === "B-2402" ? [p.peers?.system?.[r.id] ?? null] : []),
-      p.source_url,
-    ]),
+    ["archivo_periodo", "dato_periodo", "tipo", "indicador", "valor", "unidad", ...(sector ? ["participacion_pct"] : []), "mom", ...(quarterly ? ["qoq"] : []), "ytd", "yoy", ...(capital ? ["sistema_valor"] : []), "formula_definicion", "fuente"],
+    ...rows.map(({r,date,group,prior,quarter,year,yearStart,share,help}) => [p.date,date,group,r.label,p.values[r.id],r.unit,...(sector?[share]:[]),compare(p.values[r.id],prior,r.unit).value,...(quarterly?[compare(p.values[r.id],quarter,r.unit).value]:[]),compare(p.values[r.id],yearStart,r.unit).value,compare(p.values[r.id],year,r.unit).value,...(capital?[p.peers?.system?.[r.id]??null]:[]),help,p.source_url]),
   ];
-  const table = wrapTable(
-    `<table class="metric-table"><thead><tr><th>Indicador / magnitud</th><th class="number">${state.report === "B-2402" ? e(entityName()) : "Valor"}</th><th class="number">MoM</th><th class="number" title="Variación frente a diciembre del año anterior">YTD</th><th class="number">YoY</th>${state.report === "B-2402" ? '<th class="number">Banca múltiple</th>' : ""}<th>Periodo declarado</th></tr></thead><tbody>${rows.map(({ r, date, prior, year, yearStart }) => `<tr class="${r.id === state.reportMetric ? "peer-highlight" : ""}"><td><button class="text-button" data-report-metric="${r.id}">${e(r.label)}</button></td><td class="number">${format(p.values[r.id], r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], prior, r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], yearStart, r.unit)}</td><td class="number">${p.warning ? "—" : deltaCell(p.values[r.id], year, r.unit)}</td>${state.report === "B-2402" ? `<td class="number">${format(p.peers?.system?.[r.id], r.unit)}</td>` : ""}<td>${month(date)}</td></tr>`).join("")}</tbody></table>`,
-    "Datos regulatorios",
-    true,
-  );
+  const columns=6+Number(sector)+Number(quarterly)+Number(capital);
+  let lastGroup;
+  const body=rows.map(({r,date,group,prior,quarter,year,yearStart,share,help})=>{
+    const header=group && group!==lastGroup ? `<tr class="table-group"><th scope="rowgroup" colspan="${columns}">${e(group)}</th></tr>` : "";
+    lastGroup=group;
+    return header+`<tr class="${r.id===state.reportMetric?'peer-highlight':''}"><td><button class="text-button" data-report-metric="${r.id}" data-help="${e(help)}">${e(state.report === "B-234021" ? r.label.replace(/^.*? \| /, "") : r.label)}</button></td><td class="number">${format(p.values[r.id],r.unit)}</td>${sector?`<td class="number">${format(share,'PERCENT')}</td>`:''}<td class="number">${deltaCell(p.values[r.id],prior,r.unit)}</td>${quarterly?`<td class="number">${deltaCell(p.values[r.id],quarter,r.unit)}</td>`:''}<td class="number">${deltaCell(p.values[r.id],yearStart,r.unit)}</td><td class="number">${deltaCell(p.values[r.id],year,r.unit)}</td>${capital?`<td class="number">${format(p.peers?.system?.[r.id],r.unit)}</td>`:''}<td>${month(date)}</td></tr>`;
+  }).join('');
+  const table=wrapTable(`<table class="metric-table"><thead><tr><th>Indicador / magnitud</th><th class="number">${capital?e(entityName()):'Valor'}</th>${sector?'<th class="number" data-help="Saldo del sector / total de créditos a actividades empresariales de la misma entidad y fecha × 100. Orden descendente; el filtro conserva el total oficial.">% del total ↓</th>':''}<th class="number">MoM</th>${quarterly?'<th class="number">QoQ</th>':''}<th class="number">YTD</th><th class="number">YoY</th>${capital?'<th class="number">Banca múltiple</th>':''}<th>Periodo declarado</th></tr></thead><tbody>${body}</tbody></table>`,"Datos regulatorios",true);
   return (
     heading("Indicadores", `${reportData.title} · fuente ${state.report}`) +
     reportTabs() +
@@ -1046,12 +1016,12 @@ function reportView() {
         )
       : "") +
     panel(
-      metric?.label || "Serie histórica",
+      metric ? metricLabel(metric) : "Serie histórica",
       `Archivo SBS de ${month(p.date)} · dato declarado a ${month(p.effective[state.reportMetric])}`,
-      `${lineChart(series, unit, metric?.label || "Serie")}${statStrip(series, unit)}<p class="source-note">${reportData.frequency === "quarterly" ? "Promedio diario trimestral. No es un saldo de cierre." : "Cada métrica conserva su unidad y fecha."}</p>`,
-      rangeButtons(series, unit, metric?.label || "Serie"),
+      `${lineChart(series, unit, metric ? metricLabel(metric) : "Serie")}${statStrip(series, unit)}<p class="source-note">${reportData.frequency === "quarterly" ? "Promedio diario trimestral. No es un saldo de cierre." : "Cada métrica conserva su unidad y fecha."}</p>`,
+      rangeButtons(series, unit, metric ? metricLabel(metric) : "Serie"),
     ) +
-    `<section class="panel"><div class="panel-head"><h2>${state.report === "B-2402" ? "Datos SBS y magnitudes calculadas" : "Detalle de la fuente"}</h2><div class="controls"><label class="sr-only" for="report-search">Buscar indicador</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar indicador, moneda o componente…"></div></div>${rows.length ? table : '<div class="empty">No hay indicadores que coincidan con la búsqueda.</div>'}<p class="footnote">YTD: variación frente a diciembre del año anterior. Ratios: cambios en pb. Importes: cambios en %. Múltiplos: diferencias en veces. No se calculan comparaciones sin el periodo exacto.</p>${state.report === "B-2402" ? `<details class="help"><summary>Ver cálculo</summary><p>TIER 1 = APR × (TIER 1/APR) ÷ 100. Patrimonio efectivo total = APR × RCG ÷ 100. TIER 2 = Patrimonio efectivo total − TIER 1. La participación de cada nivel es su monto dividido entre el patrimonio efectivo total × 100.</p><p>Fuente: B-2402. Se utiliza toda la precisión disponible y se redondea solo al mostrar. Se requiere APR y ambos ratios del mismo periodo para cada entidad; si faltan datos o hay una advertencia de fecha, se muestra —.</p></details>` : ""}</section>`
+    `<section class="panel"><div class="panel-head"><h2>${state.report === "B-2402" ? "Datos SBS y magnitudes calculadas" : "Detalle de la fuente"}</h2><div class="controls"><label class="sr-only" for="report-search">Buscar indicador</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar indicador, moneda o componente…"></div></div>${rows.length ? table : '<div class="empty">No hay indicadores que coincidan con la búsqueda.</div>'}<p class="footnote">YTD: variación frente a diciembre del año anterior. QoQ: variación frente al trimestre anterior (tres meses). Ratios: cambios en pb. Importes: cambios en %. Múltiplos: diferencias en veces. No se calculan comparaciones sin el periodo exacto.</p>${state.report === "B-2402" ? `<details class="help"><summary>Ver cálculo</summary><p>TIER 1 = APR × (TIER 1/APR) ÷ 100. Patrimonio efectivo total = APR × RCG ÷ 100. TIER 2 = Patrimonio efectivo total − TIER 1. La participación de cada nivel es su monto dividido entre el patrimonio efectivo total × 100.</p><p>Fuente: B-2402. Se utiliza toda la precisión disponible y se redondea solo al mostrar. Se requiere APR y ambos ratios del mismo periodo para cada entidad; si faltan datos o hay una advertencia de fecha, se muestra —.</p></details>` : ""}</section>`
   );
 }
 function structureView() {
@@ -1450,7 +1420,7 @@ async function render() {
     baseFinancial = base;
     loadedEntity = requested.entity;
     financial = selectFinancial(base, bundle);
-    overview = selectOverview(baseOverview, bundle);
+    overview = withAnalysisRatios(selectOverview(baseOverview, bundle), financial);
     if (source)
       reportData =
         requested.report === "concentration" && requested.view === "reports"
@@ -1489,6 +1459,7 @@ async function render() {
     $("account-controls").hidden = state.view !== "balance";
     $("account-controls").innerHTML =
       state.view === "balance" ? accountControls() : "";
+    enhanceTableHelp($("content"));
     mountCharts({ entity: entityName(), date: state.date });
     urlState();
   } catch (err) {
@@ -1549,6 +1520,16 @@ function switchTheme() {
   } catch {}
 }
 function bind() {
+  initGlobalSearch({
+    getContext: () => ({ manifest, financial: baseFinancial, state }),
+    navigate: async target => {
+      closeDetails();
+      Object.assign(state, target, {query:"",reportQuery:""});
+      await render();
+      window.scrollTo({top:0,behavior:"auto"});
+      $("content").focus({preventScroll:true});
+    },
+  });
   $("entity-close").addEventListener("click", () => $("entity-dialog").close());
   $("entity-dialog").addEventListener("close", () =>
     $("entity-select")?.focus(),
@@ -1856,36 +1837,21 @@ if (location.protocol === "file:") {
 } else init();
 
 function derivedView() {
-  const keys = [
-    "npl",
-    "refi_ratio",
-    "car",
-    "coverage",
-    "coverage_car",
-    "provisions_direct",
-    "loan_deposit",
-    "available_public",
-    "leverage",
-    "liab_cap_res",
-    "net_fin_margin",
-    "operating_margin",
-    "net_margin",
-    "admin_eff",
-    "admin_gross_margin",
-  ];
+  const keys = Object.values(RATIO_GROUPS).flat();
   if (!keys.includes(state.reportMetric)) state.reportMetric = "car";
   const key = state.reportMetric,
     config = METRICS[key],
-    m = current().metrics[key],
+    m = current()?.metrics[key],
     unit = unitOf(key),
     series = metricSeries(key);
   exportRows = [
-    ["indicador", "valor", "unidad", "periodo", "formula_fuente"],
+    ["indicador", "valor", "unidad", "periodo", "formula", "fuente"],
     ...keys.map((k) => [
       METRICS[k].label,
-      current().metrics[k]?.value,
+      current()?.metrics[k]?.value,
       unitOf(k),
       state.date,
+      RATIO_HELP[k],
       "B-2201",
     ]),
   ];
@@ -1898,21 +1864,23 @@ function derivedView() {
     panel(
       config.label,
       month(state.date),
-      `${lineChart(series, unit, config.label)}${statStrip(series, unit, false)}`,
+      `${lineChart(series, unit, config.label)}${statStrip(series, unit, false)}<p class="source-note">${e(RATIO_HELP[key])}</p>`,
       rangeButtons(series, unit, config.label),
     ) +
     panel(
       "Diagnóstico financiero",
-      "Haz clic en un indicador para revisar la serie; los márgenes usan acumulados del mismo año.",
+      "Selecciona un ratio para revisar su fórmula y evolución. YTD: acumulado desde enero. 12M: últimos doce meses, sin extrapolar el mes actual.",
       wrapTable(
         `<table><thead><tr><th>Ratio / fórmula</th><th class="number">Valor</th><th class="number">MoM</th><th class="number">YoY</th></tr></thead><tbody>${keys
           .map((k) => {
-            const v = current().metrics[k]?.value;
-            return `<tr><td><button class="text-button" data-report-metric="${k}">${e(METRICS[k].label)}</button></td><td class="number">${format(v, unitOf(k))}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -1)), unitOf(k), k)}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -12)), unitOf(k), k)}</td></tr>`;
+            const v = current()?.metrics[k]?.value;
+            const group=Object.entries(RATIO_GROUPS).find(([,list])=>list.includes(k));
+            const header=group[1][0]===k?`<tr class="table-group"><th colspan="4" scope="rowgroup">${e(group[0])}</th></tr>`:'';
+            return header+`<tr><td><button class="text-button" data-report-metric="${k}" data-help="${e(RATIO_HELP[k])}">${e(METRICS[k].label)}</button></td><td class="number">${format(v, unitOf(k))}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -1)), unitOf(k), k)}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -12)), unitOf(k), k)}</td></tr>`;
           })
           .join("")}</tbody></table>`,
         "Ratios calculados",
-      ),
+      ) + `<p class="footnote">Créditos brutos = vigentes + refinanciados y reestructurados + atrasados; no se usa la cartera neta de provisiones. Los ratios 12M requieren historia completa y las bases exactas. — significa que falta información o el denominador es cero.</p><details class="help"><summary>Otros ratios de riesgo y rentabilidad</summary><p>ROE, ROA y cartera ajustada por castigos se consultan como indicadores oficiales SBS. No se reconstruyen castigos, CET1 ni APR a partir del patrimonio contable.</p><button data-report="B-2401">Ver indicadores oficiales</button> <button data-report="B-2402">Ver capital regulatorio</button></details>`,
     )
   );
 }

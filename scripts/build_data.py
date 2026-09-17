@@ -265,4 +265,7 @@ def build(db,output,today=None):
 if __name__=='__main__':
     ap=argparse.ArgumentParser();ap.add_argument('--as-of',type=date.fromisoformat);args=ap.parse_args()
     result=build(json.loads((ROOT/'data/hub.json').read_text()),ROOT/'data',args.as_of)
+    if not result['errors']:
+        from build_search_index import build_search_index
+        build_search_index()
     sys.exit(1 if result['errors'] else 0)
