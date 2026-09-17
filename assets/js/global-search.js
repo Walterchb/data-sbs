@@ -211,7 +211,7 @@ export function initGlobalSearch({ getContext, navigate }) {
   const dialog = document.createElement("dialog");
   dialog.className = "search-dialog";
   dialog.setAttribute("aria-labelledby", "global-search-title");
-  dialog.innerHTML = `<div class="search-head"><div><h2 id="global-search-title">Buscar en el análisis</h2><p>Indicadores, fórmulas, cuentas y fuentes</p></div><button type="button" data-search-close aria-label="Cerrar buscador">✕</button></div><div class="search-input-wrap"><label class="sr-only" for="global-search-input">Qué quieres consultar</label><input id="global-search-input" type="search" autocomplete="off" placeholder="ROE, costo de riesgo, depósitos…"><span class="search-context"></span></div><div class="search-options"><label><input type="checkbox" id="search-exact"> Coincidencia exacta</label><select id="search-category" aria-label="Tipo de resultado"><option value="">Todo</option><option>Ratios de análisis</option><option>Indicadores</option><option>Cuentas SBS</option><option>Secciones</option></select></div><p class="search-explain">Busca un concepto y abre el resultado para consultar su valor, fórmula y evolución.</p><div class="search-results" aria-label="Resultados"></div><div class="search-footer" role="status" aria-live="polite"></div>`;
+  dialog.innerHTML = `<div class="search-head"><div><h2 id="global-search-title">Buscar datos y conceptos</h2><p>Encuentra el dato y abre su sección · Ctrl + K</p></div><button type="button" data-search-close aria-label="Cerrar buscador">✕</button></div><div class="search-input-wrap"><label class="sr-only" for="global-search-input">Qué quieres consultar</label><input id="global-search-input" type="search" autocomplete="off" placeholder="ROE, costo de riesgo, depósitos…"><span class="search-context"></span></div><div class="search-options"><label><input type="checkbox" id="search-exact"> Coincidencia exacta</label><select id="search-category" aria-label="Tipo de resultado"><option value="">Todo</option><option>Ratios de análisis</option><option>Indicadores</option><option>Cuentas SBS</option><option>Secciones</option></select></div><p class="search-explain">Busca un concepto y abre el resultado para consultar su valor, fórmula y evolución.</p><div class="search-suggestions"><button type="button" data-suggest="ROE">ROE</button><button type="button" data-suggest="CAR">CAR</button><button type="button" data-suggest="liquidez">Liquidez</button><button type="button" data-suggest="depósitos">Depósitos</button></div><div class="search-results" aria-label="Resultados"></div><div class="search-footer" role="status" aria-live="polite"></div>`;
   document.body.append(dialog);
   const input = dialog.querySelector("input"),
     results = dialog.querySelector(".search-results"),
@@ -243,6 +243,7 @@ export function initGlobalSearch({ getContext, navigate }) {
     return loading;
   }
   function show() {
+    dialog.querySelector(".search-suggestions").hidden = !!input.value.trim();
     const exact = dialog.querySelector("#search-exact").checked,
       category = dialog.querySelector("#search-category").value;
     found = searchEntries(
@@ -310,6 +311,8 @@ export function initGlobalSearch({ getContext, navigate }) {
     previous?.focus({ preventScroll: true });
   });
   dialog.addEventListener("click", async (ev) => {
+    const suggestion = ev.target.closest("[data-suggest]");
+    if (suggestion) { input.value = suggestion.dataset.suggest; show(); input.focus(); return; }
     const b = ev.target.closest("[data-result]");
     if (!b) return;
     const target = found[Number(b.dataset.result)]?.target;

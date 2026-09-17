@@ -1,5 +1,6 @@
+import { savedCharts, captureVisibleTables } from "./report-assets.js";
 import { escape as e, month, num } from "./format.js";
-import { finite, norm, filterTree, treeOrder } from "./analytics.js";
+import { finite, filterTree, treeOrder } from "./analytics.js";
 import { lockPageScroll } from "./modal-scroll.js";
 import {
   parseFormula,
@@ -17,6 +18,9 @@ export function initCalculator(getContext) {
       reviewDate: new Date().toLocaleDateString("en-CA"),
       conclusion: "",
       items: [],
+      attachments: [],
+      subtitle: "Análisis financiero",
+      author: "",
     },
     variables = {},
     nextVariable = 0,
@@ -26,17 +30,18 @@ export function initCalculator(getContext) {
     period = "",
     currency = "2",
     query = "",
-    busy = false;
+    busy = false,
+    availableTables = [];
   const $ = (s) => dialog.querySelector(s);
   function create() {
     dialog = document.createElement("dialog");
     dialog.className = "calculator-dialog";
     dialog.setAttribute("aria-labelledby", "calculator-title");
-    dialog.innerHTML = `<header class="calc-header"><div><h2 id="calculator-title">Calculadora SBS</h2><p id="calc-context"></p></div><button type="button" data-calc-close aria-label="Cerrar calculadora">✕</button></header>
-  <nav class="calc-mobile-nav" aria-label="Pasos de la calculadora"><button type="button" data-calc-step=".calc-source">Cuentas</button><button type="button" data-calc-step=".calc-composer">Cálculo</button><button type="button" data-calc-step=".calc-review">Informe</button></nav><div class="calc-body"><aside class="calc-source"><h3>1. Elige tus cuentas</h3><p>Arrastra una cuenta a la fórmula o toca + para insertarla.</p><div class="calc-source-controls"><select id="calc-statement" aria-label="Estado financiero"><option value="balance">Balance</option><option value="income">Resultados</option></select><select id="calc-period" aria-label="Periodo de la cuenta"></select><select id="calc-currency" aria-label="Columna monetaria"><option value="2">Total · S/ miles</option><option value="0">MN · S/ miles</option><option value="1">ME · S/ miles</option></select></div><input id="calc-search" type="search" placeholder="Buscar cuenta, rubro o fila…" aria-label="Buscar cuenta"><div class="calc-tree" role="region" aria-label="Jerarquía de cuentas SBS"></div></aside>
-  <main class="calc-editor"><section class="calc-composer"><h3>2. Construye el cálculo</h3><label>Nombre del cálculo<input id="calc-name" maxlength="160" placeholder="Ej.: Cobertura de cartera atrasada"></label><div class="calc-formula-head"><label for="calc-expression">Fórmula</label><button type="button" data-calc-clear>Nuevo cálculo</button></div><textarea id="calc-expression" rows="3" spellcheck="false" placeholder="Ej.: (a+b)/c^(1/360)" aria-describedby="calc-formula-help"></textarea><p id="calc-formula-help">Las letras representan las cuentas elegidas. Escribe constantes y operadores; usa punto o coma decimal, sin separador de miles.</p><div class="calc-operators">${["+", "-", "*", "/", "^", "(", ")"].map((op) => `<button type="button" data-operator="${op}">${op}</button>`).join("")}<button type="button" data-calc-constant>+ Constante</button></div><div id="calc-variables"></div><div class="calc-result-row"><div><span>Resultado</span><output id="calc-result" aria-live="polite">—</output></div><label>Formato<select id="calc-unit"><option value="number">Número</option><option value="percent">Porcentaje · 0,12 → 12%</option><option value="times">Veces</option><option value="money">S/ miles</option></select></label></div><p id="calc-message" role="status"></p><label>Comentario <span class="muted">(opcional)</span><textarea id="calc-note" rows="2" maxlength="3000" placeholder="Lectura o conclusión de este cálculo"></textarea></label><button type="button" id="calc-add" class="primary">Agregar al informe</button></section>
-  <section class="calc-review"><h3>3. Prepara la revisión</h3><div class="calc-review-fields"><label>Nombre de la revisión<input id="calc-title" maxlength="180"></label><label>Fecha de revisión<input type="date" id="calc-review-date"></label></div><div id="calc-items"></div><label>Conclusión general <span class="muted">(opcional)</span><textarea id="calc-conclusion" rows="2" maxlength="5000"></textarea></label><p class="footnote">El informe incluye los cálculos agregados, sus cuentas y fechas. El borrador se conserva durante esta sesión. Los valores se fijan al agregar cada cuenta.</p></section></main></div>
-  <footer class="calc-footer"><span id="calc-export-status" role="status">Agrega un cálculo para exportar.</span><div><button type="button" id="calc-excel">Descargar Excel</button><button type="button" id="calc-pdf">Descargar PDF</button></div></footer>`;
+    dialog.innerHTML = `<header class="calc-header"><div><h2 id="calculator-title">Preparar Informe</h2><p id="calc-context"></p></div><button type="button" data-calc-close aria-label="Cerrar informe">✕</button></header>
+  <nav class="calc-workflow" aria-label="Preparar informe"><button type="button" data-report-tab="calculate" aria-pressed="true">1 · Cálculos</button><button type="button" data-report-tab="review" aria-pressed="false">2 · Contenido y revisión <span id="report-count">0</span></button><span>Diseño automático · borrador de sesión</span></nav><nav class="calc-mobile-nav" aria-label="Pasos de la calculadora"><button type="button" data-calc-step=".calc-source">Cuentas</button><button type="button" data-calc-step=".calc-composer">Cálculo</button><button type="button" data-calc-step=".calc-review">Informe</button></nav><div class="calc-body"><aside class="calc-source"><h3>Elige tus cuentas</h3><p>Arrastra una cuenta a la fórmula o toca + para insertarla.</p><div class="calc-source-controls"><select id="calc-statement" aria-label="Estado financiero"><option value="balance">Balance</option><option value="income">Resultados</option></select><select id="calc-period" aria-label="Periodo de la cuenta"></select><select id="calc-currency" aria-label="Columna monetaria"><option value="2">Total · S/ miles</option><option value="0">MN · S/ miles</option><option value="1">ME · S/ miles</option></select></div><input id="calc-search" type="search" placeholder="Buscar cuenta, rubro o fila…" aria-label="Buscar cuenta"><div class="calc-tree" role="region" aria-label="Jerarquía de cuentas SBS"></div></aside>
+  <main class="calc-editor"><section class="calc-composer"><h3>Construye el cálculo</h3><p>Elige cuentas a la izquierda, escribe una fórmula y agrega el resultado al informe.</p><label>Nombre del cálculo<input id="calc-name" maxlength="160" placeholder="Ej.: Cobertura de cartera atrasada"></label><div class="calc-formula-head"><label for="calc-expression">Fórmula</label><button type="button" data-calc-clear>Nuevo cálculo</button></div><textarea id="calc-expression" rows="3" spellcheck="false" placeholder="Ej.: (a+b)/c^(1/360)" aria-describedby="calc-formula-help"></textarea><p id="calc-formula-help">Las letras representan las cuentas elegidas. Escribe constantes y operadores; usa punto o coma decimal, sin separador de miles.</p><div class="calc-operators">${["+", "-", "*", "/", "^", "(", ")"].map((op) => `<button type="button" data-operator="${op}">${op}</button>`).join("")}<button type="button" data-calc-constant>+ Constante</button></div><div id="calc-variables"></div><div class="calc-result-row"><div><span>Resultado</span><output id="calc-result" aria-live="polite">—</output></div><label>Formato<select id="calc-unit"><option value="number">Número</option><option value="percent">Porcentaje · 0,12 → 12%</option><option value="times">Veces</option><option value="money">S/ miles</option></select></label></div><p id="calc-message" role="status"></p><label>Comentario <span class="muted">(opcional)</span><textarea id="calc-note" rows="2" maxlength="3000" placeholder="Lectura o conclusión de este cálculo"></textarea></label><button type="button" id="calc-add" class="primary">Agregar al informe</button></section>
+  <section class="calc-review" hidden><h3>Contenido del informe</h3><p class="report-intro">La carátula, el resumen y los anexos se organizan automáticamente. Revisa el contenido y descarga.</p><div class="calc-review-fields"><label>Nombre de la revisión<input id="calc-title" maxlength="180"></label><label>Fecha de revisión<input type="date" id="calc-review-date"></label></div><div class="calc-review-fields"><label>Subtítulo de la carátula<input id="calc-subtitle" maxlength="220" placeholder="Análisis financiero"></label><label>Preparado por (opcional)<input id="calc-author" maxlength="120"></label></div><h4>Resultados</h4><div id="calc-items"></div><h4>Gráficos y tablas</h4><div class="report-add-content"><label>Gráficos guardados<select id="report-chart-picker" aria-label="Gráficos guardados"></select></label><button type="button" data-report-add-chart>Agregar gráfico</button><label>Tablas de la vista actual<select id="report-table-picker" aria-label="Tablas disponibles"></select></label><button type="button" data-report-add-table>Agregar tabla</button></div><p class="footnote">Guarda imágenes desde Preparar imagen → Guardar gráfico. Las tablas incluyen las filas visibles: puedes cerrar el informe, cambiar de vista y volver para añadir otra.</p><div id="report-attachments"></div><label>Conclusión general <span class="muted">(opcional)</span><textarea id="calc-conclusion" rows="2" maxlength="5000"></textarea></label><p class="footnote">PDF: carátula → resultados → gráficos y tablas → anexo de cálculos. Excel: resultados con fórmulas, datos y contenido adjunto. Los resultados se muestran con 2 decimales; el cálculo conserva su precisión. Todo el borrador se elimina al recargar.</p></section></main></div>
+  <section class="report-pdf-preview" hidden><header><strong>Vista previa del PDF</strong><button type="button" data-close-pdf>Volver al informe</button></header><iframe title="Vista previa del informe PDF"></iframe></section><footer class="calc-footer"><span id="calc-export-status" role="status">Agrega un cálculo o elige gráficos y tablas en Contenido.</span><div><button type="button" id="calc-preview">Vista previa PDF</button><button type="button" id="calc-excel">Descargar Excel</button><button type="button" id="calc-pdf">Descargar PDF</button></div></footer>`;
     document.body.append(dialog);
     dialog.addEventListener("close", () => {
       release?.();
@@ -59,6 +64,7 @@ export function initCalculator(getContext) {
       query = ev.target.value;
       renderTree();
     };
+    for (const key of ['subtitle','author']) $('#calc-'+key).oninput = ev => { draft[key] = ev.target.value; };
     $("#calc-expression").oninput = preview;
     $("#calc-unit").onchange = preview;
     $("#calc-title").oninput = (ev) => {
@@ -73,6 +79,21 @@ export function initCalculator(getContext) {
     dialog.addEventListener("click", (ev) => {
       const b = ev.target.closest("button");
       if (!b) return;
+      if (b.dataset.reportTab) setTab(b.dataset.reportTab);
+      if (b.hasAttribute('data-report-add-chart')) {
+        const chart = savedCharts().find(c => c.id === $('#report-chart-picker').value);
+        if (chart) addAttachment({...chart, url:undefined});
+      }
+      if (b.hasAttribute('data-report-add-table')) {
+        const table = availableTables.find(t => t.id === $('#report-table-picker').value);
+        if (table) addAttachment(structuredClone(table));
+      }
+      if (b.dataset.attachmentRemove !== undefined) { const [removed] = draft.attachments.splice(Number(b.dataset.attachmentRemove),1); if (removed?.kind === 'chart') URL.revokeObjectURL(removed.url); renderItems(); }
+      if (b.dataset.attachmentMove !== undefined) {
+        const i = Number(b.dataset.attachmentMove), j = i + Number(b.dataset.direction);
+        if (j >= 0 && j < draft.attachments.length) [draft.attachments[i],draft.attachments[j]] = [draft.attachments[j],draft.attachments[i]];
+        renderItems();
+      }
       if (b.dataset.calcStep)
         $(b.dataset.calcStep).scrollIntoView({ block: "start" });
       if (b.dataset.calcToggle) {
@@ -90,6 +111,7 @@ export function initCalculator(getContext) {
       }
       if (b.hasAttribute("data-calc-clear")) clearEditor();
       if (b.hasAttribute("data-calc-constant")) {
+        if (Object.keys(variables).length >= 80) { $("#calc-message").textContent = "Máximo 80 variables por cálculo."; return; }
         while (variables[variableName(nextVariable)]) nextVariable++;
         const key = variableName(nextVariable++);
         variables[key] = { value: 1, label: "Constante", kind: "constant" };
@@ -97,6 +119,7 @@ export function initCalculator(getContext) {
         insert(key);
       }
       if (b.dataset.calcEdit !== undefined) {
+        setTab("calculate");
         editing = Number(b.dataset.calcEdit);
         const item = draft.items[editing];
         variables = structuredClone(item.variables);
@@ -166,8 +189,11 @@ export function initCalculator(getContext) {
         $("#calc-message").textContent = error.message;
       }
     };
+    $("[data-close-pdf]").onclick = () => { $(".report-pdf-preview").hidden = true; };
     $("#calc-excel").onclick = () => exportReview("xlsx");
     $("#calc-pdf").onclick = () => exportReview("pdf");
+    $("#calc-preview").onclick = () => exportReview("preview");
+    $("#report-attachments").addEventListener("input", ev => { if (ev.target.dataset.attachmentTitle !== undefined) draft.attachments[Number(ev.target.dataset.attachmentTitle)].title = ev.target.value; });
   }
   function clearEditor() {
     variables = {};
@@ -198,8 +224,9 @@ export function initCalculator(getContext) {
       ? rows
           .map((r) => {
             const children = catalog.some((c) => c.parent === r.id),
-              value = values[r.id]?.[Number(currency)];
-            return `<div class="calc-account" draggable="${finite(value)}" data-account-drag="${e(r.id)}" style="--depth:${r.depth}"><button type="button" class="calc-expand" ${children ? `data-calc-toggle="${r.id}" aria-expanded="${!collapsed.has(r.id)}" aria-label="${collapsed.has(r.id) ? "Expandir" : "Plegar"} ${e(r.label)}"` : 'disabled aria-hidden="true"'}>${children ? (collapsed.has(r.id) ? "›" : "⌄") : ""}</button><div><strong>${e(r.label)}</strong><small>${num(value)} · ${r.kind === "ytd" ? "YTD" : "Cierre"}</small></div><button type="button" data-calc-account="${r.id}" ${finite(value) ? "" : "disabled"} aria-label="Agregar ${e(r.label)}">+</button></div>`;
+              value = values[r.id]?.[Number(currency)],
+              keys = Object.entries(variables).filter(([,v]) => v.id === r.id && v.date === period && v.currency === currency && v.entity === ctx.entity).map(([k])=>k);
+            return `<div class="calc-account ${keys.length ? 'is-used' : ''}" draggable="${finite(value)}" data-account-drag="${e(r.id)}" style="--depth:${r.depth}"><button type="button" class="calc-expand" ${children ? `data-calc-toggle="${r.id}" aria-expanded="${!collapsed.has(r.id)}" aria-label="${collapsed.has(r.id) ? "Expandir" : "Plegar"} ${e(r.label)}"` : 'disabled aria-hidden="true"'}>${children ? (collapsed.has(r.id) ? "›" : "⌄") : ""}</button><div><strong>${e(r.label)}</strong><small>${num(value)} · ${r.kind === "ytd" ? "YTD" : "Cierre"}</small></div>${keys.length ? `<span class="calc-account-keys" aria-label="Variable ${keys.join(', ')}">${keys.join(', ')}</span>` : ''}<button type="button" data-calc-account="${r.id}" ${finite(value) ? "" : "disabled"} aria-label="Agregar ${e(r.label)}">+</button></div>`;
           })
           .join("")
       : '<p class="empty">No hay cuentas que coincidan.</p>';
@@ -244,6 +271,7 @@ export function initCalculator(getContext) {
       $("#calc-expression").scrollIntoView({ block: "center" });
   }
   function renderVariables() {
+    renderTree();
     $("#calc-variables").innerHTML = Object.entries(variables)
       .map(
         ([key, v]) =>
@@ -284,12 +312,42 @@ export function initCalculator(getContext) {
           )
           .join("")
       : '<p class="empty">Todavía no hay cálculos en la revisión.</p>';
-    for (const id of ["#calc-excel", "#calc-pdf"])
-      $(id).disabled = !draft.items.length || busy;
+    renderAttachments();
+    $('#report-count').textContent = draft.items.length + draft.attachments.length;
+    for (const id of ["#calc-excel", "#calc-pdf", "#calc-preview"])
+      $(id).disabled = !(draft.items.length + draft.attachments.length) || busy;
+  }
+  function setTab(tab) {
+    dialog.dataset.reportTab = tab;
+    $('.calc-composer').hidden = tab !== 'calculate';
+    $('.calc-source').hidden = tab !== 'calculate';
+    $('.calc-review').hidden = tab !== 'review';
+    dialog.querySelectorAll('[data-report-tab]').forEach(b => b.setAttribute('aria-pressed',String(b.dataset.reportTab === tab)));
+    $('.calc-editor').scrollTop = 0;
+    if (tab === 'review') renderItems();
+  }
+  function addAttachment(item) {
+    if (draft.attachments.some(a => a.id === item.id)) { $('#calc-export-status').textContent = 'Este contenido ya está en el informe.'; return; }
+    if (draft.attachments.length >= 30) { $('#calc-export-status').textContent = 'Máximo 30 gráficos o tablas por informe.'; return; }
+    if (item.kind === 'table' && item.rows.length > 1000) { $('#calc-export-status').textContent = 'Filtra la tabla a 1000 filas o menos antes de agregarla.'; return; }
+    if (item.kind === 'chart') {
+      if (draft.attachments.reduce((n,a)=>n+(a.png?.size||0),0)+item.png.size > 25*1024*1024) { $('#calc-export-status').textContent='El informe admite hasta 25 MB de gráficos. Quita alguno para continuar.'; return; }
+      item.url = URL.createObjectURL(item.png);
+    }
+    draft.attachments.push(item); renderItems();
+    $('#calc-export-status').textContent = 'Contenido agregado. Puedes cambiar su título y orden.';
+  }
+  function renderAttachments() {
+    const charts = savedCharts();
+    $('#report-chart-picker').innerHTML = charts.length ? charts.map(c => `<option value="${c.id}">${e(c.title)}</option>`).join('') : '<option>No hay gráficos guardados</option>';
+    $('[data-report-add-chart]').disabled = !charts.length;
+    $('#report-table-picker').innerHTML = availableTables.length ? availableTables.map(t => `<option value="${t.id}">${e(t.title)} · ${t.rows.length} filas</option>`).join('') : '<option>Sin tablas en esta vista</option>';
+    $('[data-report-add-table]').disabled = !availableTables.length;
+    $('#report-attachments').innerHTML = draft.attachments.length ? draft.attachments.map((a,i) => `<article class="report-attachment">${a.kind === 'chart' ? `<img src="${a.url}" alt="${e(a.title)}">` : '<span class="report-table-icon" aria-hidden="true">▦</span>'}<div><small>${a.kind === 'chart' ? 'GRÁFICO' : `TABLA · ${a.rows.length} filas`}</small><input data-attachment-title="${i}" value="${e(a.title)}" maxlength="160" aria-label="Título del contenido ${i+1}"><small>${e(a.context || a.subtitle || '')}</small></div><button type="button" data-attachment-move="${i}" data-direction="-1" ${i === 0 ? 'disabled' : ''} aria-label="Subir contenido">↑</button><button type="button" data-attachment-move="${i}" data-direction="1" ${i === draft.attachments.length-1 ? 'disabled' : ''} aria-label="Bajar contenido">↓</button><button type="button" data-attachment-remove="${i}" aria-label="Quitar contenido">×</button></article>`).join('') : '<p class="empty">Puedes añadir gráficos y tablas aunque el informe no tenga cálculos.</p>';
   }
   async function exportReview(type) {
     if (busy) return;
-    if (!draft.items.length) return;
+    if (!(draft.items.length + draft.attachments.length)) return;
     if (!draft.title.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(draft.reviewDate)) {
       $("#calc-export-status").textContent =
         "Completa el nombre y la fecha de revisión.";
@@ -302,7 +360,7 @@ export function initCalculator(getContext) {
       const { downloadReview } = await import("./calculator-export.js");
       await downloadReview(structuredClone(draft), type);
       $("#calc-export-status").textContent =
-        "Archivo listo. Incluye los cálculos agregados al informe.";
+        "Informe listo: incluye los resultados y el contenido agregado.";
     } catch (error) {
       $("#calc-export-status").textContent =
         "No se pudo exportar: " + error.message;
@@ -311,8 +369,11 @@ export function initCalculator(getContext) {
       renderItems();
     }
   }
+  window.matchMedia("(max-width:760px)").addEventListener?.("change", ev => { if (ev.matches && dialog?.open) dialog.close(); });
   document.getElementById("calculator-open").onclick = () => {
+    if (window.matchMedia("(max-width:760px)").matches) return;
     ctx = getContext();
+    availableTables = captureVisibleTables(document.getElementById("content"), `${ctx.entityName} · ${month(ctx.date)}`);
     if (!ctx.financial) return;
     if (!dialog) create();
     period = ctx.date;
@@ -331,6 +392,7 @@ export function initCalculator(getContext) {
           `<option value="${p.date}" ${p.date === period ? "selected" : ""}>${month(p.date)}</option>`,
       )
       .join("");
+    for (const key of ["subtitle","author"]) $("#calc-"+key).value = draft[key];
     $("#calc-title").value = draft.title;
     $("#calc-review-date").value = draft.reviewDate;
     $("#calc-conclusion").value = draft.conclusion;

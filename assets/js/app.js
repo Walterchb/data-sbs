@@ -546,7 +546,7 @@ function updateStatus() {
   $("health-label").textContent = health.errors
     ? `${health.errors} errores`
     : lastChecked
-      ? `Sync ${lastChecked}`
+      ? `Actualizado ${lastChecked}`
       : health.warnings
         ? "Fuentes con avisos"
         : "Fuentes verificadas";

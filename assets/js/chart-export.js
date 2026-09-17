@@ -1,3 +1,4 @@
+import { saveChart, savedCharts, removeChart } from "./report-assets.js";
 import {
   EXPORT_FONTS,
   PAPER_SERIES_STYLES,
@@ -73,7 +74,7 @@ export async function exportImageBlob(svg, s) {
     let blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
     if (s.format === "svg") return blob;
     const size = presentationSize(s.width, s.height, s);
-    const pixels = rasterSize(size.width, size.height, s.exportScale);
+    const pixels = s.reportMaxPixels ? {width:Math.round(size.width * Math.min(2,s.reportMaxPixels/Math.max(size.width,size.height))),height:Math.round(size.height * Math.min(2,s.reportMaxPixels/Math.max(size.width,size.height))),valid:true} : rasterSize(size.width, size.height, s.exportScale);
     if (!pixels.valid)
       throw new Error(
         "La imagen supera 48 megapíxeles. Reduce la resolución o el tamaño.",
@@ -750,8 +751,8 @@ export function openChartExport(payload) {
       <div class="export-field-row"><label>Opacidad · %<input type="number" name="patternOpacity" min="0" max="100" value="15"></label><label>Grosor · px<input type="number" name="patternStroke" min="0.5" max="4" step="0.5" value="1"></label></div>
       <label>Sombra<input type="range" name="frameShadow" min="0" max="100" value="25" aria-label="Intensidad de sombra"></label>
       <p class="export-control-note">Los fondos y patrones son vectoriales. 0 elimina la sombra o el redondeado. Solo sombra conserva la transparencia exterior en PNG y SVG; JPG usa fondo blanco.</p>
-    </div></details></form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
-    <footer class="chart-export-footer"><span>La imagen incluye el rango visible del gráfico.</span><div class="chart-export-actions"><button type="button" data-copy-chart>Copiar gráfico</button><button type="button" data-download>Descargar imagen</button></div></footer>`;
+    </div></details><details class="export-section"><summary>6 · Guardados</summary><div class="export-section-body"><p class="export-control-note">Gráficos de esta sesión, listos para Preparar Informe. Se eliminan al recargar. El informe usa PNG sin pérdida, hasta 2400 px; tus descargas originales conservan su resolución.</p><div data-saved-charts></div></div></details></form><section class="chart-export-preview" aria-label="Vista previa"><div class="export-preview-surface"><img alt="Vista previa del gráfico personalizado"></div><p class="export-preview-size"></p><p class="export-preview-status" role="status" aria-live="polite"></p></section></div>
+    <footer class="chart-export-footer"><span>La imagen incluye el rango visible del gráfico.</span><div class="chart-export-actions"><button type="button" data-save-chart>Guardar gráfico</button><button type="button" data-copy-chart>Copiar gráfico</button><button type="button" data-download>Descargar imagen</button></div></footer>`;
   const trigger = document.activeElement;
   const unlockScroll = lockPageScroll();
   document.body.append(dialog);
@@ -770,6 +771,7 @@ export function openChartExport(payload) {
     : "Este navegador no permite copiar imágenes. Usa Descargar imagen.";
   const setDisabled = (value) => {
     download.disabled = value;
+    dialog.querySelector("[data-save-chart]").disabled = value;
     copy.disabled = value || !clipboardAvailable;
   };
   let svg = "",
@@ -1171,6 +1173,28 @@ export function openChartExport(payload) {
     }
     renderPreview();
   });
+  function renderSaved() {
+    dialog.querySelector('[data-saved-charts]').innerHTML = savedCharts().length ? savedCharts().map(c => `<article class="saved-chart-card"><img src="${c.url}" alt="${escape(c.title)}"><strong>${escape(c.title)}</strong><small>${escape(c.subtitle)}</small><button type="button" data-remove-saved="${c.id}">Quitar</button></article>`).join('') : '<p class="empty">Aún no hay gráficos. Prepara la imagen y pulsa Guardar gráfico.</p>';
+  }
+  renderSaved();
+  dialog.querySelector('[data-saved-charts]').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-remove-saved]');
+    if (b) { removeChart(b.dataset.removeSaved); renderSaved(); }
+  });
+  dialog.querySelector('[data-save-chart]').onclick = async () => {
+    if (busy) return;
+    renderPreview();
+    if (download.disabled || !svg) return;
+    busy = true; setDisabled(true);
+    try {
+      const s = settings(), size = presentationSize(s.width, s.height, s);
+      const scale = Math.min(2, 2400 / Math.max(size.width, size.height));
+      const png = await exportImageBlob(svg, {...s, format:'png', reportMaxPixels:2400});
+      saveChart({kind:'chart', title:s.title || spec.label, subtitle:s.subtitle, source:s.source, svg, png, width:Math.round(size.width*scale), height:Math.round(size.height*scale)});
+      renderSaved(); status.textContent = 'Gráfico guardado. Disponible en Preparar Informe → Contenido.';
+    } catch(error) { status.textContent = error.message; }
+    finally { busy = false; setDisabled(false); }
+  };
   copy.addEventListener("click", async () => {
     if (busy || !clipboardAvailable) return;
     renderPreview();

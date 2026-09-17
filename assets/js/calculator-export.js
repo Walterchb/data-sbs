@@ -1,3 +1,5 @@
+import { buildReportPdf } from "./report-pdf.js";
+import { addWorkbookAttachments } from "./report-workbook.js";
 import {
   excelFormula,
   formatResult,
@@ -44,7 +46,7 @@ const day = (month) => {
 const serial = (date) =>
   (Date.parse(date + "T00:00:00Z") - Date.UTC(1899, 11, 30)) / 86400000;
 function verified(draft) {
-  if (!draft.items.length) throw Error("Agrega al menos un cálculo.");
+  if (!draft.items.length && !draft.attachments?.length) throw Error("Agrega un cálculo, gráfico o tabla.");
   return {
     ...draft,
     items: draft.items.map((item) => ({
@@ -70,7 +72,7 @@ export function workbookParts(draft) {
       `<row r="${n}"${height ? ` ht="${height}" customHeight="1"` : ""}>${values.map((v, i) => cell(String.fromCharCode(65 + i), n, v, styles[i] ?? 0)).join("")}</row>`,
     );
   }
-  row(0, 1, [report.title], [1], 34);
+  row(0, 1, [report.title], [1], Math.max(34,Math.ceil(report.title.length/100)*28));
   row(
     0,
     2,
@@ -82,7 +84,7 @@ export function workbookParts(draft) {
     0,
     3,
     [
-      "B-2201 · Entradas monetarias en S/ miles. Fechas y entidades detalladas en la hoja Datos.",
+      "Resultados a 2 decimales. Cuentas SBS en S/ miles; fechas y entidades en Datos. Gráficos y tablas en hojas adicionales.",
     ],
     [6],
     26,
@@ -200,7 +202,7 @@ export function workbookParts(draft) {
       : []),
   ];
   function sheet(index, widths, merged, freeze) {
-    return `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="${freeze}" topLeftCell="A${freeze + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="20"/><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${sheets[index].join("")}</sheetData>${index === 1 ? `<autoFilter ref="A4:J${Math.max(4, inputRow - 1)}"/>` : ""}<mergeCells count="${merged.length}">${merged.map((ref) => `<mergeCell ref="${ref}"/>`).join("")}</mergeCells><pageMargins left="0.3" right="0.3" top="0.4" bottom="0.4" header="0.2" footer="0.2"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
+    return `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="${freeze}" topLeftCell="A${freeze + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="20"/><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${sheets[index].join("")}</sheetData>${index === 1 ? `<autoFilter ref="A4:J${Math.max(4, inputRow - 1)}"/>` : ""}<mergeCells count="${merged.length}">${merged.map((ref) => `<mergeCell ref="${ref}"/>`).join("")}</mergeCells><pageMargins left="0.3" right="0.3" top="0.4" bottom="0.4" header="0.2" footer="0.2"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
   }
   return {
     "[Content_Types].xml":
@@ -211,7 +213,7 @@ export function workbookParts(draft) {
       '<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Revisión" sheetId="1" r:id="rId1"/><sheet name="Datos" sheetId="2" r:id="rId2"/></sheets><calcPr calcId="191029" fullCalcOnLoad="1" forceFullCalc="1"/></workbook>',
     "xl/_rels/workbook.xml.rels":
       '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
-    "xl/styles.xml": `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="3"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="#,##0.00####;[Red](#,##0.00####);0.00"/><numFmt numFmtId="166" formatCode="0.00####%"/></numFmts><fonts count="4"><font><sz val="11"/><color rgb="FF102033"/><name val="Calibri"/></font><font><b/><sz val="18"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><sz val="11"/><color rgb="FF005AA9"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0B2246"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><bottom style="hair"><color rgb="FFD9E3EC"/></bottom></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7">${[
+    "xl/styles.xml": `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="3"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="#,##0.00;[Red](#,##0.00);0.00"/><numFmt numFmtId="166" formatCode="0.00%"/></numFmts><fonts count="4"><font><sz val="11"/><color rgb="FF102033"/><name val="Calibri"/></font><font><b/><sz val="18"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><sz val="11"/><color rgb="FF005AA9"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0B2246"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7">${[
       { f: 0, n: 0 },
       { f: 1, n: 0, fill: 2 },
       { f: 2, n: 0, fill: 2 },
@@ -222,7 +224,7 @@ export function workbookParts(draft) {
     ]
       .map(
         (s) =>
-          `<xf numFmtId="${s.n}" fontId="${s.f}" fillId="${s.fill || 0}" borderId="0" xfId="0" applyAlignment="1" applyNumberFormat="1"><alignment vertical="center" wrapText="1"/></xf>`,
+          `<xf numFmtId="${s.n}" fontId="${s.f}" fillId="${s.fill || 0}" borderId="0" xfId="0" applyAlignment="1" applyNumberFormat="1"><alignment vertical="center" wrapText="1" indent="1"/></xf>`,
       )
       .join(
         "",
@@ -237,198 +239,7 @@ export function workbookParts(draft) {
   };
 }
 export async function pdfBytes(draft, lib, fonts) {
-  const report = verified(draft),
-    { PDFDocument, StandardFonts, rgb } = lib;
-  const doc = await PDFDocument.create();
-  if (fonts) doc.registerFontkit(fonts.kit);
-  const font = await doc.embedFont(fonts?.normal || StandardFonts.Helvetica, {
-      subset: true,
-    }),
-    bold = await doc.embedFont(fonts?.bold || StandardFonts.HelveticaBold, {
-      subset: true,
-    });
-  doc.setTitle(report.title);
-  doc.setSubject("Revisión de cálculos sobre cuentas SBS B-2201");
-  const navy = rgb(0.035, 0.1, 0.24),
-    blue = rgb(0, 0.31, 0.63),
-    gray = rgb(0.35, 0.4, 0.45),
-    light = rgb(0.9, 0.94, 0.97),
-    black = rgb(0.05, 0.07, 0.1);
-  const width = 841.89,
-    height = 595.28,
-    margin = 38,
-    usable = width - 2 * margin;
-  let page, y;
-  const safe = (t) =>
-    String(t ?? "")
-      .replace(/→/g, "->")
-      .replace(/[−–—]/g, "-")
-      .replace(/›/g, "/")
-      .replace(/[^\u0020-\u007e\u00a0-\u00ff\n\r\t]/g, " ");
-  function lines(text, size = 10, f = font, max = usable) {
-    const out = [];
-    for (const para of safe(text).split("\n")) {
-      let line = "";
-      for (const word of para.split(/\s+/)) {
-        if (f.widthOfTextAtSize((line ? line + " " : "") + word, size) <= max)
-          line += (line ? " " : "") + word;
-        else {
-          if (line) out.push(line);
-          line = "";
-          for (const char of word) {
-            if (f.widthOfTextAtSize(line + char, size) > max) {
-              out.push(line);
-              line = "";
-            }
-            line += char;
-          }
-        }
-      }
-      out.push(line);
-    }
-    return out;
-  }
-  function newPage() {
-    page = doc.addPage([width, height]);
-    y = height - margin;
-    page.drawText("REVISIÓN FINANCIERA  /  SBS", {
-      x: margin,
-      y,
-      size: 9,
-      font: bold,
-      color: gray,
-    });
-    page.drawText(report.reviewDate.split("-").reverse().join("/"), {
-      x: width - margin - 62,
-      y,
-      size: 9,
-      font,
-      color: gray,
-    });
-    y -= 26;
-    for (const line of lines(report.title, 22, bold, usable)) {
-      page.drawText(line, { x: margin, y, size: 22, font: bold, color: navy });
-      y -= 26;
-    }
-    page.drawLine({
-      start: { x: margin, y: y + 6 },
-      end: { x: margin + 55, y: y + 6 },
-      thickness: 3,
-      color: navy,
-    });
-    y -= 15;
-  }
-  function room(h) {
-    if (y - h < 48) newPage();
-  }
-  function text(t, size = 10, color = black, f = font, max = usable) {
-    for (const line of lines(t, size, f, max)) {
-      room(size + 5);
-      page.drawText(line, { x: margin, y, size, font: f, color });
-      y -= size + 5;
-    }
-  }
-  newPage();
-  text(
-    "Cálculos con datos capturados de B-2201. Entradas monetarias en S/ miles.",
-    9,
-    gray,
-  );
-  y -= 8;
-  for (let i = 0; i < report.items.length; i++) {
-    const item = report.items[i];
-    room(115);
-    text(`${i + 1}. ${item.name}`, 16, navy, bold);
-    const resultLines = lines(
-      `Resultado: ${formatResult(item.value, item.unit)}`,
-      17,
-      bold,
-      usable - 22,
-    );
-    const formulaLines = lines(
-      `Fórmula: ${item.expression}`,
-      11,
-      font,
-      usable - 22,
-    );
-    // Long expressions continue as text instead of drawing outside a fixed card.
-    room(Math.min(180, (resultLines.length + formulaLines.length) * 18 + 20));
-    const h = resultLines.length * 22 + 20;
-    page.drawRectangle({
-      x: margin,
-      y: y - h + 12,
-      width: usable,
-      height: h,
-      color: light,
-    });
-    for (const line of resultLines) {
-      page.drawText(line, {
-        x: margin + 11,
-        y: y - 6,
-        size: 17,
-        font: bold,
-        color: blue,
-      });
-      y -= 22;
-    }
-    y -= 16;
-    text(`Fórmula: ${item.expression}`, 11, blue);
-    y -= 4;
-    text("DATOS UTILIZADOS", 9, gray, bold);
-    for (const [key, v] of Object.entries(item.variables)) {
-      room(44);
-      text(
-        `${key} = ${formatResult(v.value)}  |  ${v.path?.join(" / ") || v.label}`,
-        10,
-        black,
-        bold,
-      );
-      text(
-        v.kind === "constant"
-          ? "Constante definida por el usuario."
-          : `${v.entityName} · ${day(v.date).split("-").reverse().join("/")} · ${["MN", "ME", "Total"][Number(v.currency)]} · S/ miles · ${v.kind === "ytd" ? "Acumulado YTD" : "Saldo de cierre"} · ${v.reference || v.id}`,
-        8,
-        gray,
-      );
-      if (v.source) text("Fuente: " + v.source, 7, gray);
-      y -= 3;
-    }
-    if (item.note) {
-      y -= 3;
-      text(item.note, 10, black);
-    }
-    y -= 15;
-  }
-  if (report.conclusion) {
-    room(65);
-    text("CONCLUSIÓN", 14, navy, bold);
-    text(report.conclusion, 11);
-  }
-  const pages = doc.getPages();
-  pages.forEach((p, i) => {
-    p.drawRectangle({
-      x: 0,
-      y: 0,
-      width: width * 0.68,
-      height: 25,
-      color: navy,
-    });
-    p.drawText("Revisión de cálculos · Treasury Hub", {
-      x: margin,
-      y: 9,
-      size: 8,
-      font,
-      color: rgb(1, 1, 1),
-    });
-    p.drawText(`${i + 1} / ${pages.length}`, {
-      x: width - margin - 35,
-      y: 9,
-      size: 8,
-      font,
-      color: gray,
-    });
-  });
-  return doc.save();
+  return buildReportPdf(verified(draft), lib, fonts);
 }
 async function fontBytes(name) {
   const r = await fetch(new URL("../vendor/" + name, import.meta.url));
@@ -440,7 +251,7 @@ export async function downloadReview(draft, type) {
   if (type === "xlsx") {
     const JSZip = await vendor("../vendor/jszip.min.js", "JSZip"),
       zip = new JSZip();
-    for (const [name, content] of Object.entries(workbookParts(draft)))
+    for (const [name, content] of Object.entries(await addWorkbookAttachments(workbookParts(draft), draft.attachments || [])))
       zip.file(name, content);
     blob = await zip.generateAsync({
       type: "blob",
@@ -458,6 +269,12 @@ export async function downloadReview(draft, type) {
     blob = new Blob([await pdfBytes(draft, lib, { kit, normal, bold })], {
       type: "application/pdf",
     });
+  }
+  if (type === 'preview') {
+    const url = URL.createObjectURL(blob);
+    const panel = document.querySelector('.report-pdf-preview');
+    if (panel) { const old=panel.dataset.url; panel.dataset.url=url; panel.querySelector('iframe').src=url; panel.hidden=false; if(old)URL.revokeObjectURL(old); }
+    return;
   }
   const name =
     draft.title

@@ -1,3 +1,7 @@
+# Preparar Informe: actualización
+
+Consulta **INSTALAR_PREPARAR_INFORME.md** para las instrucciones actuales de gráficos, tablas, carátula y exportaciones.
+
 # Calculadora SBS, ayudas y búsqueda exacta
 
 ## Instalación
@@ -14,7 +18,7 @@ El paquete incluye las mejoras previas y no reemplaza estados financieros ni his
 - La ayuda de cada cuenta permanece en la línea del rubro, sin añadir una fila al texto.
 - Tooltips con fondo azul oscuro y explicaciones de significado, cálculo e interpretación cuando corresponde. Se abren al pasar el mouse, enfocar o tocar el icono; se cierran con Escape o al tocar fuera.
 - La primera columna fija conserva el fondo de la fila seleccionada.
-- El estado actualizado del topbar dice «Sync».
+- El estado actualizado del topbar dice «Actualizado».
 - El buscador permite filtrar por tipo y activar «Coincidencia exacta»: busca la frase o sigla completa en nombres y alias, sin coincidencias parciales ni sugerencias. Por ejemplo, CAR abre Cartera de alto riesgo y no coincide con la palabra cartera.
 
 ## Calculadora
@@ -29,7 +33,7 @@ Abre el botón de calculadora del topbar. Usa la entidad seleccionada en el dash
 6. Pon nombre al cálculo y, opcionalmente, un comentario. Pulsa «Agregar al informe». Puedes editar o eliminar los cálculos agregados.
 7. Completa nombre, fecha y conclusión de la revisión y descarga Excel o PDF.
 
-En móvil hay accesos a Cuentas, Cálculo e Informe; puedes usar + en lugar de arrastrar. La web de fondo permanece bloqueada mientras está abierto el modal.
+El preparador no aparece en móvil. La web de fondo permanece bloqueada mientras está abierto el modal.
 
 **El borrador se conserva al cerrar y abrir el modal durante la sesión. Recargar o cerrar la página lo elimina.** Los archivos incluyen solo los cálculos agregados al informe; no una fórmula que todavía esté en edición.
 

@@ -128,7 +128,7 @@ export function formatResult(value, unit = "number") {
   return (
     new Intl.NumberFormat("es-PE", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
+      maximumFractionDigits: 2,
       ...(unit === "percent" ? { style: "percent" } : {}),
     }).format(value) +
     (unit === "times" ? "x" : unit === "money" ? " S/ miles" : "")

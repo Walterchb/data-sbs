@@ -114,3 +114,30 @@ test("exact search CAR matches the alias without matching cartera or unrelated e
   assert.equal(result[0].target.reportMetric, "car");
   assert.ok(searchEntries(entries, "CAR", 40, false).length > 1);
 });
+
+test('report results use exactly two decimals while formulas retain full precision', async () => {
+  const {formatResult} = await import('../assets/js/calculator-engine.js');
+  assert.equal(formatResult(1/3), '0.33');
+  assert.equal(formatResult(1/3,'percent'), '33.33%');
+  const item=captureCalculation({name:'Precisión',expression:'1/3',variables:{}});
+  assert.equal(item.value,1/3);
+  const parts=workbookParts({title:'Prueba',reviewDate:'2026-09-17',items:[item]});
+  assert.ok(parts['xl/styles.xml'].includes('formatCode="0.00%"'));
+  assert.ok(!parts['xl/styles.xml'].includes('0.00####'));
+  assert.ok(parts['xl/worksheets/sheet1.xml'].includes('<f>(1/3)</f>'));
+});
+test('attachments-only reports keep numeric table cells and native PNG drawings with valid relationships', async () => {
+  const {addWorkbookAttachments} = await import('../assets/js/report-workbook.js');
+  const {tableNumber} = await import('../assets/js/report-assets.js');
+  assert.deepEqual(tableNumber('1,250.23'),{value:1250.23,percent:false});
+  assert.deepEqual(tableNumber('-2.45%'),{value:-.0245,percent:true});
+  assert.equal(tableNumber('31/07/2026'),null);
+  const attachments=[{kind:'table',title:'Balance',headers:['Rubro','Saldo','Var %'],rows:[['Activo','1,250.23','2.50%']],context:'Banco · Jul 2026'}, {kind:'chart',title:'Serie',png:new Blob(['test']),width:1600,height:900}];
+  const parts=await addWorkbookAttachments(workbookParts({title:'Adjuntos',reviewDate:'2026-09-17',items:[],attachments}),attachments);
+  assert.ok(parts['xl/worksheets/sheet3.xml'].includes('<v>1250.23</v>'));
+  assert.ok(parts['xl/worksheets/sheet3.xml'].includes('s="4"><v>0.025</v>'));
+  assert.ok(parts['xl/workbook.xml'].includes('r:id="rId5"'));
+  assert.ok(parts['xl/worksheets/sheet4.xml'].includes('<drawing r:id="rId1"/>'));
+  assert.ok(parts['xl/media/chart2.png'] instanceof ArrayBuffer);
+  assert.ok(parts['xl/drawings/_rels/drawing2.xml.rels'].includes('../media/chart2.png'));
+});
