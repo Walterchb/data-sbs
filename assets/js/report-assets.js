@@ -45,3 +45,5 @@ export function tableNumber(value) {
   if (!/^[+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/.test(n)) return null;
   return {value:Number(n.replace(/,/g,'')) / (percent ? 100 : 1), percent};
 }
+
+export function numericColumns(headers,rows){return headers.map((_,c)=>c>0&&rows.some(r=>tableNumber(r[c]))&&rows.every(r=>tableNumber(r[c])||!r[c]||/^[—–-]$/.test(String(r[c]).trim())));}

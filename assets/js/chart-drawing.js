@@ -197,7 +197,7 @@ function markup(item) {
   const text = lines
     .map(
       (line, i) =>
-        `<text x="${x + 8}" y="${y + 8 + item.fontSize * (1 + i * 1.3)}" fill="${stroke}" font-family="Segoe UI, Arial, sans-serif" font-size="${item.fontSize}" xml:space="preserve">${escape(line)}</text>`,
+        `<text x="${x + 8}" y="${y + 8 + item.fontSize * (1 + i * 1.3)}" fill="${stroke}" font-family="THHumanist" font-size="${item.fontSize}" xml:space="preserve">${escape(line)}</text>`,
     )
     .join("");
   return background + highlights + text;

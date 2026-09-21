@@ -3207,3 +3207,14 @@ button.text-button.has-table-help { cursor:pointer; }
 .report-attachment label { display:flex; align-items:center; gap:8px; margin:5px 0 0; font-size:10px; }
 .report-attachment input[type=number] { max-width:65px; margin:0; }
 #calc-author { text-transform:uppercase; }
+/* Report setup: one page assignment per attachment, no competing layout modes. */
+.report-design{grid-template-columns:minmax(220px,1fr) minmax(240px,1fr);align-items:center}
+.report-page-help{font-size:12px;color:var(--muted);margin:12px 0}
+.report-attachment input[data-attachment-page]{width:72px}
+.report-attachment label{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px}
+.report-result-table th:nth-child(3),.report-result-table td:nth-child(3){text-align:right}
+.report-result-table th{font-size:11px}
+.report-page-group{border:1px solid var(--line);border-radius:10px;margin:14px 0;padding:14px;background:var(--panel)}
+.report-page-group h5{display:flex;justify-content:space-between;margin:0 0 10px;font-size:13px}
+.report-page-group h5 span{font-size:11px;font-weight:400;color:var(--muted)}
+.report-page-group .report-attachment{margin-bottom:8px}

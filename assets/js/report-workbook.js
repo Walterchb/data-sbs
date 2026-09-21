@@ -1,4 +1,4 @@
-import {tableNumber} from './report-assets.js';
+import {tableNumber,numericColumns} from './report-assets.js';
 const x=s=>String(s??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const col=n=>{let s='';for(n++;n;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;};
 const cell=(r,c,value,style=0)=>`<c r="${col(c)}${r}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${x(value)}</t></is></c>`;
@@ -20,8 +20,9 @@ export async function addWorkbookAttachments(parts, attachments) {
     out['[Content_Types].xml']=out['[Content_Types].xml'].replace('</Types>',`<Override PartName="/xl/worksheets/sheet${n}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`);
     let rows=`<row r="1" ht="45" customHeight="1">${cell(1,0,a.title,1)}</row><row r="2" ht="35" customHeight="1">${cell(2,0,a.context||a.subtitle||'',6)}</row>`,drawing='',cols='';
     if(a.kind==='table') {
+      const numeric=numericColumns(a.headers,a.rows);
       cols=a.headers.map((h,c)=>`<col min="${c+1}" max="${c+1}" width="${c===0?52:22}" customWidth="1"/>`).join('');
-      rows+=`<row r="4" ht="32" customHeight="1">${a.headers.map((h,c)=>cell(4,c,h,2)).join('')}</row>`;
+      rows+=`<row r="4" ht="32" customHeight="1">${a.headers.map((h,c)=>cell(4,c,h,numeric[c]?7:2)).join('')}</row>`;
       a.rows.forEach((r,j)=>{
         const height=Math.min(400,Math.max(25,...r.map((v,c)=>Math.ceil(String(v).length/(c===0?48:20))*14+9)));
         rows+=`<row r="${j+5}" ht="${height}" customHeight="1">${a.headers.map((_,c)=>{const v=r[c]??'',num=c>0?tableNumber(v):null;return num?`<c r="${col(c)}${j+5}" s="${num.percent?4:3}"><v>${num.value}</v></c>`:cell(j+5,c,v);}).join('')}</row>`;

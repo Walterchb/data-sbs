@@ -1,3 +1,4 @@
+import {sourceReference, sourceColumn} from './report-reference.js';
 import { vectorPdf } from "./report-vector.js";
 import { buildReportPdf } from "./report-pdf.js";
 import { addWorkbookAttachments } from "./report-workbook.js";
@@ -93,8 +94,8 @@ export function workbookParts(draft) {
   row(
     0,
     5,
-    ["N°", "Cálculo", "Comentario", "Resultado", "Formato", "Expresión"],
-    [2, 2, 2, 2, 2, 2],
+    ["N°", "Cálculo", "Detalle", "Resultado", "Formato", "Expresión"],
+    [2, 2, 2, 7, 2, 2],
     24,
   );
   row(1, 1, ["DATOS DE LA REVISIÓN"], [1], 32);
@@ -122,7 +123,7 @@ export function workbookParts(draft) {
       "Fuente",
       "Referencia",
     ],
-    Array(10).fill(2),
+    [2,2,2,2,2,2,2,7,2,2],
     24,
   );
   let inputRow = 5,
@@ -141,17 +142,15 @@ export function workbookParts(draft) {
           v.entityName || "Definido por el usuario",
           v.date ? serial(day(v.date)) : "",
           v.path?.join(" › ") || v.label,
-          v.currency === undefined
-            ? "Constante"
-            : ["MN", "ME", "Total"][Number(v.currency)],
+          sourceColumn(v),
           v.kind === "constant"
             ? "Constante"
             : v.kind === "ytd"
               ? "Acumulado YTD"
-              : "Saldo de cierre",
+              : v.kind === "ratio" ? "Ratio al cierre" : "Saldo de cierre",
           v.value,
           v.source || "",
-          v.reference || v.id || "",
+          sourceReference(v),
         ],
         [0, 0, 0, 5, 0, 0, 0, 3, 6, 6],
         Math.max(
@@ -162,14 +161,16 @@ export function workbookParts(draft) {
       );
       inputRow++;
     }
+    const detailChunks=(item.note||"").match(/[\s\S]{1,600}(?:\s|$)|[\s\S]{1,600}/g)||[""];
     const n = outputRow++,
       style = item.unit === "percent" ? 4 : 3;
     sheets[0].push(
-      `<row r="${n}" ht="${Math.min(250, Math.max(38, Math.ceil(item.name.length / 35) * 14 + 8, Math.ceil(Math.min(item.expression.length, 180) / 25) * 14 + 8, Math.ceil(Math.min((item.note || "").length, 300) / 52) * 14 + 8))}" customHeight="1">${cell("A", n, i + 1)}${cell("B", n, item.name)}${cell("C", n, item.noteMode === "footnote" ? (item.note ? `Nota [${i+1}]` : "") : item.note.length > 300 ? "Comentario ampliado debajo" : item.note)}${cell("D", n, item.value, style, excelFormula(item.ast, refs))}${cell("E", n, { number: "Número", percent: "Porcentaje", times: "Veces", money: "S/ miles" }[item.unit])}${cell("F", n, item.expression.length > 180 ? "Expresión completa debajo" : item.expression, 6)}</row>`,
+      `<row r="${n}" ht="${Math.min(250, Math.max(38, Math.ceil(item.name.length / 35) * 14 + 8, Math.ceil(Math.min(item.expression.length, 180) / 25) * 14 + 8, Math.ceil(detailChunks[0].length / 52) * 14 + 8))}" customHeight="1">${cell("A", n, i + 1)}${cell("B", n, item.name)}${cell("C", n, detailChunks[0])}${cell("D", n, item.value, style, excelFormula(item.ast, refs))}${cell("E", n, { number: "Número", percent: "Porcentaje", times: "Veces", money: "S/ miles" }[item.unit])}${cell("F", n, item.expression.length > 180 ? "Expresión completa debajo" : item.expression, 6)}</row>`,
     );
+    for(const detail of detailChunks.slice(1)){row(0,outputRow++,["","",detail],[0,0,0],Math.max(34,Math.ceil(detail.length/52)*14+8));}
     for (const text of [
       item.expression.length > 180 ? "Fórmula: " + item.expression : "",
-      item.noteMode !== "footnote" && item.note.length > 300 ? item.note : "",
+
     ].filter(Boolean)) {
       for (let start = 0; start < text.length; start += 180) {
         row(0, outputRow, ["", text.slice(start, start + 180)], [0, 0], 34);
@@ -178,7 +179,7 @@ export function workbookParts(draft) {
       }
     }
   });
-  const notes = report.items.map((item,i)=>item.noteMode === 'footnote' && item.note ? `[${i+1}] ${item.note}` : '').filter(Boolean);
+  const notes = [];
   if(report.tableNote)notes.push('Nota de tabla: '+report.tableNote);
   if(report.author)notes.push('PREPARADO POR: '+report.author.toLocaleUpperCase('es-PE'));
   for(const text of notes){
@@ -220,7 +221,7 @@ export function workbookParts(draft) {
       '<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Revisión" sheetId="1" r:id="rId1"/><sheet name="Datos" sheetId="2" r:id="rId2"/></sheets><calcPr calcId="191029" fullCalcOnLoad="1" forceFullCalc="1"/></workbook>',
     "xl/_rels/workbook.xml.rels":
       '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
-    "xl/styles.xml": `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="3"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="#,##0.00;[Red](#,##0.00);0.00"/><numFmt numFmtId="166" formatCode="0.00%"/></numFmts><fonts count="4"><font><sz val="11"/><color rgb="FF102033"/><name val="Calibri"/></font><font><b/><sz val="18"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><sz val="11"/><color rgb="FF005AA9"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0B2246"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7">${[
+    "xl/styles.xml": `<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="3"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/><numFmt numFmtId="165" formatCode="#,##0.00;[Red](#,##0.00);0.00"/><numFmt numFmtId="166" formatCode="0.00%"/></numFmts><fonts count="4"><font><sz val="11"/><color rgb="FF102033"/><name val="Calibri"/></font><font><b/><sz val="18"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><sz val="11"/><color rgb="FF005AA9"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0B2246"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="8">${[
       { f: 0, n: 0 },
       { f: 1, n: 0, fill: 2 },
       { f: 2, n: 0, fill: 2 },
@@ -228,10 +229,11 @@ export function workbookParts(draft) {
       { f: 0, n: 166 },
       { f: 0, n: 164 },
       { f: 0, n: 0 },
+      { f: 2, n: 0, fill: 2, a: "right" },
     ]
       .map(
         (s) =>
-          `<xf numFmtId="${s.n}" fontId="${s.f}" fillId="${s.fill || 0}" borderId="0" xfId="0" applyAlignment="1" applyNumberFormat="1"><alignment vertical="center" wrapText="1" indent="1"/></xf>`,
+          `<xf numFmtId="${s.n}" fontId="${s.f}" fillId="${s.fill || 0}" borderId="0" xfId="0" applyAlignment="1" applyNumberFormat="1"><alignment horizontal="${s.a || ([165,166].includes(s.n)?"right":"left")}" vertical="center" wrapText="1" indent="1"/></xf>`,
       )
       .join(
         "",

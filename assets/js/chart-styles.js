@@ -1,10 +1,10 @@
-// Editorial interpretations using system fonts: no external font download is needed.
+// Bundled fonts keep screen, image and PDF metrics consistent.
 export const EXPORT_FONTS = {
-  sans: "Arial, Helvetica, sans-serif",
-  humanist: "Segoe UI, Arial, sans-serif",
-  serif: "Georgia, Times New Roman, serif",
-  times: "Times New Roman, Georgia, serif",
-  mono: "Consolas, Courier New, monospace",
+  sans: "THSans",
+  humanist: "THHumanist",
+  serif: "THSerif",
+  times: "THTimes",
+  mono: "THMono",
 };
 export const QUICK_STYLES = {
   mckinsey: {

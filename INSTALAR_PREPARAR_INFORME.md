@@ -13,8 +13,8 @@ El paquete conserva los archivos de datos financieros. Incluye las mejoras anter
 El botón del topbar ahora se llama **Preparar Informe**. Está disponible en escritorio y tablet de más de 760 px; no aparece en móvil. No requiere configurar márgenes, tipografías ni paginación.
 
 1. **Cálculos:** elige una cuenta de Balance o Resultados, periodo y columna. Pulsa + o arrastra a la fórmula. La cuenta se resalta y muestra su letra antes del +. Puedes mezclar fechas: cada entrada conserva entidad, fecha, columna, fuente y valor.
-2. Puedes cargar **18 cálculos predeterminados**, agrupados por calidad de activos, coberturas, liquidez, solvencia contable, rentabilidad y eficiencia. Cargan fórmula y cuentas de la entidad, periodo y columna seleccionados. ROA y ROE analíticos usan utilidad de 12 meses y promedio de 13 cierres: no se identifican como ratios publicados por SBS. Si falta una base, se avisa sin reemplazarla por cero.
-3. Escribe una operación con +, -, *, /, ^ y paréntesis. Para un ratio usa `a/b` y formato Porcentaje; no multipliques también por 100. Pon nombre al cálculo, elige comentario junto al nombre o como **Nota de tabla** y pulsa **Agregar al informe**. También puedes agregar una nota general a la tabla de resultados.
+2. Puedes cargar **26 cálculos predeterminados**, agrupados por capital, calidad de activos, coberturas, liquidez, solvencia contable, rentabilidad y eficiencia. Cargan fórmula y cuentas de la entidad, periodo y columna seleccionados. ROA y ROE analíticos usan utilidad de 12 meses y promedio de 13 cierres: no se identifican como ratios publicados por SBS. Si falta una base, se avisa sin reemplazarla por cero.
+3. Escribe una operación con +, -, *, /, ^ y paréntesis. Para un ratio usa `a/b` y formato Porcentaje; no multipliques también por 100. Pon nombre al cálculo y un **Detalle** opcional, que siempre se muestra a su lado en la tabla y pulsa **Agregar al informe**. También puedes agregar una nota general a la tabla de resultados.
 4. **Contenido y revisión:** completa nombre, fecha, subtítulo y autor opcional. Agrega los gráficos guardados y las tablas disponibles en la vista del dashboard. Puedes editar títulos, ordenar o quitar adjuntos, editar resultados y añadir una conclusión.
 5. Usa **Vista previa PDF**, **Descargar PDF** o **Descargar Excel**. También puedes exportar un informe de gráficos y tablas sin cálculos.
 
@@ -23,7 +23,7 @@ Las cuentas monetarias del editor se expresan en S/ miles, incluido ME como equi
 ## Guardar gráficos y añadir tablas
 
 - En **Preparar imagen**, pulsa **Guardar gráfico**. La sección **6 · Guardados** muestra los gráficos de la sesión y permite eliminarlos. En Preparar Informe → Contenido, elige el gráfico y pulsa Agregar gráfico.
-- El PDF convierte el SVG guardado en trazos y texto seleccionable: no rasteriza el gráfico. Conserva líneas, etiquetas, degradados, patrones y anotaciones. Las sombras de desenfoque se omiten porque requieren un filtro de imagen. Un SVG con imágenes externas produce un aviso; no se sustituye silenciosamente por un PNG. Excel conserva la composición como PNG sin pérdida, limitado a 2400 px en el lado mayor.
+- El PDF convierte el SVG guardado en trazos y texto seleccionable: no rasteriza el gráfico. Conserva líneas, etiquetas, degradados, patrones y anotaciones. Las tipografías locales son las mismas en la vista previa, la imagen y el PDF. Se corrigen pesos y posiciones de texto según las medidas del navegador. Solo las sombras de desenfoque utilizan una capa decorativa transparente; las series, etiquetas y textos continúan siendo vectoriales. Un SVG con imágenes externas produce un aviso; no se sustituye silenciosamente por un PNG. Excel conserva la composición como PNG sin pérdida, limitado a 2400 px en el lado mayor.
 - Las tablas se capturan con sus filas actualmente visibles, filtros y unidades. Las filas plegadas no se incorporan. Se excluyen columnas que solo tienen gráficos sin valores de texto.
 - Para añadir tablas de otras secciones, cierra el informe, navega a esa sección y vuelve a abrirlo. El borrador sigue ahí. Las tablas son instantáneas y no cambian al cambiar la entidad o fecha del dashboard.
 - Los adjuntos ya agregados al informe se mantienen aunque quites el gráfico de Guardados.
@@ -34,9 +34,16 @@ Límites para cuidar memoria: 20 gráficos guardados / 40 MB en la galería; 30 
 
 ## Descargas
 
-**PDF:** elige **Corporativo**, **Editorial** (marfil, reglas finas y acentos verdes) o **Paper**. Todos incluyen portada con cuadrícula sutil y autor en mayúsculas, resumen con comentarios junto al nombre, notas, índice con páginas, contenido y anexos identificados.
+**PDF:** elige **Corporativo**, **Editorial** (marfil, reglas finas y acentos verdes) o **Paper**. Todos incluyen portada con cuadrícula desvanecida de líneas discontinuas y autor en mayúsculas, resultados con Detalle junto al nombre, nota general, índice enlazado inmediatamente después de la portada, contenido y anexos identificados.
 
-Distribuciones: un elemento por página, dos lado a lado, cuatro en cuadrícula, dos gráficos + dos tablas, o asignación manual de páginas. Las flechas reordenan elementos; en modo manual asigna la página de contenido (máximo cuatro elementos). Las tablas que no caben completas tienen una vista parcial identificada y una referencia a su anexo completo. Puedes desactivar los anexos de cálculos; las continuaciones necesarias de las tablas se conservan. Los encabezados se repiten y las tablas anchas se dividen por grupos de columnas conservando el rubro.
+**Contenido:** cada elemento tiene un número de página. Se agrupan visualmente por página y puedes cambiar su orden con las flechas. Máximo cuatro por página; la distribución se ajusta automáticamente. Ya no se elige entre modos de distribución.
+
+Los encabezados de Editorial y Paper tienen reglas arriba y abajo, texto ligeramente mayor y alineación numérica consistente con los valores. Las tablas que no caben completas tienen una vista parcial identificada y una referencia enlazada a su anexo completo. Los anexos separan cálculos, tablas completas y archivos de origen; los archivos se listan una sola vez. Cada página incluye un enlace para volver al índice. Puedes desactivar los anexos de cálculos; las continuaciones de tablas se conservan.
+
+**Capital:** APR, capital global, CET1/APR, TIER 1/APR y reconstrucción de patrimonio efectivo total, TIER 1, TIER 2 y su participación. Se utiliza B-2402 de la entidad y el cierre exactos; no se mezcla un mes anterior sin avisar. Los importes son S/ miles. Si seleccionas MN o ME, el cálculo indica que requiere Total.
+
+**Referencias:** `F124` era una abreviación de fila, no la celda F124. Ahora se indica explícitamente B-2201, hoja 1 (Balance) o 2 (Resultados) y fila. La columna monetaria aparece por separado. Se contrastaron las 149 filas del catálogo con archivos originales de 2021 y 2026. Capital identifica fuente y métrica; no inventa coordenadas de Excel que no contiene el conjunto de datos compacto.
+
 
 **Excel:** Revisión con fórmulas nativas, Datos con las entradas editables y fechas reales, y hojas adicionales para cada gráfico o tabla. Las tablas son celdas editables; los gráficos conservan la composición guardada como imágenes. Los resultados recalculan al modificar las celdas de Datos. Formatos de dos decimales, encabezados fijos y ajuste de impresión al ancho de página.
 
@@ -47,4 +54,4 @@ Distribuciones: un elemento por página, dos lado a lado, cuatro en cuadrícula,
 
 ## Validación
 
-74 pruebas JavaScript. Comprobación en navegador de predeterminados, comentarios, notas, asignación de páginas y exportaciones. Los tres estilos PDF se renderizaron y revisaron; extracción de títulos, fechas y valores de los gráficos confirmada, sin imágenes rasterizadas en los PDF de prueba. Excel conserva fórmulas nativas y resultados con dos decimales; no se probó en Microsoft Excel de escritorio.
+76 pruebas JavaScript. Comprobación en navegador de predeterminados, capital, Detalle, notas, asignación de páginas y exportaciones. Los tres estilos PDF se renderizaron y revisaron; extracción de títulos, fechas y valores de los gráficos confirmada, con trazos vectoriales y sin rasterizar el contenido del gráfico. Se compararon imágenes guardadas y PDFs renderizados con cuatro estilos y con fondo, patrón y sombra. Excel conserva fórmulas nativas y resultados con dos decimales; no se probó en Microsoft Excel de escritorio.

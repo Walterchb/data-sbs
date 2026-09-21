@@ -262,7 +262,7 @@ test("Paper uses centered serif headings and fine axes without a decorative rule
     quickStyle: "paper",
   });
   assert.equal(option.title[0].left, "center");
-  assert.match(option.textStyle.fontFamily, /Times New Roman/);
+  assert.match(option.textStyle.fontFamily, /THTimes/);
   assert.equal(option.title[0].textStyle.fontWeight, 400);
   assert.equal(option.series[0].lineStyle.width, 1.5);
   assert.equal(option.yAxis.axisLine.show, true);

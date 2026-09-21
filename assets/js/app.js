@@ -1521,7 +1521,7 @@ function switchTheme() {
   } catch {}
 }
 function bind() {
-  initCalculator(() => ({financial, date:state.date, entity:state.entity, entityName:entitySbsName()||entityName()}));
+  initCalculator(() => ({financial, date:state.date, entity:state.entity, entityName:entitySbsName()||entityName(), loadCapital: async (entity) => selectReport(await Data.load("B-2402"), entity)}));
   initGlobalSearch({
     getContext: () => ({ manifest, financial: baseFinancial, state }),
     navigate: async target => {

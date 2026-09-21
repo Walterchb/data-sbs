@@ -150,7 +150,7 @@ test('preset formulas reconcile with source ratios and reject missing historical
  const {withAnalysisRatios}=await import('../assets/js/analysis-ratios.js');
  const ctx={financial,entity:'banbif',entityName:'Banco Interamericano de Finanzas'};
  const date=financial.periods.at(-1).date, expected=withAnalysisRatios(overview,financial).periods.find(p=>p.date===date);
- for(const preset of REPORT_PRESETS){
+ for(const preset of REPORT_PRESETS.filter(p=>!p.id.startsWith("capital_"))){
   const item=buildPreset(preset.id,ctx,date);
   assert.ok(Number.isFinite(item.value),preset.id);
   if(!preset.id.endsWith('_analytic')){
@@ -173,12 +173,31 @@ test('page compositions preserve every item once and enforce four panels per cus
  assert.throws(()=>contentPages(items.map(a=>({...a,page:1})),'manual'),/hasta 4/);
  const mixed=contentPages(items,'mixed');assert.equal(mixed[0].items.filter(a=>a.kind==='chart').length,2);
 });
-test('calculation comments are beside names and footnotes survive workbook export',()=>{
+test('details always remain beside names, including legacy footnote entries',()=>{
  const inline=captureCalculation({name:'Nombre',expression:'1/3',variables:{},note:'Comentario en columna'});
  const foot=captureCalculation({name:'Otro',expression:'2/3',variables:{},note:'Texto de nota',noteMode:'footnote'});
  const parts=workbookParts({title:'Prueba',reviewDate:'2026-09-21',items:[inline,foot],tableNote:'Nota general',author:'Equipo de tesorería'});
  const sheet=parts['xl/worksheets/sheet1.xml'];
  assert.ok(sheet.includes('<c r="C6" s="0" t="inlineStr"><is><t xml:space="preserve">Comentario en columna'));
- assert.ok(sheet.includes('[2] Texto de nota'));assert.ok(sheet.includes('Nota de tabla: Nota general'));
+ assert.ok(sheet.includes('>Texto de nota</t>'));assert.ok(!sheet.includes('Nota [2]'));assert.ok(sheet.includes('>Detalle</t>'));assert.ok(sheet.includes('Nota de tabla: Nota general'));
  assert.ok(sheet.includes('EQUIPO DE TESORERÍA'));
+});
+
+test('capital presets use the exact entity, date and regulatory units',async()=>{
+ const fs=await import('node:fs');const {buildPreset}=await import('../assets/js/report-presets.js');const {selectReport}=await import('../assets/js/entities.js');
+ const report=JSON.parse(fs.readFileSync(new URL('../data/reports/B-2402.json',import.meta.url)));
+ const ctx={capital:report,entity:'banbif',entityName:'BanBif'},date='2026-06';
+ const total=buildPreset('capital_total',ctx,date),t1=buildPreset('capital_tier1',ctx,date),t2=buildPreset('capital_tier2',ctx,date);
+ assert.ok(Math.abs(total.value-t1.value-t2.value)<1e-8);assert.equal(total.unit,'money');
+ assert.ok(Math.abs(buildPreset('capital_rcg',ctx,date).value-.15046569190903158)<1e-12);
+ assert.ok(Math.abs(buildPreset('capital_tier1_share',ctx,date).value-t1.value/total.value)<1e-12);
+ assert.throws(()=>buildPreset('capital_total',ctx,'2026-07'),/No hay capital/);
+ assert.throws(()=>buildPreset('capital_total',ctx,date,'1'),/Total/);
+ assert.throws(()=>buildPreset('capital_total',{...ctx,capital:selectReport(report,'missing'),entity:'missing'},date),/Falta/);
+ assert.notEqual(buildPreset('capital_total',{...ctx,capital:selectReport(report,'bbva'),entity:'bbva'},date).value,total.value);
+});
+test('financial references distinguish sheet and row without inventing cell columns',async()=>{
+ const {sourceReference}=await import('../assets/js/report-reference.js');
+ assert.equal(sourceReference({id:'balance:124'}),'B-2201 · hoja 1 (Balance) · fila 124');
+ assert.equal(sourceReference({id:'income:79'}),'B-2201 · hoja 2 (Resultados) · fila 79');
 });

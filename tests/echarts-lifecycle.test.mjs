@@ -77,6 +77,10 @@ test("real ECharts mounts, exports, restores, remounts and disposes without bind
     this.open = false;
     this.dispatchEvent(new window.Event("close"));
   };
+  const originalFetch=globalThis.fetch;
+  globalThis.FontFace=class{async load(){return this;}};
+  Object.defineProperty(document,'fonts',{value:{add(){}},configurable:true});
+  globalThis.fetch=async (...args)=>String(args[0]).startsWith('file:')?new Response(await (await import('node:fs/promises')).readFile(new URL(args[0]))):originalFetch(...args);
   const echarts = require("echarts");
   echarts.setPlatformAPI({
     measureText: (text, font) => ({
@@ -111,7 +115,7 @@ test("real ECharts mounts, exports, restores, remounts and disposes without bind
       assert.equal(node.previousElementSibling.hidden, true);
       const callback = chart.getOption().toolbox[0].feature.myExport.onclick;
       assert.equal(typeof callback, "function");
-      callback();
+      await callback();
       const dialog = document.querySelector(".chart-export-dialog");
       assert.equal(dialog.open, true);
       assert.equal(
@@ -144,6 +148,7 @@ test("real ECharts mounts, exports, restores, remounts and disposes without bind
     }
   } finally {
     clearCharts();
+    globalThis.fetch=originalFetch;delete globalThis.FontFace;
     dom.window.close();
   }
 });

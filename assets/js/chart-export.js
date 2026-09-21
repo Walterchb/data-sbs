@@ -1,3 +1,4 @@
+import {ensureChartFonts,embedChartFonts} from './chart-fonts.js';
 import { saveChart, savedCharts, removeChart } from "./report-assets.js";
 import {
   EXPORT_FONTS,
@@ -664,7 +665,9 @@ export function buildExportOptions(payload, settings) {
 }
 
 let activeDialog;
-export function openChartExport(payload) {
+export async function openChartExport(payload) {
+  let chartFonts;
+  try{chartFonts=await ensureChartFonts();}catch(error){alert(error.message);return;}
   activeDialog?.close();
   const { spec, context } = payload;
   const points = spec.comparison ? spec.series[0].points : spec.points;
@@ -723,7 +726,7 @@ export function openChartExport(payload) {
       </div></details><details class="export-section"><summary>4 · Estilo del gráfico</summary><div class="export-section-body">
         <div class="export-field-row"><label>Tamaño de texto<input name="fontSize" type="number" min="12" max="72" value="28" required></label><label>Fechas<select name="dateFormat" ${isBar ? "disabled" : ""}><option value="month">Jul 2026</option><option value="year-month">2026-07</option></select></label></div>
         ${isBar ? "" : `<div class="export-field-row"><label>Grosor de línea<input name="lineWidth" type="number" min="1" max="6" step="0.5" value="2.5"></label>${spec.comparison ? "" : '<label>Color de línea<input name="color" type="color" value="#1c7ff2"></label>'}</div>`}
-        <div class="export-field-row"><label>Tipografía<select name="fontFamily"><option value="humanist">Segoe UI</option><option value="sans">Arial</option><option value="serif">Georgia</option><option value="times">Times New Roman</option><option value="mono">Consolas</option></select></label><label>Tipografía del título<select name="titleFont"><option value="humanist">Segoe UI</option><option value="sans">Arial</option><option value="serif">Georgia</option><option value="times">Times New Roman</option><option value="mono">Consolas</option></select></label></div>
+        <div class="export-field-row"><label>Tipografía<select name="fontFamily"><option value="humanist">Humanista</option><option value="sans">Sans</option><option value="serif">Serif</option><option value="times">Clásica</option><option value="mono">Monoespaciada</option></select></label><label>Tipografía del título<select name="titleFont"><option value="humanist">Humanista</option><option value="sans">Sans</option><option value="serif">Serif</option><option value="times">Clásica</option><option value="mono">Monoespaciada</option></select></label></div>
         <label class="export-check"><input name="grid" type="checkbox" checked> Mostrar cuadrícula</label>
         ${spec.comparison ? '<label class="export-check"><input name="legend" type="checkbox" checked> Mostrar leyenda</label>' : '<label class="export-check"><input name="references" type="checkbox" checked> Promedio, máximo y mínimo</label>'}
       </div></details>
@@ -992,7 +995,7 @@ export function openChartExport(payload) {
         )
         .replace(/<\/svg>\s*$/, "</g></svg>");
       setPreviewImage(
-        drawingEditor.setBase(base, s.width, s.height, labels, s),
+        drawingEditor.setBase(embedChartFonts(base,chartFonts), s.width, s.height, labels, s),
       );
       dialog.querySelector(".export-preview-size").textContent =
         s.format === "svg"

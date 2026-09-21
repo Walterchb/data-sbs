@@ -1,3 +1,4 @@
+import {sourceReference} from './report-reference.js';
 import { accountTheory } from "./account-theory.js";
 import { escape, format, num, month } from "./format.js";
 import {
@@ -82,8 +83,8 @@ export function accountTable(data, state) {
       .join(" ");
     const expanded = Boolean(state.query.trim()) || !state.collapsed.has(r.id);
     const title =
-      r.path.join(" › ") + (state.showReferences ? ` · ${r.reference}` : "");
-    const cell = `<td><div class="account-label" style="--depth:${r.depth}">${hasChildren ? `<button class="tree-toggle" data-collapse="${r.id}" aria-expanded="${expanded}" aria-label="${escape((expanded ? "Plegar " : "Expandir ") + r.label)}" ${state.query.trim() ? 'disabled title="La búsqueda muestra las coincidencias con sus padres"' : ""}><i class="fa-solid fa-chevron-${expanded ? "down" : "right"}" aria-hidden="true"></i></button>` : '<span class="tree-spacer" aria-hidden="true"><i class="fa-solid fa-circle"></i></span>'}<div class="row-title"><button class="text-button" data-account="${r.id}" data-help="${escape(accountTheory(r))}"><span class="cell-text">${escape(r.label)}</span></button>${state.showReferences ? `<small class="row-reference"><span class="cell-text">${escape(r.reference)}</span></small>` : ""}</div></div></td>`;
+      r.path.join(" › ") + (state.showReferences ? ` · ${sourceReference(r)}` : "");
+    const cell = `<td><div class="account-label" style="--depth:${r.depth}">${hasChildren ? `<button class="tree-toggle" data-collapse="${r.id}" aria-expanded="${expanded}" aria-label="${escape((expanded ? "Plegar " : "Expandir ") + r.label)}" ${state.query.trim() ? 'disabled title="La búsqueda muestra las coincidencias con sus padres"' : ""}><i class="fa-solid fa-chevron-${expanded ? "down" : "right"}" aria-hidden="true"></i></button>` : '<span class="tree-spacer" aria-hidden="true"><i class="fa-solid fa-circle"></i></span>'}<div class="row-title"><button class="text-button" data-account="${r.id}" data-help="${escape(accountTheory(r))}"><span class="cell-text">${escape(r.label)}</span></button>${state.showReferences ? `<small class="row-reference"><span class="cell-text">${escape(sourceReference(r))}</span></small>` : ""}</div></div></td>`;
     const vals = history
       ? dates
           .map(
@@ -100,7 +101,7 @@ export function accountTable(data, state) {
       html: `<tr class="${rowClass}" data-depth="${r.depth}" data-row="${r.id}" data-parent="${r.parent || ""}">${cell}${cells}</tr>`,
       export: [
         state.date,
-        r.reference,
+        sourceReference(r),
         r.path.join(" > "),
         ...(history
           ? dates.map(
