@@ -141,3 +141,44 @@ test('attachments-only reports keep numeric table cells and native PNG drawings 
   assert.ok(parts['xl/media/chart2.png'] instanceof ArrayBuffer);
   assert.ok(parts['xl/drawings/_rels/drawing2.xml.rels'].includes('../media/chart2.png'));
 });
+
+test('preset formulas reconcile with source ratios and reject missing historical data', async () => {
+ const fs=await import('node:fs');
+ const {REPORT_PRESETS,buildPreset}=await import('../assets/js/report-presets.js');
+ const financial=JSON.parse(fs.readFileSync(new URL('../data/financial.json',import.meta.url)));
+ const overview=JSON.parse(fs.readFileSync(new URL('../data/overview.json',import.meta.url)));
+ const {withAnalysisRatios}=await import('../assets/js/analysis-ratios.js');
+ const ctx={financial,entity:'banbif',entityName:'Banco Interamericano de Finanzas'};
+ const date=financial.periods.at(-1).date, expected=withAnalysisRatios(overview,financial).periods.find(p=>p.date===date);
+ for(const preset of REPORT_PRESETS){
+  const item=buildPreset(preset.id,ctx,date);
+  assert.ok(Number.isFinite(item.value),preset.id);
+  if(!preset.id.endsWith('_analytic')){
+   const target=expected.metrics[preset.id].value;
+   assert.ok(Math.abs(item.value*(item.unit==='percent'?100:1)-target)<1e-8,preset.id);
+  }
+ }
+ assert.throws(()=>buildPreset('roe_analytic',ctx,financial.periods[0].date),/Falta/);
+ const zero={...ctx,financial:{...financial,periods:financial.periods.map(p=>p.date===date?{...p,values:{...p.values,'balance:126':[0,0,0]}}:p)}};
+ assert.throws(()=>buildPreset('leverage',zero,date),/cero/);
+});
+test('page compositions preserve every item once and enforce four panels per custom page', async()=>{
+ const {contentPages}=await import('../assets/js/report-layout.js');
+ const items=Array.from({length:8},(_,i)=>({id:i,kind:i%2?'table':'chart',page:i<4?1:3}));
+ for(const layout of ['single','two','four','mixed','manual']){
+  const pages=contentPages(items,layout);
+  assert.deepEqual(pages.flatMap(p=>p.items.map(a=>a.id)).sort((a,b)=>a-b),items.map(a=>a.id));
+  assert.ok(pages.every(p=>p.items.length<=4));
+ }
+ assert.throws(()=>contentPages(items.map(a=>({...a,page:1})),'manual'),/hasta 4/);
+ const mixed=contentPages(items,'mixed');assert.equal(mixed[0].items.filter(a=>a.kind==='chart').length,2);
+});
+test('calculation comments are beside names and footnotes survive workbook export',()=>{
+ const inline=captureCalculation({name:'Nombre',expression:'1/3',variables:{},note:'Comentario en columna'});
+ const foot=captureCalculation({name:'Otro',expression:'2/3',variables:{},note:'Texto de nota',noteMode:'footnote'});
+ const parts=workbookParts({title:'Prueba',reviewDate:'2026-09-21',items:[inline,foot],tableNote:'Nota general',author:'Equipo de tesorería'});
+ const sheet=parts['xl/worksheets/sheet1.xml'];
+ assert.ok(sheet.includes('<c r="C6" s="0" t="inlineStr"><is><t xml:space="preserve">Comentario en columna'));
+ assert.ok(sheet.includes('[2] Texto de nota'));assert.ok(sheet.includes('Nota de tabla: Nota general'));
+ assert.ok(sheet.includes('EQUIPO DE TESORERÍA'));
+});

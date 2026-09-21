@@ -1,3 +1,4 @@
+import { vectorPdf } from "./report-vector.js";
 import { buildReportPdf } from "./report-pdf.js";
 import { addWorkbookAttachments } from "./report-workbook.js";
 import {
@@ -92,7 +93,7 @@ export function workbookParts(draft) {
   row(
     0,
     5,
-    ["N°", "Cálculo", "Expresión", "Resultado", "Formato", "Comentario"],
+    ["N°", "Cálculo", "Comentario", "Resultado", "Formato", "Expresión"],
     [2, 2, 2, 2, 2, 2],
     24,
   );
@@ -164,11 +165,11 @@ export function workbookParts(draft) {
     const n = outputRow++,
       style = item.unit === "percent" ? 4 : 3;
     sheets[0].push(
-      `<row r="${n}" ht="${Math.min(250, Math.max(38, Math.ceil(item.name.length / 35) * 14 + 8, Math.ceil(Math.min(item.expression.length, 180) / 25) * 14 + 8, Math.ceil(Math.min((item.note || "").length, 300) / 52) * 14 + 8))}" customHeight="1">${cell("A", n, i + 1)}${cell("B", n, item.name)}${cell("C", n, item.expression.length > 180 ? "Expresión completa debajo" : item.expression, 6)}${cell("D", n, item.value, style, excelFormula(item.ast, refs))}${cell("E", n, { number: "Número", percent: "Porcentaje", times: "Veces", money: "S/ miles" }[item.unit])}${cell("F", n, item.note.length > 300 ? "Comentario ampliado debajo" : item.note)}</row>`,
+      `<row r="${n}" ht="${Math.min(250, Math.max(38, Math.ceil(item.name.length / 35) * 14 + 8, Math.ceil(Math.min(item.expression.length, 180) / 25) * 14 + 8, Math.ceil(Math.min((item.note || "").length, 300) / 52) * 14 + 8))}" customHeight="1">${cell("A", n, i + 1)}${cell("B", n, item.name)}${cell("C", n, item.noteMode === "footnote" ? (item.note ? `Nota [${i+1}]` : "") : item.note.length > 300 ? "Comentario ampliado debajo" : item.note)}${cell("D", n, item.value, style, excelFormula(item.ast, refs))}${cell("E", n, { number: "Número", percent: "Porcentaje", times: "Veces", money: "S/ miles" }[item.unit])}${cell("F", n, item.expression.length > 180 ? "Expresión completa debajo" : item.expression, 6)}</row>`,
     );
     for (const text of [
       item.expression.length > 180 ? "Fórmula: " + item.expression : "",
-      item.note.length > 300 ? item.note : "",
+      item.noteMode !== "footnote" && item.note.length > 300 ? item.note : "",
     ].filter(Boolean)) {
       for (let start = 0; start < text.length; start += 180) {
         row(0, outputRow, ["", text.slice(start, start + 180)], [0, 0], 34);
@@ -177,6 +178,12 @@ export function workbookParts(draft) {
       }
     }
   });
+  const notes = report.items.map((item,i)=>item.noteMode === 'footnote' && item.note ? `[${i+1}] ${item.note}` : '').filter(Boolean);
+  if(report.tableNote)notes.push('Nota de tabla: '+report.tableNote);
+  if(report.author)notes.push('PREPARADO POR: '+report.author.toLocaleUpperCase('es-PE'));
+  for(const text of notes){
+    for(let i=0;i<text.length;i+=180){row(0,outputRow,['',text.slice(i,i+180)],[0,6],34);detailMerges.push(`B${outputRow}:F${outputRow}`);outputRow++;}
+  }
   const end = outputRow + 1;
   if (report.conclusion) {
     row(0, end, ["CONCLUSIÓN"], [2], 24);
@@ -229,7 +236,7 @@ export function workbookParts(draft) {
       .join(
         "",
       )}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`,
-    "xl/worksheets/sheet1.xml": sheet(0, [6, 40, 30, 24, 16, 58], merges, 5),
+    "xl/worksheets/sheet1.xml": sheet(0, [6, 40, 58, 24, 16, 30], merges, 5),
     "xl/worksheets/sheet2.xml": sheet(
       1,
       [9, 10, 40, 15, 66, 12, 22, 24, 60, 18],
@@ -266,7 +273,12 @@ export async function downloadReview(draft, type) {
       fontBytes("ReportSans.ttf"),
       fontBytes("ReportSans-Bold.ttf"),
     ]);
-    blob = new Blob([await pdfBytes(draft, lib, { kit, normal, bold })], {
+    const fonts = { kit, normal, bold };
+    if (draft.attachments?.some(a=>a.kind === 'chart')) {
+      const [PDFKit, SVGtoPDF] = await Promise.all([vendor('../vendor/pdfkit.min.js','PDFDocument'),vendor('../vendor/svg-to-pdfkit.min.js','SVGtoPDF')]);
+      fonts.vector = svg => vectorPdf(svg, fonts, PDFKit, SVGtoPDF);
+    }
+    blob = new Blob([await pdfBytes(draft, lib, fonts)], {
       type: "application/pdf",
     });
   }

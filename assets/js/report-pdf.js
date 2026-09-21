@@ -1,3 +1,4 @@
+import {contentPages} from './report-layout.js';
 import {formatResult} from './calculator-engine.js';
 import {tableNumber} from './report-assets.js';
 export async function buildReportPdf(report, lib, fonts) {
@@ -8,7 +9,12 @@ export async function buildReportPdf(report, lib, fonts) {
   const bold = await doc.embedFont(fonts?.bold || StandardFonts.HelveticaBold,{subset:true});
   doc.setTitle(report.title); doc.setSubject('Informe financiero · cálculos y evidencia');
   const W=841.89,H=595.28,M=44,U=W-M*2;
-  const navy=rgb(.035,.11,.19), blue=rgb(.05,.36,.55), gray=rgb(.38,.44,.49), pale=rgb(.94,.96,.975), white=rgb(1,1,1), ink=rgb(.08,.14,.19), line=rgb(.83,.88,.91);
+  const editorial=report.pdfStyle==='editorial',paper=report.pdfStyle==='paper',plain=editorial||paper;
+  const navy=plain?rgb(.08,.09,.08):rgb(.035,.11,.19),blue=editorial?rgb(.02,.4,.33):paper?rgb(.2,.2,.2):rgb(.05,.36,.55),gray=rgb(.38,.42,.43),pale=plain?rgb(.93,.93,.90):rgb(.94,.96,.975),white=rgb(1,1,1),ink=rgb(.08,.14,.19),line=plain?rgb(.72,.73,.70):rgb(.83,.88,.91),background=editorial?rgb(.973,.969,.945):white;
+  const headerFill=plain?background:navy,headerInk=plain?navy:white;
+  const targets=new Map(),indexJobs=[],continuations=[],vectorCache=new Map();
+  const assets=(report.attachments||[]).map((a,i)=>({...a,ref:`${a.kind==='chart'?'G':'T'}${String((report.attachments||[]).slice(0,i+1).filter(b=>b.kind===a.kind).length).padStart(2,'0')}`}));
+  const content=contentPages(assets,report.layout);
   const date=report.reviewDate.split('-').reverse().join('/');
   const safe=t=>String(t??'').replace(/[−–—]/g,'-').replace(/›/g,'/').replace(/Δ/g,'Var.').replace(/→/g,'a').replace(/[^\u0020-\u007e\u00a0-\u00ff\n]/g,' ');
   const lines=(text,size=11,f=font,max=U)=>{
@@ -26,9 +32,9 @@ export async function buildReportPdf(report, lib, fonts) {
   let page,y,section='';
   const draw=(text,x,yy,size=11,f=font,color=ink)=>page.drawText(safe(text),{x,y:yy,size,font:f,color});
   function newPage(title=section) {
-    section=title.replace(/(?: · continuación)+$/,''); page=doc.addPage([W,H]); y=H-40;
+    section=title.replace(/(?: · continuación)+$/,''); page=doc.addPage([W,H]); page.drawRectangle({x:0,y:0,width:W,height:H,color:background}); y=H-40;
     draw('TREASURY HUB  /  INFORME FINANCIERO',M,y,8,bold,gray);
-    draw(date,W-M-60,y,8,font,gray); y-=38;
+    draw(date,W-M-60,y,8,font,gray); if(plain)page.drawLine({start:{x:M,y:y-10},end:{x:W-M,y:y-10},thickness:.7,color:navy}); y-=38;
     for(const l of lines(title,22,bold)){draw(l,M,y,22,bold,navy);y-=27;}
     page.drawLine({start:{x:M,y:y+9},end:{x:M+44,y:y+9},thickness:2,color:blue});y-=15;
   }
@@ -37,8 +43,8 @@ export async function buildReportPdf(report, lib, fonts) {
   function grid(headers,rows,widths) {
     const top=()=>{
       const h=Math.max(...headers.map((v,i)=>lines(v,9,bold,widths[i]-16).length))*13+16;
-      room(h+30); page.drawRectangle({x:M,y:y-h+7,width:U,height:h,color:navy});
-      let x=M; headers.forEach((v,i)=>{lines(v,9,bold,widths[i]-16).forEach((l,j)=>draw(l,x+8,y-7-j*13,9,bold,white));x+=widths[i];});y-=h;
+      room(h+30); page.drawRectangle({x:M,y:y-h+7,width:U,height:h,color:headerFill});
+      let x=M; headers.forEach((v,i)=>{lines(v,9,bold,widths[i]-16).forEach((l,j)=>draw(l,x+8,y-7-j*13,9,bold,headerInk));x+=widths[i];});y-=h;
     };
     top();
     rows.forEach((cells,n)=>{
@@ -50,73 +56,115 @@ export async function buildReportPdf(report, lib, fonts) {
         if(y-32<52){newPage();top();}
         const count=Math.min(total-offset,Math.max(1,Math.floor((y-70)/13)));
         const h=count*13+14;
-        if(n%2===0)page.drawRectangle({x:M,y:y-h+7,width:U,height:h,color:pale});
+        if(!plain&&n%2===0)page.drawRectangle({x:M,y:y-h+7,width:U,height:h,color:pale});
         let x=M; wrapped.forEach((ls,i)=>{ls.slice(offset,offset+count).forEach((l,j)=>draw(l,/^[+-]?[\d,.]+\s?%?$/.test(String(cells[i]).trim()) ? x+widths[i]-8-font.widthOfTextAtSize(l,9) : x+8,y-5-j*13,9,font));x+=widths[i];});
         y-=h; offset+=count;
         if(offset<total){newPage();top();}
       }
-    });y-=14;
+    });page.drawLine({start:{x:M,y:y+6},end:{x:W-M,y:y+6},thickness:.5,color:line});y-=14;
   }
   // Cover: editorial hierarchy with an original side motif, never a copied logo.
-  page=doc.addPage([W,H]);page.drawRectangle({x:0,y:0,width:W,height:H,color:navy});
-  page.drawRectangle({x:W-170,y:0,width:170,height:H,color:rgb(.045,.16,.25)});
-  for(let i=0;i<5;i++)page.drawLine({start:{x:W-150+i*26,y:90},end:{x:W-150+i*26,y:180+i*56},thickness:2,color:rgb(.15,.34,.44)});
-  draw('TREASURY HUB',M,H-55,12,bold,white);draw('INFORME FINANCIERO',M,H-81,9,font,rgb(.59,.75,.83));
+  page=doc.addPage([W,H]);page.drawRectangle({x:0,y:0,width:W,height:H,color:plain?background:navy});
+  for(let x=0;x<W;x+=36)page.drawLine({start:{x,y:0},end:{x,y:H},thickness:.4,color:plain?line:rgb(.3,.5,.6),opacity:.17});
+  for(let y=0;y<H;y+=36)page.drawLine({start:{x:0,y},end:{x:W,y},thickness:.4,color:plain?line:rgb(.3,.5,.6),opacity:.17});
+  if(!plain)page.drawRectangle({x:W-170,y:0,width:170,height:H,color:rgb(.045,.16,.25)});
+  if(!plain)for(let i=0;i<5;i++)page.drawLine({start:{x:W-150+i*26,y:90},end:{x:W-150+i*26,y:180+i*56},thickness:2,color:rgb(.15,.34,.44)});
+  draw('TREASURY HUB',M,H-55,12,bold,plain?navy:white);draw('INFORME FINANCIERO',M,H-81,9,font,plain?gray:rgb(.59,.75,.83));
   y=H-190;
   let coverSize=30; while(coverSize>24 && lines(report.title,coverSize,bold,580).length>4)coverSize-=2;
-  for(const l of lines(report.title,coverSize,bold,580)){draw(l,M,y,coverSize,bold,white);y-=coverSize+8;}
-  y-=12;page.drawLine({start:{x:M,y},end:{x:M+66,y},thickness:4,color:rgb(.28,.72,.8)});y-=32;
-  for(const l of lines(report.subtitle||'Análisis financiero',14,font,565)){draw(l,M,y,14,font,rgb(.75,.84,.89));y-=20;}
-  draw('FECHA DE REVISIÓN',M,95,8,bold,rgb(.59,.75,.83));draw(date,M,72,13,font,white);
-  if(report.author){draw('PREPARADO POR',260,95,8,bold,rgb(.59,.75,.83)); lines(report.author,11,font,365).slice(0,2).forEach((l,i)=>draw(l,260,72-i*14,11,font,white));}
-  if(report.items.length || report.conclusion) {
-    newPage('Resumen de resultados');
-    if(report.items.length)grid(['Indicador / cálculo','Resultado','Unidad'],report.items.map(i=>[i.name,formatResult(i.value,i.unit==='percent'?'percent':'number'),{number:'Número',percent:'Porcentaje',times:'Veces',money:'S/ miles'}[i.unit]]),[U-285,180,105]);
-    for(const [i,item] of report.items.entries()) if(item.note){room(55);para(`${i+1}. ${item.name}`,12,navy,bold);para(item.note);}
+  for(const l of lines(report.title,coverSize,bold,580)){draw(l,M,y,coverSize,bold,plain?navy:white);y-=coverSize+8;}
+  y-=12;page.drawLine({start:{x:M,y},end:{x:M+66,y},thickness:4,color:plain?blue:rgb(.28,.72,.8)});y-=32;
+  for(const l of lines(report.subtitle||'Análisis financiero',14,font,565)){draw(l,M,y,14,font,plain?gray:rgb(.75,.84,.89));y-=20;}
+  draw('FECHA DE REVISIÓN',M,95,8,bold,plain?gray:rgb(.59,.75,.83));draw(date,M,72,13,font,plain?navy:white);
+  if(report.author){draw('PREPARADO POR',260,95,8,bold,plain?gray:rgb(.59,.75,.83)); lines(report.author.toLocaleUpperCase('es-PE'),11,font,365).slice(0,2).forEach((l,i)=>draw(l,260,72-i*14,11,font,plain?navy:white));}
+  if(report.items.length || report.conclusion || assets.length) {
+    newPage('Resumen del informe');
+    if(report.items.length)grid(['Indicador / cálculo','Comentario','Resultado'],report.items.map((item,i)=>[`${String(i+1).padStart(2,'0')}. ${item.name}`,item.noteMode==='footnote'&&item.note?`Ver nota [${i+1}]`:item.note||'',formatResult(item.value,item.unit)]),[245,U-385,140]);
+    for(const [i,item] of report.items.entries())if(item.note&&item.noteMode==='footnote')para(`[${i+1}] ${item.note}`,9,gray);
+    if(report.tableNote)para(`Nota de tabla: ${report.tableNote}`,9,gray);
     if(report.conclusion){room(60);para('Conclusión',14,navy,bold);para(report.conclusion);}
-  }
-  const imageCache=new Map();
-  for(const [i,a] of (report.attachments||[]).entries()) {
-    if(a.kind==='chart') {
-      newPage(`Gráfico ${String(i+1).padStart(2,'0')}`);
-      if(!imageCache.has(a.id))imageCache.set(a.id,await doc.embedPng(await a.png.arrayBuffer()));
-      const img=imageCache.get(a.id), scale=Math.min(U/img.width,(y-92)/img.height);
-      page.drawImage(img,{x:M+(U-img.width*scale)/2,y:y-img.height*scale,width:img.width*scale,height:img.height*scale});
-      y-=img.height*scale+20;para(a.title,10,navy,bold);
-      // Source is already baked into the chart, avoid duplicating long captions.
-    } else {
-      const batch=a.rows.every(r=>r.slice(1).every(v=>String(v||'').length<=20))?7:4;
-      const groups=[];for(let c=1;c<a.headers.length;c+=batch)groups.push([0,...Array.from({length:Math.min(batch,a.headers.length-c)},(_,n)=>c+n)]);
-      if(!groups.length)groups.push([0]);
-      for(const [g,indices] of groups.entries()){
-        newPage(a.title+(groups.length>1?` · ${g+1}/${groups.length}`:''));
-        para(a.context||'',9,gray);
-        const weights=indices.map((c,i)=>{
-          const values=a.rows.map(r=>String(r[c]||''));
-          const numeric=c>0 && values.every(v=>tableNumber(v)||!v||/^[—–-]$/.test(v));
-          return numeric?76:Math.min(320,Math.max(i===0?140:85,Math.max(String(a.headers[c]).length,...values.map(v=>v.length))*4.4));
-        });
-        const sum=weights.reduce((a,b)=>a+b,0), widths=weights.map(w=>w/sum*U);
-        grid(indices.map(c=>a.headers[c]),a.rows.map(r=>indices.map(c=>{const n=c>0?tableNumber(r[c]):null;return n?formatResult(n.value,n.percent?'percent':'number'):r[c]||'';})),widths);
-      }
+    if(assets.length || report.annexes!==false&&report.items.length) {
+      room(65);para('Contenido y referencias',13,navy,bold);
+      const entries=[...assets.map(a=>[a.ref,`${a.ref} · ${a.title}`]),...(report.annexes!==false?report.items.map((item,i)=>[`A${i+1}`,`A${String(i+1).padStart(2,'0')} · ${item.name}`]):[])];
+      for(const [ref,label] of entries){const ls=lines(label,9,font,U-55);room(ls.length*13+5);for(const [i,l]of ls.entries())draw(l,M,y-i*13,9,font,gray);indexJobs.push({page,y,ref});y-=ls.length*13+6;}
     }
   }
-  // Supporting detail is intentionally separated from the executive results.
+  async function vectorChart(a,x,top,w,h) {
+    if(!fonts?.vector)throw Error('No se pudo cargar el exportador vectorial. Reintenta la descarga.');
+    if(!vectorCache.has(a.id)){
+      const bytes=await fonts.vector(a.svg);
+      const [embedded]=await doc.embedPdf(bytes,[0]);vectorCache.set(a.id,embedded);
+    }
+    const picture=vectorCache.get(a.id),scale=Math.min(w/picture.width,h/picture.height);
+    page.drawPage(picture,{x:x+(w-picture.width*scale)/2,y:top-picture.height*scale,width:picture.width*scale,height:picture.height*scale});
+  }
+  function compactTable(a,x,top,w,h) {
+    const maxCols=w<U-5?4:8,indices=Array.from({length:Math.min(a.headers.length,maxCols)},(_,i)=>i);
+    const widths=indices.map((_,i)=>indices.length===1?w:i===0?w*.4:w*.6/(indices.length-1));
+    const size=w<U-5?7.8:9,lh=size+4;
+    const heads=indices.map((c,i)=>lines(a.headers[c],size,bold,widths[i]-12));
+    const hh=Math.max(...heads.map(l=>l.length))*lh+12;
+    page.drawRectangle({x,y:top-hh+5,width:w,height:hh,color:headerFill});
+    let xx=x;heads.forEach((ls,i)=>{ls.forEach((l,j)=>draw(l,xx+6,top-5-j*lh,size,bold,headerInk));xx+=widths[i];});
+    let yy=top-hh,count=0;
+    for(const row of a.rows){
+      const values=indices.map(c=>{const n=c>0?tableNumber(row[c]):null;return n?formatResult(n.value,n.percent?'percent':'number'):row[c]||'';});
+      const wrapped=values.map((v,i)=>lines(v,size,font,widths[i]-12));
+      const rh=Math.max(...wrapped.map(l=>l.length))*lh+10;
+      if(yy-rh<top-h+27)break;
+      if(!plain&&count%2===0)page.drawRectangle({x,y:yy-rh+5,width:w,height:rh,color:pale});
+      xx=x;wrapped.forEach((ls,i)=>{ls.forEach((l,j)=>draw(l,/^[+-]?[\d,.]+\s?%?$/.test(String(values[i]).trim())?xx+widths[i]-6-font.widthOfTextAtSize(l,size):xx+6,yy-4-j*lh,size,font));xx+=widths[i];});
+      yy-=rh;count++;
+    }
+    page.drawLine({start:{x,y:yy+4},end:{x:x+w,y:yy+4},thickness:.5,color:line});
+    if(count<a.rows.length || indices.length<a.headers.length){
+      continuations.push(a);const target=`detail-${a.ref}`;
+      draw(`Vista parcial · tabla completa en anexo ${a.ref}`,x,Math.min(yy-14,top-h+15),8,font,gray);
+      indexJobs.push({page,y:Math.min(yy-14,top-h+15),ref:target,x:x+w-40});
+    }
+  }
+  for(const group of content) {
+    newPage(`Contenido ${String(group.number).padStart(2,'0')}`);
+    const top=y,cols=group.items.length===1?1:2,rows=group.items.length>2?2:1,gap=22,cw=(U-gap*(cols-1))/cols,ch=(top-58-gap*(rows-1))/rows;
+    for(const [i,a]of group.items.entries()){
+      const x=M+(i%cols)*(cw+gap),pt=top-Math.floor(i/cols)*(ch+gap);
+      targets.set(a.ref,doc.getPageCount());
+      const titleLines=lines(`${a.ref} · ${a.title}`,11,bold,cw);
+      titleLines.forEach((l,j)=>draw(l,x,pt-j*14,11,bold,navy));
+      const chartTop=pt-titleLines.length*14-4,available=ch-titleLines.length*14-6;
+      if(a.kind==='chart')await vectorChart(a,x,chartTop,cw,available);
+      else compactTable(a,x,chartTop,cw,available);
+    }
+  }
+  // Annex A: reproducible calculations. Annex T: full tables when a panel is too small.
   const sources=new Map();
-  report.items.forEach((item,i)=>{
-    newPage(`Anexo ${i+1} · Cálculo y datos`);
-    para(item.name,17,navy,bold);
-    para(`Resultado: ${formatResult(item.value,item.unit)}`,16,blue,bold);
-    para(`Fórmula: ${item.expression}`,11,gray);
-    para('Cuentas monetarias en S/ miles. Valores de origen con precisión completa en Excel.',9,gray);
+  if(report.annexes!==false)for(const [i,item]of report.items.entries()){
+    if(i===0)newPage('Anexo A · Cálculos y fuentes');else room(185);
+    targets.set(`A${i+1}`,doc.getPageCount());
+    para(`A${String(i+1).padStart(2,'0')} · ${item.name}`,14,navy,bold);
+    para(`Resultado: ${formatResult(item.value,item.unit)}`,12,blue,bold);
+    para(`Fórmula: ${item.expression}`,10,gray);
+    if(i===0)para('Cuentas en S/ miles. Excel conserva la precisión original. Referencias de fuente al final del anexo.',9,gray);
     grid(['Variable','Cuenta / referencia','Valor','Entidad · cierre · columna'],Object.entries(item.variables).map(([key,v])=>{
       if(v.source&&!sources.has(v.source))sources.set(v.source,sources.size+1);
       const ref=v.source?` [${sources.get(v.source)}]`:'';
       const close=v.date?new Date(Date.UTC(Number(v.date.slice(0,4)),Number(v.date.slice(5,7)),0)).toLocaleDateString('es-PE',{timeZone:'UTC',day:'2-digit',month:'2-digit',year:'numeric'}):'';
       return [key,`${v.path?.join(' / ')||v.label}${v.reference?' · '+v.reference:''}${ref}`,formatResult(v.value),v.kind==='constant'?'Constante definida por el usuario':`${v.entityName}\n${close} · ${['MN','ME','Total'][Number(v.currency)]}\n${v.kind==='ytd'?'Acumulado YTD':'Saldo de cierre'}`];
     }),[62,310,135,U-507]);
-  });
-  if(sources.size){room(100);para('Fuentes',14,navy,bold);para('Referencias de las cuentas utilizadas. Los números remiten al anexo de cada cálculo.',10,gray);for(const [url,n] of sources){room(45);para(`[${n}] ${url}`,9,blue);}}
+  }
+  if(sources.size){room(100);para('Fuentes de los cálculos',13,navy,bold);for(const [url,n]of sources){room(45);para(`[${n}] ${url}`,9,blue);}}
+  for(const a of continuations){
+    const batch=7,groups=[];for(let c=1;c<a.headers.length;c+=batch)groups.push([0,...Array.from({length:Math.min(batch,a.headers.length-c)},(_,n)=>c+n)]);if(!groups.length)groups.push([0]);
+    for(const [g,indices]of groups.entries()){
+      newPage(`Anexo ${a.ref} · ${a.title}${groups.length>1?` · ${g+1}/${groups.length}`:''}`);
+      if(g===0)targets.set(`detail-${a.ref}`,doc.getPageCount());
+      para(a.context||'',9,gray);
+      const weights=indices.map((c,i)=>{const values=a.rows.map(r=>String(r[c]||''));const numeric=c>0&&values.every(v=>tableNumber(v)||!v||/^[—–-]$/.test(v));return numeric?76:Math.min(320,Math.max(i===0?140:85,Math.max(String(a.headers[c]).length,...values.map(v=>v.length))*4.4));});
+      const sum=weights.reduce((a,b)=>a+b,0),widths=weights.map(w=>w/sum*U);
+      grid(indices.map(c=>a.headers[c]),a.rows.map(r=>indices.map(c=>{const n=c>0?tableNumber(r[c]):null;return n?formatResult(n.value,n.percent?'percent':'number'):r[c]||'';})),widths);
+    }
+  }
+  for(const job of indexJobs){const target=targets.get(job.ref);if(target)job.page.drawText(`p. ${target}`,{x:job.x??W-M-35,y:job.y,size:8,font,color:gray});}
   const pages=doc.getPages();pages.forEach((p,i)=>{if(i===0)return;p.drawLine({start:{x:M,y:34},end:{x:W-M,y:34},thickness:.5,color:line});p.drawText('Treasury Hub · '+safe(report.title).slice(0,95),{x:M,y:20,size:8,font,color:gray});p.drawText(`${i+1} / ${pages.length}`,{x:W-M-40,y:20,size:8,font,color:gray});});
   return doc.save();
 }

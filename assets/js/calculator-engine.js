@@ -140,6 +140,7 @@ export function captureCalculation({
   variables,
   unit = "number",
   note = "",
+  noteMode = "inline",
 }) {
   const ast = parseFormula(expression),
     used = formulaVariables(ast),
@@ -152,6 +153,7 @@ export function captureCalculation({
     variables: JSON.parse(JSON.stringify(values)),
     unit,
     note,
+    noteMode,
     ast,
     value,
   };
