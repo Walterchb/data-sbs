@@ -149,7 +149,7 @@ export function captureCalculation({
   if (!name.trim()) throw Error("Escribe un nombre para el cálculo.");
   return {
     name: name.trim(),
-    expression: expression.trim(),
+    expression: expression.trim().toUpperCase(),
     variables: JSON.parse(JSON.stringify(values)),
     unit,
     note,

@@ -201,3 +201,17 @@ test('financial references distinguish sheet and row without inventing cell colu
  assert.equal(sourceReference({id:'balance:124'}),'B-2201 · hoja 1 (Balance) · fila 124');
  assert.equal(sourceReference({id:'income:79'}),'B-2201 · hoja 2 (Resultados) · fila 79');
 });
+
+import {reportAnnex,formulaLabel} from '../assets/js/report-annex.js';
+test('annex shares inputs without mixing entities, dates, currencies or raw precision',()=>{
+ const account={id:'balance:124',label:'Patrimonio',value:123.456,entity:'banbif',entityName:'BanBif',date:'2026-06',currency:'2',source:'https://example.test/source',kind:'stock'};
+ const items=[captureCalculation({name:'Primero',expression:'a/b+1e-3',variables:{a:account,b:{kind:'constant',label:'Factor',value:2}}}),captureCalculation({name:'Segundo',expression:'b/a',variables:{b:account,a:{kind:'constant',label:'Factor',value:2}}}),...['entity','date','currency','value'].map((field,i)=>captureCalculation({name:field,expression:'a',variables:{a:{...account,[field]:['other','2025-06','0',123.457][i]}}}))];
+ const annex=reportAnnex(items);
+ assert.equal(annex.inputs.length,6);
+ assert.equal(annex.formulas[0].expression,'A/B+1E-3');
+ assert.equal(annex.formulas[1].expression,'A/B');
+ const shared=Object.fromEntries(annex.inputs.map(v=>[v.symbol.toLowerCase(),v]));
+ annex.formulas.forEach((f,i)=>assert.equal(evaluateFormula(parseFormula(f.expression),shared),items[i].value));
+ assert.equal(formulaLabel('a+1e-3+bb',{a:'C',bb:'D'}),'C+1e-3+D');
+ assert.equal(captureCalculation({name:'Mayúsculas',expression:'a/2',variables:{a:account}}).expression,'A/2');
+});

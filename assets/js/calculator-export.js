@@ -53,6 +53,7 @@ function verified(draft) {
     ...draft,
     items: draft.items.map((item) => ({
       ...item,
+      expression: item.expression.toUpperCase(),
       ast: parseFormula(item.expression),
       value: evaluateFormula(parseFormula(item.expression), item.variables),
     })),
@@ -138,13 +139,13 @@ export function workbookParts(draft) {
         inputRow,
         [
           i + 1,
-          key,
+          key.toUpperCase(),
           v.entityName || "Definido por el usuario",
           v.date ? serial(day(v.date)) : "",
-          v.path?.join(" › ") || v.label,
+          v.kind === "constant" ? v.label.toUpperCase() : v.path?.join(" › ") || v.label,
           sourceColumn(v),
           v.kind === "constant"
-            ? "Constante"
+            ? "CONSTANTE"
             : v.kind === "ytd"
               ? "Acumulado YTD"
               : v.kind === "ratio" ? "Ratio al cierre" : "Saldo de cierre",

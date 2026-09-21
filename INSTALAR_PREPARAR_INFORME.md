@@ -34,11 +34,11 @@ Límites para cuidar memoria: 20 gráficos guardados / 40 MB en la galería; 30 
 
 ## Descargas
 
-**PDF:** elige **Corporativo**, **Editorial** (marfil, reglas finas y acentos verdes) o **Paper**. Todos incluyen portada con cuadrícula desvanecida de líneas discontinuas y autor en mayúsculas, resultados con Detalle junto al nombre, nota general, índice enlazado inmediatamente después de la portada, contenido y anexos identificados.
+**PDF:** elige **Corporativo**, **Editorial** (marfil, reglas finas y acentos verdes) o **Paper**. Todos incluyen portada con cuadrícula desvanecida de líneas discontinuas y autor en mayúsculas, resultados con Detalle junto al nombre, nota general, índice enlazado inmediatamente después de la portada, contenido y anexos identificados. Las portadas tienen reglas y acentos propios de cada estilo; el índice distingue secciones numeradas y subsecciones con conexiones discontinuas.
 
 **Contenido:** cada elemento tiene un número de página. Se agrupan visualmente por página y puedes cambiar su orden con las flechas. Máximo cuatro por página; la distribución se ajusta automáticamente. Ya no se elige entre modos de distribución.
 
-Los encabezados de Editorial y Paper tienen reglas arriba y abajo, texto ligeramente mayor y alineación numérica consistente con los valores. Las tablas que no caben completas tienen una vista parcial identificada y una referencia enlazada a su anexo completo. Los anexos separan cálculos, tablas completas y archivos de origen; los archivos se listan una sola vez. Cada página incluye un enlace para volver al índice. Puedes desactivar los anexos de cálculos; las continuaciones de tablas se conservan.
+Los encabezados de Editorial y Paper tienen reglas arriba y abajo, texto ligeramente mayor y centrado horizontal y verticalmente; los valores numéricos se mantienen alineados a la derecha. Las tablas que no caben completas tienen una vista parcial identificada y una referencia enlazada a su anexo completo. El respaldo reúne las fórmulas y una lista única de cuentas y constantes, agrupada por entidad, cierre y unidad. No repite los resultados ni el Detalle. Las constantes y las letras se muestran en mayúsculas. Las referencias enlazan los archivos de origen sin mostrar URLs largas. Las tablas completas idénticas comparten un único anexo. Cada página incluye un enlace para volver al índice. Puedes desactivar los anexos de cálculos; las continuaciones de tablas se conservan.
 
 **Capital:** APR, capital global, CET1/APR, TIER 1/APR y reconstrucción de patrimonio efectivo total, TIER 1, TIER 2 y su participación. Se utiliza B-2402 de la entidad y el cierre exactos; no se mezcla un mes anterior sin avisar. Los importes son S/ miles. Si seleccionas MN o ME, el cálculo indica que requiere Total.
 
@@ -54,4 +54,4 @@ Los encabezados de Editorial y Paper tienen reglas arriba y abajo, texto ligeram
 
 ## Validación
 
-76 pruebas JavaScript. Comprobación en navegador de predeterminados, capital, Detalle, notas, asignación de páginas y exportaciones. Los tres estilos PDF se renderizaron y revisaron; extracción de títulos, fechas y valores de los gráficos confirmada, con trazos vectoriales y sin rasterizar el contenido del gráfico. Se compararon imágenes guardadas y PDFs renderizados con cuatro estilos y con fondo, patrón y sombra. Excel conserva fórmulas nativas y resultados con dos decimales; no se probó en Microsoft Excel de escritorio.
+77 pruebas JavaScript. Comprobación en navegador de predeterminados, capital, Detalle, notas, asignación de páginas y exportaciones. Los tres estilos PDF se renderizaron y revisaron; extracción de títulos, fechas y valores de los gráficos confirmada, con trazos vectoriales y sin rasterizar el contenido del gráfico. Se compararon imágenes guardadas y PDFs renderizados con cuatro estilos y con fondo, patrón y sombra. Excel conserva fórmulas nativas y resultados con dos decimales; no se probó en Microsoft Excel de escritorio.

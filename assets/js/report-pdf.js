@@ -1,3 +1,4 @@
+import {reportAnnex} from './report-annex.js';
 import {sourceReference,sourceColumn} from './report-reference.js';
 import {contentPages} from './report-layout.js';
 import {formatResult} from './calculator-engine.js';
@@ -41,27 +42,29 @@ export async function buildReportPdf(report, lib, fonts) {
   }
   function room(h){if(y-h<52)newPage(section+' · continuación');}
   function para(text,size=11,color=ink,f=font){for(const l of lines(text,size,f)){room(size+6);draw(l,M,y,size,f,color);y-=size+6;}y-=5;}
-  function grid(headers,rows,widths,numeric=numericColumns(headers,rows)) {
+  function grid(headers,rows,widths,numeric=numericColumns(headers,rows),{compact=false,context=""}={}) {
+    const rowLine=compact?12:13,rowPad=compact?8:14;
+    const next=()=>{newPage();if(context)para(context,10,blue,bold);top();};
     const top=()=>{
       const h=Math.max(...headers.map((v,i)=>lines(v,10,bold,widths[i]-16).length))*13+16;
       room(h+30); page.drawRectangle({x:M,y:y-h+7,width:U,height:h,color:headerFill});
       if(plain){page.drawLine({start:{x:M,y:y+7},end:{x:W-M,y:y+7},thickness:.7,color:navy});page.drawLine({start:{x:M,y:y-h+7},end:{x:W-M,y:y-h+7},thickness:.6,color:navy});}
-      let x=M; headers.forEach((v,i)=>{lines(v,10,bold,widths[i]-16).forEach((l,j)=>draw(l,numeric[i]?x+widths[i]-8-bold.widthOfTextAtSize(l,10):x+8,y-7-j*13,10,bold,headerInk));x+=widths[i];});y-=h;
+      let x=M; headers.forEach((v,i)=>{const ls=lines(v,10,bold,widths[i]-16),base=y+7-h/2+(ls.length-1)*6.5-3.5;ls.forEach((l,j)=>draw(l,x+(widths[i]-bold.widthOfTextAtSize(l,10))/2,base-j*13,10,bold,headerInk));x+=widths[i];});y-=h;
     };
     top();
     rows.forEach((cells,n)=>{
       const wrapped=cells.map((v,i)=>lines(v,9,font,widths[i]-16));
       let offset=0,total=Math.max(...wrapped.map(a=>a.length));
       // Ordinary rows stay together; split only a row taller than a full page.
-      if (total*13+14 <= H-210 && y-total*13-14<52) {newPage();top();}
+      if (total*rowLine+rowPad <= H-210 && y-total*rowLine-rowPad<52) {next();}
       while(offset<total){
-        if(y-32<52){newPage();top();}
-        const count=Math.min(total-offset,Math.max(1,Math.floor((y-70)/13)));
-        const h=count*13+14;
+        if(y-rowLine-rowPad<52){next();}
+        const count=Math.min(total-offset,Math.max(1,Math.floor((y-52-rowPad)/rowLine)));
+        const h=count*rowLine+rowPad;
         if(!plain&&n%2===0)page.drawRectangle({x:M,y:y-h+7,width:U,height:h,color:pale});
-        let x=M; wrapped.forEach((ls,i)=>{ls.slice(offset,offset+count).forEach((l,j)=>draw(l,numeric[i] ? x+widths[i]-8-font.widthOfTextAtSize(l,9) : x+8,y-5-j*13,9,font));x+=widths[i];});
+        let x=M; wrapped.forEach((ls,i)=>{ls.slice(offset,offset+count).forEach((l,j)=>draw(l,numeric[i] ? x+widths[i]-8-font.widthOfTextAtSize(l,9) : x+8,y-5-j*rowLine,9,font));x+=widths[i];});
         y-=h; offset+=count;
-        if(offset<total){newPage();top();}
+        if(offset<total){next();}
       }
     });page.drawLine({start:{x:M,y:y+6},end:{x:W-M,y:y+6},thickness:.5,color:line});y-=14;
   }
@@ -70,8 +73,14 @@ export async function buildReportPdf(report, lib, fonts) {
   const gridInk=plain?line:rgb(.3,.5,.6);
   const fade=(x,y)=>.26*Math.exp(-((x-W*.82)**2/(W*.48)**2+(y-H*.7)**2/(H*.65)**2));
   for(let x=0;x<W;x+=36)for(let yy=0;yy<H;yy+=36)for(const vertical of [true,false])page.drawLine({start:{x,y:yy},end:{x:vertical?x:Math.min(x+36,W),y:vertical?Math.min(yy+36,H):yy},thickness:.5,color:gridInk,opacity:fade(x,yy),dashArray:[3,5]});
-  if(!plain)page.drawRectangle({x:W-170,y:0,width:170,height:H,color:rgb(.045,.16,.25)});
-  if(!plain)for(let i=0;i<5;i++)page.drawLine({start:{x:W-150+i*26,y:90},end:{x:W-150+i*26,y:180+i*56},thickness:2,color:rgb(.15,.34,.44)});
+  const coverInk=plain?navy:white,coverAccent=plain?blue:rgb(.28,.72,.8);
+  // Restrained print details distinguish each edition without decorative clutter.
+  page.drawLine({start:{x:M,y:H-112},end:{x:W-M,y:H-112},thickness:paper?.6:1,color:coverInk,opacity:.35});
+  page.drawLine({start:{x:M,y:126},end:{x:W-M,y:126},thickness:.6,color:coverInk,opacity:.25});
+  if(editorial)page.drawRectangle({x:0,y:H-112,width:8,height:112,color:blue});
+  if(paper){page.drawLine({start:{x:M,y:H-117},end:{x:W-M,y:H-117},thickness:.35,color:navy});}
+  if(!plain)page.drawLine({start:{x:W-80,y:155},end:{x:W-80,y:H-150},thickness:1,color:coverAccent,opacity:.6,dashArray:[2,5]});
+  draw(report.reviewDate.slice(0,4),W-M-66,H-67,24,bold,coverAccent);
   draw('TREASURY HUB',M,H-55,12,bold,plain?navy:white);draw('INFORME FINANCIERO',M,H-81,9,font,plain?gray:rgb(.59,.75,.83));
   y=H-190;
   let coverSize=30; while(coverSize>24 && lines(report.title,coverSize,bold,580).length>4)coverSize-=2;
@@ -104,7 +113,7 @@ export async function buildReportPdf(report, lib, fonts) {
     const hh=Math.max(...heads.map(l=>l.length))*lh+12;
     page.drawRectangle({x,y:top-hh+5,width:w,height:hh,color:headerFill});
     if(plain){for(const yy of [top+5,top-hh+5])page.drawLine({start:{x,y:yy},end:{x:x+w,y:yy},thickness:.6,color:navy});}
-    let xx=x;heads.forEach((ls,i)=>{ls.forEach((l,j)=>draw(l,numeric[indices[i]]?xx+widths[i]-6-bold.widthOfTextAtSize(l,hs):xx+6,top-5-j*lh,hs,bold,headerInk));xx+=widths[i];});
+    let xx=x;heads.forEach((ls,i)=>{const base=top+5-hh/2+(ls.length-1)*lh/2-hs*.35;ls.forEach((l,j)=>draw(l,xx+(widths[i]-bold.widthOfTextAtSize(l,hs))/2,base-j*lh,hs,bold,headerInk));xx+=widths[i];});
     let yy=top-hh,count=0;
     for(const row of a.rows){
       const values=indices.map(c=>{const n=c>0?tableNumber(row[c]):null;return n?formatResult(n.value,n.percent?'percent':'number'):row[c]||'';});
@@ -117,7 +126,9 @@ export async function buildReportPdf(report, lib, fonts) {
     }
     page.drawLine({start:{x,y:yy+4},end:{x:x+w,y:yy+4},thickness:.5,color:line});
     if(count<a.rows.length || indices.length<a.headers.length){
-      continuations.push(a);const target=`detail-${a.ref}`;
+      const same=continuations.find(t=>JSON.stringify([t.title,t.context,t.headers,t.rows])===JSON.stringify([a.title,a.context,a.headers,a.rows]));
+      if(same)same.detailRefs.push(a.ref);else continuations.push({...a,detailRefs:[a.ref]});
+      const target=`detail-${a.ref}`;
       draw(`Vista parcial · tabla completa en anexo ${a.ref}`,x,Math.min(yy-14,top-h+15),8,font,gray);
       indexJobs.push({page,y:Math.min(yy-14,top-h+15),ref:target,x:x+w-40});
     }
@@ -135,49 +146,83 @@ export async function buildReportPdf(report, lib, fonts) {
       else compactTable(a,x,chartTop,cw,available);
     }
   }
-  // Each calculation keeps its formula and compact inputs together. Source files are listed once.
-  const sources=new Map();
-  if(report.annexes!==false)for(const [i,item]of report.items.entries()){
-    const vars=Object.entries(item.variables),entities=[...new Set(vars.map(([,v])=>v.entityName).filter(Boolean))];
-    const sourceId=v=>{if(v.source&&!sources.has(v.source))sources.set(v.source,{n:sources.size+1,date:v.date,code:v.id?.startsWith('B-2402:')?'B-2402':'B-2201'});return v.source?`S${String(sources.get(v.source).n).padStart(2,'0')}`:'';};
-    const rows=vars.map(([key,v])=>[key,v.label,formatResult(v.value)+(v.unit==='PERCENT'?'%':''),v.date?new Date(Date.UTC(Number(v.date.slice(0,4)),Number(v.date.slice(5,7)),0)).toLocaleDateString('es-PE',{timeZone:'UTC',day:'2-digit',month:'2-digit',year:'numeric'}):'—',sourceColumn(v),v.kind==='constant'?'Definido por el usuario':`${sourceReference(v).replace('B-2201 · ','').replace('B-2402 · '+v.label,'Métrica B-2402')} · ${sourceId(v)}${entities.length>1?' · '+v.entityName:''}`]);
-    const widths=[40,220,110,84,96,U-550];
-    const rowHeight=row=>Math.max(...row.map((v,c)=>lines(v,9,font,widths[c]-16).length))*13+14;
-    const headHeight=90+lines(item.name,14,bold).length*20+lines(item.expression,10).length*16;
-    if(i===0)newPage('Anexo A · Cálculos');else room(Math.min(H-180,headHeight+rows.reduce((h,r)=>h+rowHeight(r),0)));
-    targets.set(`A${i+1}`,doc.getPageCount());
-    para(`A${String(i+1).padStart(2,'0')} · ${item.name}`,14,navy,bold);
-    para(`Resultado: ${formatResult(item.value,item.unit)}     |     Fórmula: ${item.expression}`,10,blue);
-    if(entities.length===1)para(entities[0],9,gray);
-    grid(['Var.','Cuenta / indicador','Valor','Cierre','Unidad','Referencia'],rows,widths,[false,false,true,false,false,false]);
+  // One formula list and one shared input glossary; results and details stay in Results.
+  const sources=new Map(),annex=reportAnnex(report.items);
+  const sourceId=v=>{
+    if(v.source&&!sources.has(v.source))sources.set(v.source,{n:sources.size+1,date:v.date,code:v.id?.startsWith('B-2402:')?'B-2402':'B-2201'});
+    return v.source?`S${String(sources.get(v.source).n).padStart(2,'0')}`:'';
+  };
+  if(report.annexes!==false && report.items.length){
+    newPage('Respaldo de cálculos');targets.set('annex',doc.getPageCount());targets.set('formulas',doc.getPageCount());
+    para('Fórmulas',14,navy,bold);
+    grid(['Cálculo','Fórmula'],annex.formulas.map(v=>[v.name,v.expression]),[U*.57,U*.43],[false,false],{compact:true});
+    if(annex.inputs.length){
+      room(150);targets.set('inputs',doc.getPageCount());para('Cuentas y constantes',14,navy,bold);
+      para('Cada letra identifica una única entrada en las fórmulas de este anexo.',9,gray);
+      for(const group of annex.groups){
+        room(115);const v=group[0],constant=v.kind==='constant';
+        const close=v.date?new Date(Date.UTC(Number(v.date.slice(0,4)),Number(v.date.slice(5,7)),0)).toLocaleDateString('es-PE',{timeZone:'UTC',day:'2-digit',month:'2-digit',year:'numeric'}):'';
+        const context=constant?'CONSTANTES':`${v.entityName||'Entidad seleccionada'}${close?' · '+close:''} · ${sourceColumn(v)}${v.kind==='ytd'?' · Acumulado YTD':''}`;
+        para(context,10,blue,bold);
+        const rows=group.map(v=>[v.symbol,constant?v.label.toUpperCase():v.label,formatResult(v.value)+(v.unit==='PERCENT'?'%':''),constant?'':`${sourceReference(v).replace('B-2201 · ','').replace('B-2402 · '+v.label,'Métrica B-2402')} · ${sourceId(v)}`]);
+        grid(constant?['Letra','Constante','Valor']:['Letra','Cuenta / indicador','Valor','Referencia'],constant?rows.map(r=>r.slice(0,3)):rows,constant?[50,U-170,120]:[50,U-340,115,175],[false,false,true,false],{compact:true,context});
+      }
+    }
+    if(sources.size){
+      room(75);targets.set('sources',doc.getPageCount());para('Fuentes',14,navy,bold);
+      for(const [url,source] of sources){
+        room(26);const label=`S${String(source.n).padStart(2,'0')} · SBS ${source.code} · ${source.date||'Archivo de origen'}`;
+        draw(label,M,y,10,font,blue);externalJobs.push({page,x:M,y:y-4,w:font.widthOfTextAtSize(safe(label),10),h:18,url});y-=25;
+      }
+    }
   }
   for(const a of continuations){
     const batch=7,groups=[];for(let c=1;c<a.headers.length;c+=batch)groups.push([0,...Array.from({length:Math.min(batch,a.headers.length-c)},(_,n)=>c+n)]);if(!groups.length)groups.push([0]);
     for(const [g,indices]of groups.entries()){
       newPage(`Anexo ${a.ref} · ${a.title}${groups.length>1?` · ${g+1}/${groups.length}`:''}`);
-      if(g===0)targets.set(`detail-${a.ref}`,doc.getPageCount());
+      if(g===0)for(const ref of a.detailRefs)targets.set(`detail-${ref}`,doc.getPageCount());
       para(a.context||'',9,gray);
       const weights=indices.map((c,i)=>{const values=a.rows.map(r=>String(r[c]||''));const numeric=c>0&&values.every(v=>tableNumber(v)||!v||/^[—–-]$/.test(v));return numeric?76:Math.min(320,Math.max(i===0?140:85,Math.max(String(a.headers[c]).length,...values.map(v=>v.length))*4.4));});
       const sum=weights.reduce((a,b)=>a+b,0),widths=weights.map(w=>w/sum*U);
       grid(indices.map(c=>a.headers[c]),a.rows.map(r=>indices.map(c=>{const n=c>0?tableNumber(r[c]):null;return n?formatResult(n.value,n.percent?'percent':'number'):r[c]||'';})),widths);
     }
   }
-  if(sources.size){newPage('Anexo S · Fuentes');targets.set('sources',doc.getPageCount());para('Archivos oficiales utilizados. Cada referencia abre el archivo de origen.',10,gray);
-    for(const [url,s]of sources){room(52);const label=`S${String(s.n).padStart(2,'0')} · ${s.code} · ${s.date}`;draw(label,M,y,11,bold,blue);externalJobs.push({page,x:M,y:y-3,w:U,h:18,url});y-=20;para(url,8,gray);}
-  }
   // Insert the index immediately after the cover, then resolve all final page numbers.
-  const entries=[...(targets.has('results')?[['results','Resultados']]:[]),...content.flatMap(g=>[[`content-${g.number}`,`Contenido ${String(g.number).padStart(2,'0')}`],...g.items.map(a=>[a.ref,`${a.ref} · ${a.title}`,true])]),...(report.annexes!==false?report.items.map((item,i)=>[`A${i+1}`,`A${String(i+1).padStart(2,'0')} · ${item.name}`]):[]),...continuations.map(a=>[`detail-${a.ref}`,`Anexo ${a.ref} · ${a.title}`]),...(sources.size?[['sources','Anexo S · Fuentes']]:[])];
+  const entries=[...(targets.has('results')?[['results','Resultados']]:[]),...content.flatMap(g=>[[`content-${g.number}`,`Contenido ${String(g.number).padStart(2,'0')}`],...g.items.map(a=>[a.ref,`${a.ref} · ${a.title}`,true])]),...(targets.has('annex')?[['annex','Respaldo de cálculos'],['formulas','Fórmulas',true],...(targets.has('inputs')?[['inputs','Cuentas y constantes',true]]:[]),...(sources.size?[['sources','Fuentes',true]]:[])]:[]),...continuations.map(a=>[`detail-${a.ref}`,`Tabla completa · ${a.title}`])];
   const indexGroups=[[]];let used=0;
-  for(const entry of entries){const h=lines(entry[1],10,entry[2]?font:bold,U-65).length*14+13;if(used+h>H-180){indexGroups.push([]);used=0;}indexGroups.at(-1).push({entry,h});used+=h;}
+  const entryHeight=entry=>lines(entry[1],entry[2]?10:12,entry[2]?font:bold,U-145).length*16+(entry[2]?14:23);
+  for(const [n,entry] of entries.entries()){
+    const h=entryHeight(entry);let reserve=0;
+    if(!entry[2])for(let j=n+1;j<entries.length&&entries[j][2];j++)reserve+=entryHeight(entries[j]);
+    if(h+reserve>H-180)reserve=entries[n+1]?.[2]?entryHeight(entries[n+1]):0;
+    if(used && used+h+reserve>H-180){indexGroups.push([]);used=0;}
+    indexGroups.at(-1).push({entry,h});used+=h;
+  }
   const indexCount=indexGroups.length;
   const link=(p,x,yy,w,h,target)=>p.node.addAnnot(doc.context.register(doc.context.obj({Type:'Annot',Subtype:'Link',Rect:[x,yy,x+w,yy+h],Border:[0,0,0],Dest:[doc.getPage(target-1).ref,lib.PDFName.of('Fit')]})));
+  let sectionNumber=0;
   for(const [i,group]of indexGroups.entries()){
     page=doc.insertPage(i+1,[W,H]);page.drawRectangle({x:0,y:0,width:W,height:H,color:background});
-    draw('TREASURY HUB  /  INFORME FINANCIERO',M,H-40,8,bold,gray);draw('Índice'+(i?' · continuación':''),M,H-86,24,bold,navy);
-    page.drawLine({start:{x:M,y:H-101},end:{x:W-M,y:H-101},thickness:.7,color:navy});y=H-132;
-    for(const {entry:[ref,label,child],h}of group){const x=M+(child?12:0),f=child?font:bold;for(const [j,l]of lines(label,10,f,U-65).entries())draw(l,x,y-j*14,10,f,child?gray:navy);indexJobs.push({page,y,ref,x:W-M-35,left:M,height:h});y-=h;}
+    draw('TREASURY HUB  /  INFORME FINANCIERO',M,H-40,8,bold,gray);
+    draw('Índice'+(i?' · continuación':''),M,H-88,28,bold,navy);
+    draw('LECTURA DEL INFORME',W-M-116,H-84,8,bold,gray);
+    page.drawLine({start:{x:M,y:H-106},end:{x:W-M,y:H-106},thickness:.7,color:navy});
+    page.drawLine({start:{x:M,y:H-106},end:{x:M+66,y:H-106},thickness:editorial?3:2,color:blue});y=H-142;
+    for(const {entry:[ref,label,child],h}of group){
+      const x=M+(child?56:34),f=child?font:bold,size=child?10:12;
+      if(!child){sectionNumber++;draw(String(sectionNumber).padStart(2,'0'),M,y,10,bold,blue);}
+      else{
+        page.drawLine({start:{x:M+38,y:y+18},end:{x:M+38,y:y+3},thickness:.6,color:line,dashArray:[2,3]});
+        page.drawLine({start:{x:M+38,y:y+3},end:{x:x-8,y:y+3},thickness:.6,color:line,dashArray:[2,3]});
+      }
+      const ls=lines(label,size,f,U-145);
+      ls.forEach((l,j)=>draw(l,x,y-j*16,size,f,child?gray:navy));
+      const last=ls.at(-1),leaderX=x+f.widthOfTextAtSize(last,size)+12,base=y-(ls.length-1)*16;
+      if(leaderX<W-M-50)page.drawLine({start:{x:leaderX,y:base+3},end:{x:W-M-50,y:base+3},thickness:.6,color:line,dashArray:[1.5,3]});
+      indexJobs.push({page,y:base,ref,x:W-M-35,left:M,height:h,linkTop:y+12});y-=h;
+    }
   }
-  for(const job of indexJobs){const before=targets.get(job.ref);if(before){const target=before+indexCount;job.page.drawText(`p. ${target}`,{x:job.x??W-M-35,y:job.y,size:9,font,color:blue});link(job.page,job.left??job.x??W-M-35,job.y-(job.height||14)+12,job.left?U:40,job.height||14,target);}}
+  for(const job of indexJobs){const before=targets.get(job.ref);if(before){const target=before+indexCount;job.page.drawText(`p. ${target}`,{x:job.x??W-M-35,y:job.y,size:9,font,color:blue});link(job.page,job.left??job.x??W-M-35,job.linkTop!==undefined?job.linkTop-job.height:job.y-(job.height||14)+12,job.left?U:40,job.height||14,target);}}
   for(const job of externalJobs)job.page.node.addAnnot(doc.context.register(doc.context.obj({Type:'Annot',Subtype:'Link',Rect:[job.x,job.y,job.x+job.w,job.y+job.h],Border:[0,0,0],A:{S:'URI',URI:lib.PDFString.of(job.url)}})));
   const pages=doc.getPages();pages.forEach((p,i)=>{if(i===0)return;p.drawLine({start:{x:M,y:34},end:{x:W-M,y:34},thickness:.5,color:line});p.drawText((i>indexCount?'Volver al índice · ':'Treasury Hub · ')+safe(report.title).slice(0,90),{x:M,y:20,size:8,font,color:gray});if(i>indexCount)link(p,M,15,120,16,2);p.drawText(`${i+1} / ${pages.length}`,{x:W-M-40,y:20,size:8,font,color:gray});});
   return doc.save();
