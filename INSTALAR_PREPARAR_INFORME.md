@@ -54,4 +54,8 @@ Los encabezados de Editorial y Paper tienen reglas arriba y abajo, texto ligeram
 
 ## Validación
 
-77 pruebas JavaScript. Comprobación en navegador de predeterminados, capital, Detalle, notas, asignación de páginas y exportaciones. Los tres estilos PDF se renderizaron y revisaron; extracción de títulos, fechas y valores de los gráficos confirmada, con trazos vectoriales y sin rasterizar el contenido del gráfico. Se compararon imágenes guardadas y PDFs renderizados con cuatro estilos y con fondo, patrón y sombra. Excel conserva fórmulas nativas y resultados con dos decimales; no se probó en Microsoft Excel de escritorio.
+80 pruebas JavaScript y 25 Python. Comprobación en navegador de predeterminados, capital, Detalle, notas, asignación de páginas y exportaciones. Los tres estilos PDF se renderizaron y revisaron; extracción de títulos, fechas y valores de los gráficos confirmada, con trazos vectoriales y sin rasterizar el contenido del gráfico. Se compararon imágenes guardadas y PDFs renderizados con cuatro estilos y con fondo, patrón y sombra. Excel conserva fórmulas nativas y resultados con dos decimales; no se probó en Microsoft Excel de escritorio.
+
+## Rentabilidad y mora con castigos
+
+Se agregan ROAE y ROAA con metodología SBS (utilidad 12M / promedio de 12 cierres) y mora real con los 12 flujos mensuales B-2369. Los predeterminados conservan todas las entradas y fórmulas editables. Consulta `ACTUALIZACION_ROAE_ROAA_MORA.md` para fórmulas, fuentes y cifras conciliadas.

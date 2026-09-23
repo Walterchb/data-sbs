@@ -1,6 +1,6 @@
 // Independently published supplemental reports avoid replacing the user's existing datasets.
 const structureCache = new Map();
-const structureCodes = new Set(["B-2334", "B-2344"]);
+const structureCodes = new Set(["B-2334", "B-2344", "B-2369"]);
 export async function loadStructure(code) {
   if (!structureCodes.has(code))
     throw new Error("Fuente de estructura no válida.");

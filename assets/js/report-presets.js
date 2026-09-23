@@ -1,19 +1,23 @@
+import {writeoffMonths,RETURN_HELP,MORA_HELP,ADJUSTED_NPL_HELP} from './sbs-ratios.js';
 import {CAPITAL_INPUTS} from './capital.js';
 import {sourceReference} from './report-reference.js';
 import {captureCalculation, variableName} from './calculator-engine.js';
 import {shift} from './analytics.js';
 export const REPORT_PRESETS = [
  ['capital_apr','APR total','Capital'],['capital_rcg','Ratio de capital global','Capital'],['capital_cet1','Capital ordinario nivel 1 / APR','Capital'],['capital_tier1_ratio','TIER 1 / APR','Capital'],['capital_total','Patrimonio efectivo total · calculado','Capital'],['capital_tier1','TIER 1 · calculado','Capital'],['capital_tier2','TIER 2 · calculado','Capital'],['capital_tier1_share','TIER 1 / patrimonio efectivo','Capital'],
+ ['mora_real','Mora real · CAR + castigos 12M','Calidad de activos'],['npl_writeoffs','Morosidad con castigos 12M','Calidad de activos'],
  ['npl','Morosidad de créditos','Calidad de activos'],['car','Cartera de alto riesgo (CAR)','Calidad de activos'],['refi_ratio','Refinanciados / créditos brutos','Calidad de activos'],
  ['coverage','Cobertura de cartera atrasada','Cobertura'],['coverage_car','Cobertura de CAR','Cobertura'],['provisions_direct','Provisiones / créditos brutos','Cobertura'],['credit_cost_12m','Costo de riesgo crediticio · 12M','Cobertura'],
  ['loan_deposit','Créditos / depósitos','Liquidez y fondeo'],['available_public','Disponible / obligaciones con el público','Liquidez y fondeo'],
  ['equity_assets','Patrimonio / activos','Solvencia contable'],['leverage','Pasivo / patrimonio','Solvencia contable'],
  ['gross_fin_margin','Margen financiero bruto / ingresos YTD','Rentabilidad'],['net_fin_margin','Margen financiero neto / ingresos YTD','Rentabilidad'],['net_margin','Utilidad / ingresos financieros YTD','Rentabilidad'],
+ ['roae','ROAE · metodología SBS','Rentabilidad'],['roaa','ROAA · metodología SBS','Rentabilidad'],
  ['roa_analytic','ROA analítico · 12M / 13 cierres','Rentabilidad'],['roe_analytic','ROE analítico · 12M / 13 cierres','Rentabilidad'],
  ['admin_eff','Gastos administrativos / ingresos YTD','Eficiencia'],['admin_gross_margin','Gastos administrativos / margen bruto YTD','Eficiencia']
 ].map(([id,name,group])=>({id,name,group}));
 export function buildPreset(id, ctx, date, currency='2') {
  const spec=REPORT_PRESETS.find(p=>p.id===id);if(!spec)throw Error('Selecciona un cálculo.');
+ if(['roae','roaa','mora_real','npl_writeoffs'].includes(id)&&currency!=='2')throw Error('Este indicador se calcula en Total. Selecciona Total.');
  if(id.startsWith('capital_'))return buildCapitalPreset(spec,ctx,date,currency);
  const variables={},keys=new Map(),periods=new Map(ctx.financial.periods.map(p=>[p.date,p]));
  const ref=(row,d=date)=>{
@@ -43,6 +47,18 @@ export function buildPreset(id, ctx, date, currency='2') {
   case 'net_margin':expression=`${f(79)}/${f(9)}`;break;
   case 'admin_eff':expression=`${f(56)}/${sum([f(9),f(40)])}`;break;
   case 'admin_gross_margin':expression=`${f(56)}/${f(34)}`;break;
+  case 'roae':case 'roaa':{
+   const row=id==='roaa'?59:126;
+   expression=`${trailing(79)}/(${sum(Array.from({length:12},(_,i)=>b(row,shift(date,-i))))}/12)`;note=RETURN_HELP;break;
+  }
+  case 'mora_real':case 'npl_writeoffs':{
+   const cs=writeoffMonths(ctx.writeoffs,ctx.entity,date).map(p=>{
+    if(!Number.isFinite(p.value))throw Error(`Falta el flujo de castigos B-2369 de ${p.date} para este ámbito. Se requieren 12 meses completos.`);
+    const key=variableName(keys.size);keys.set('writeoff|'+p.date,key);variables[key]={id:'B-2369:'+p.id,label:'Castigos del mes',kind:'flow',date:p.date,entity:ctx.entity,entityName:ctx.entityName,source:p.source,value:p.value,reference:'B-2369 · Castigos del mes',unit:'PEN_THOUSAND'};return key;
+   });
+   const casts=sum(cs),bad=id==='mora_real'?sum([b(38),b(37)]):b(38);
+   expression=`(${bad}+${casts})/(${gross()}+${casts})`;note=id==='mora_real'?MORA_HELP:ADJUSTED_NPL_HELP;break;
+  }
   case 'roa_analytic':case 'roe_analytic':{
    const row=id==='roa_analytic'?59:126;
    expression=`${trailing(79)}/(${sum(Array.from({length:13},(_,i)=>b(row,shift(date,-i))))}/13)`;

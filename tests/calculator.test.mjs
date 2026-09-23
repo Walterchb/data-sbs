@@ -110,7 +110,8 @@ test("exact search CAR matches the alias without matching cartera or unrelated e
     {},
   );
   const result = searchEntries(entries, "CAR", 40, true);
-  assert.equal(result.length, 1);
+  assert.equal(result.length, 2);
+  assert.ok(result.some(r=>r.target.reportMetric==="mora_real"));
   assert.equal(result[0].target.reportMetric, "car");
   assert.ok(searchEntries(entries, "CAR", 40, false).length > 1);
 });
@@ -148,8 +149,9 @@ test('preset formulas reconcile with source ratios and reject missing historical
  const financial=JSON.parse(fs.readFileSync(new URL('../data/financial.json',import.meta.url)));
  const overview=JSON.parse(fs.readFileSync(new URL('../data/overview.json',import.meta.url)));
  const {withAnalysisRatios}=await import('../assets/js/analysis-ratios.js');
- const ctx={financial,entity:'banbif',entityName:'Banco Interamericano de Finanzas'};
- const date=financial.periods.at(-1).date, expected=withAnalysisRatios(overview,financial).periods.find(p=>p.date===date);
+ const writeoffs=JSON.parse(fs.readFileSync(new URL('../data/reports/B-2369.json',import.meta.url)));
+ const ctx={financial,writeoffs,entity:'banbif',entityName:'Banco Interamericano de Finanzas'};
+ const date=financial.periods.at(-1).date, expected=withAnalysisRatios(overview,financial,writeoffs).periods.find(p=>p.date===date);
  for(const preset of REPORT_PRESETS.filter(p=>!p.id.startsWith("capital_"))){
   const item=buildPreset(preset.id,ctx,date);
   assert.ok(Number.isFinite(item.value),preset.id);

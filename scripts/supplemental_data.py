@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def with_supplemental_reports(db):
     reports = dict(db.get('reports', {}))
-    for code in ('B-2334', 'B-2344'):
+    for code in ('B-2334', 'B-2344', 'B-2369'):
         # An existing source, even an empty one, remains authoritative.
         if code in reports:
             continue

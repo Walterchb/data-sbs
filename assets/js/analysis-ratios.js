@@ -1,6 +1,7 @@
+import {sbsRatios,RETURN_HELP,MORA_HELP,ADJUSTED_NPL_HELP} from './sbs-ratios.js';
 import { finite, shift, ratio } from "./analytics.js";
 export const RATIO_GROUPS = {
-  "Calidad de activos": ["npl", "refi_ratio", "car"],
+  "Calidad de activos": ["npl", "refi_ratio", "car", "mora_real", "npl_writeoffs", "writeoffs_12m"],
   "Cobertura y costo de riesgo": [
     "coverage",
     "coverage_car",
@@ -9,7 +10,7 @@ export const RATIO_GROUPS = {
   ],
   "Liquidez y fondeo": ["loan_deposit", "available_public"],
   "Solvencia contable": ["leverage", "liab_cap_res", "equity_assets"],
-  "Rentabilidad y márgenes": [
+  "Rentabilidad y márgenes": ["roae", "roaa",
     "gross_fin_margin",
     "net_fin_margin",
     "operating_margin",
@@ -18,6 +19,7 @@ export const RATIO_GROUPS = {
   Eficiencia: ["admin_eff", "admin_gross_margin", "admin_eff_12m"],
 };
 export const RATIO_HELP = {
+  roae: RETURN_HELP, roaa: RETURN_HELP, mora_real:MORA_HELP, npl_writeoffs:ADJUSTED_NPL_HELP, writeoffs_12m:"Suma de los doce flujos mensuales de B-2369. Importes en S/ miles. Requiere los 12 meses completos; un dato ausente no se considera cero.",
   npl: "Cartera atrasada (vencidos + cobranza judicial) / créditos brutos × 100.",
   refi_ratio:
     "Créditos refinanciados y reestructurados / créditos brutos × 100.",
@@ -55,6 +57,7 @@ export const RATIO_HELP = {
     "Margen financiero bruto YTD / ingresos financieros YTD × 100.",
 };
 export const EXTRA_RATIOS = {
+  roae:{label:"ROAE · metodología SBS",unit:"PERCENT"},roaa:{label:"ROAA · metodología SBS",unit:"PERCENT"},mora_real:{label:"Mora real · CAR + castigos 12M",unit:"PERCENT"},npl_writeoffs:{label:"Morosidad con castigos 12M",unit:"PERCENT"},writeoffs_12m:{label:"Castigos acumulados · 12M",unit:"PEN_THOUSAND"},
   credit_cost_12m: {
     label: "Costo de riesgo crediticio · 12M",
     unit: "PERCENT",
@@ -82,7 +85,8 @@ export function trailingIncome(periods, id, date) {
     ? current + december - prior
     : null;
 }
-export function withAnalysisRatios(overview, financial) {
+export function withAnalysisRatios(overview, financial, writeoffs, entity="banbif") {
+  const sbs=sbsRatios(financial,writeoffs,entity);
   const byDate = new Map(financial.periods.map((p) => [p.date, p]));
   const gross = (d) =>
     sum([26, 37, 38].map((n) => byDate.get(d)?.values[`balance:${n}`]?.[2]));
@@ -96,6 +100,7 @@ export function withAnalysisRatios(overview, financial) {
       );
       const mean = averages.every(finite) ? sum(averages) / 13 : null;
       const calc = {
+        ...sbs.get(p.date),
         credit_cost_12m:
           mean > 0
             ? ratio(
@@ -118,10 +123,11 @@ export function withAnalysisRatios(overview, financial) {
         ...p,
         metrics: {
           ...p.metrics,
+          ...Object.fromEntries([["roe","roae"],["roa","roaa"]].filter(([key])=>!finite(p.metrics[key]?.value)).map(([key,computed])=>[key,{value:sbs.get(p.date)?.[computed]??null,date:p.date,source:"B-2201 · calculado SBS"}])),
           ...Object.fromEntries(
             Object.entries(calc).map(([key, value]) => [
               key,
-              { value, date: p.date, source: "B-2201" },
+              { value, date: p.date, source: ["mora_real","npl_writeoffs","writeoffs_12m"].includes(key)?"B-2201 + B-2369":"B-2201" },
             ]),
           ),
         },

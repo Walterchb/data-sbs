@@ -1,6 +1,8 @@
+import {RETURN_HELP,MORA_HELP,ADJUSTED_NPL_HELP} from './sbs-ratios.js';
 import { norm, finite, shift, ratio } from "./analytics.js";
 export const REPORT_NAMES = {
   "B-2401": "Indicadores",
+  "B-2369": "Castigos",
   "B-2336": "Sectores",
   "B-2402": "Capital",
   "B-2340": "Liquidez",
@@ -14,13 +16,14 @@ export const REPORT_NAMES = {
 };
 export function metricLabel(row) {
   if (/Utilidad Neta Anualizada \/ Patrimonio Promedio/i.test(row.label))
-    return `${row.label} (ROE)`;
+    return `${row.label} · ROAE (ROE)`;
   if (/Utilidad Neta Anualizada \/ Activo Promedio/i.test(row.label))
-    return `${row.label} (ROA)`;
+    return `${row.label} · ROAA (ROA)`;
   return row.label;
 }
 export function metricGroup(code, row) {
   const s = norm(row.label);
+  if(row.id.startsWith("calc:")&&/mora|morosidad|castigos/.test(s))return "Calidad de activos";
   if (code === "B-2401") {
     if (/capital|pasivo total/.test(s)) return "Solvencia";
     if (/provisiones/.test(s)) return "Cobertura";
@@ -69,7 +72,11 @@ const groupOrder = [
 function sourceMetricHelp(code, row) {
   const label = metricLabel(row),
     s = norm(row.label);
+  if(row.id==="calc:mora_real")return MORA_HELP;
+  if(row.id==="calc:npl_writeoffs")return ADJUSTED_NPL_HELP;
+  if(row.id==="calc:writeoffs_12m")return "Suma de 12 flujos mensuales de castigos B-2369. Un castigo retira del balance un crédito provisionado; no elimina la deuda del cliente.";
   let help = `${label}. Fuente SBS ${code}. `;
+  if(code === "B-2369")return help+"Flujo mensual de créditos castigados del Reporte 25 SBS, en S/ miles. No es el saldo acumulado de cuentas de orden. Puede contener ajustes negativos publicados; se conservan al sumar doce meses.";
   if (code === "B-2334")
     return (
       help +
@@ -107,12 +114,12 @@ function sourceMetricHelp(code, row) {
   if (/utilidad neta anualizada/.test(s))
     return (
       help +
-      "Rentabilidad publicada por SBS: utilidad neta anualizada dividida entre el saldo promedio indicado × 100. Se conserva su metodología; no se sustituye por utilidad YTD / saldo de cierre."
+      RETURN_HELP
     );
   if (/ajustada/.test(s))
     return (
       help +
-      "Indicador oficial SBS que incorpora castigos según la definición de la fuente. Los EEFF no incluyen el flujo de castigos necesario para reconstruirlo."
+      "SBS incorpora el flujo anual de castigos y transferencias de cartera en numerador y denominador. La CAR ajustada también incluye refinanciados. No equivale a mora real calculada únicamente con castigos B-2369."
     );
   if (/capital global/.test(s))
     return (
@@ -168,7 +175,7 @@ export function reportRows(data, p, query = "") {
         index,
         date,
         group: metricGroup(code, r),
-        help: metricHelp(code, r),
+        help: metricHelp(code, r)+(p.calculated?.[r.id]?" "+p.calculated[r.id]:"")+(p.values[r.id]===null?" Sin componentes suficientes para este ámbito; no se sustituye por el total con exterior.":""),
         prior: date ? base(shift(date, -1)) : null,
         quarter: date ? base(shift(date, -3)) : null,
         year: date ? base(shift(date, -12)) : null,

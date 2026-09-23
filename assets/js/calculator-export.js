@@ -148,7 +148,7 @@ export function workbookParts(draft) {
             ? "CONSTANTE"
             : v.kind === "ytd"
               ? "Acumulado YTD"
-              : v.kind === "ratio" ? "Ratio al cierre" : "Saldo de cierre",
+              : v.kind === "flow" ? "Flujo mensual" : v.kind === "ratio" ? "Ratio al cierre" : "Saldo de cierre",
           v.value,
           v.source || "",
           sourceReference(v),

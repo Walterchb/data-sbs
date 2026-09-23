@@ -3,6 +3,7 @@ export function selectReport(report, entity = "banbif") {
   if (entity === "banbif") return report;
   return {
     ...report,
+    coverage_note:entity==="system"&&report.periods.some(p=>p.peers?.system_foreign&&!p.peers?.system)?"Esta fuente publica Banca Múltiple con sucursales del exterior y no desagrega el total local. Selecciona el ámbito con exterior para consultar ese agregado; no se mezclan ambas coberturas.":null,
     periods: report.periods.map((p) => {
       const values = p.peers?.[entity] || {};
       const effective = p.peer_effective?.[entity] || p.effective;

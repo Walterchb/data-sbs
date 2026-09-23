@@ -44,8 +44,8 @@ export const METRICS = {
     label: "Gastos administrativos / margen financiero bruto YTD",
     unit: "PERCENT",
   },
-  roe: { label: "ROE", unit: "PERCENT", direction: 1 },
-  roa: { label: "ROA", unit: "PERCENT", direction: 1 },
+  roe: { label: "ROAE (ROE)", unit: "PERCENT", direction: 1 },
+  roa: { label: "ROAA (ROA)", unit: "PERCENT", direction: 1 },
   efficiency: {
     label: "Gastos operación / margen financiero",
     unit: "PERCENT",

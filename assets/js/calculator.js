@@ -83,6 +83,7 @@ export function initCalculator(getContext) {
       const button=$('[data-load-preset]'),id=$('#calc-preset').value,selectedDate=period,selectedCurrency=currency,context=ctx;button.disabled=true;
       try {
         if(id.startsWith('capital_')){const capital=await context.loadCapital(context.entity);if(!dialog.open||ctx!==context||period!==selectedDate||currency!==selectedCurrency)return;context.capital=capital;}
+        if(['mora_real','npl_writeoffs'].includes(id)){const writeoffs=await context.loadWriteoffs();if(!dialog.open||ctx!==context||period!==selectedDate||currency!==selectedCurrency)return;context.writeoffs=writeoffs;}
         const item=buildPreset(id,context,selectedDate,selectedCurrency);
         variables=item.variables;editing=-1;nextVariable=Object.keys(variables).length;
         statement=Object.values(variables)[0]?.id?.startsWith('income:')?'income':'balance';$('#calc-statement').value=statement;
@@ -302,7 +303,7 @@ export function initCalculator(getContext) {
     $("#calc-variables").innerHTML = Object.entries(variables)
       .map(
         ([key, v]) =>
-          `<div class="calc-variable"><button type="button" data-calc-insert="${key}" aria-label="Insertar variable ${key}">${key.toUpperCase()}</button><div><strong>${e(v.kind === "constant" ? v.label.toUpperCase() : v.label)}</strong><small>${v.kind === "constant" ? "Valor definido por ti" : `${month(v.date)} · ${sourceColumn(v)} · ${v.kind === "ytd" ? "Acumulado YTD" : v.kind === "ratio" ? "Ratio al cierre" : "Saldo de cierre"} · ${e(v.entityName)}`}</small></div>${v.kind === "constant" ? `<input inputmode="decimal" data-constant="${key}" value="${v.value ?? ""}" aria-label="Valor de ${key}">` : `<b>${num(v.value)}${v.unit==='PERCENT'?'%':''}</b>`}<button type="button" data-calc-remove="${key}" aria-label="Quitar variable ${key}">×</button></div>`,
+          `<div class="calc-variable"><button type="button" data-calc-insert="${key}" aria-label="Insertar variable ${key}">${key.toUpperCase()}</button><div><strong>${e(v.kind === "constant" ? v.label.toUpperCase() : v.label)}</strong><small>${v.kind === "constant" ? "Valor definido por ti" : `${month(v.date)} · ${sourceColumn(v)} · ${v.kind === "ytd" ? "Acumulado YTD" : v.kind === "flow" ? "Flujo mensual" : v.kind === "ratio" ? "Ratio al cierre" : "Saldo de cierre"} · ${e(v.entityName)}`}</small></div>${v.kind === "constant" ? `<input inputmode="decimal" data-constant="${key}" value="${v.value ?? ""}" aria-label="Valor de ${key}">` : `<b>${num(v.value)}${v.unit==='PERCENT'?'%':''}</b>`}<button type="button" data-calc-remove="${key}" aria-label="Quitar variable ${key}">×</button></div>`,
       )
       .join("");
   }

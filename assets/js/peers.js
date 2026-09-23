@@ -1,3 +1,4 @@
+import {returnOnAverage,writeoffs12m} from './sbs-ratios.js';
 import { finite, ratio, compare, shift, months } from "./analytics.js";
 import { METRICS, BANK_NAMES } from "./config.js";
 export const PEER_METRICS = [
@@ -8,6 +9,8 @@ export const PEER_METRICS = [
   "net_income",
   "npl",
   "coverage",
+  "mora_real",
+  "npl_writeoffs",
   "roe",
   "roa",
   "efficiency",
@@ -19,6 +22,7 @@ export const PEER_METRICS = [
 ];
 export const peerReportCode = (key) =>
   ({
+    mora_real:"B-2369",npl_writeoffs:"B-2369",
     roe: "B-2401",
     roa: "B-2401",
     efficiency: "B-2401",
@@ -58,13 +62,16 @@ export function peerChoices(state) {
 export function peerHistory(financial, sources, bank, key, cutoff) {
   const result = new Map(),
     code = peerReportCode(key);
-  if (!code) {
+  if (!code || code==="B-2369") {
     for (const p of financial.periods) {
       if (p.date > cutoff) continue;
       const b = p.peers.find((b) => b.slug === bank);
+      const casts=code==="B-2369"?writeoffs12m(sources[code],bank,p.date):null;
+      const risk=key==="mora_real"?(finite(b?.refinanced)&&finite(b?.overdue)?b.overdue+b.refinanced:null):b?.overdue;
+      const adjusted=[casts,risk,b?.gross_credits].every(finite)&&b.gross_credits+casts>0?ratio(risk+casts,b.gross_credits+casts):null;
       result.set(p.date, {
         date: p.date,
-        value: bankFinancialValue(b, key),
+        value: code==="B-2369"?adjusted:bankFinancialValue(b, key),
         official: b?.name || "",
         warning: "",
       });
@@ -92,6 +99,13 @@ export function peerHistory(financial, sources, bank, key, cutoff) {
             "",
         });
     }
+  if(key==='roe'||key==='roa'){
+    const byDate=new Map(financial.periods.map(p=>[p.date,p.peers.find(b=>b.slug===bank)]));
+    for(const [date,b]of byDate){if(date>cutoff||finite(result.get(date)?.value))continue;
+      const r=returnOnAverage(d=>byDate.get(d)?.net_income,d=>byDate.get(d)?.[key==='roe'?'equity':'total_assets'],date);
+      if(finite(r.value))result.set(date,{date,value:r.value,official:b?.name||'',warning:'',calculated:true});
+    }
+  }
   return result;
 }
 function summarize(history, choice, dates, cutoff) {
@@ -248,6 +262,15 @@ export function peerModel(financial, sources, state) {
       state.date,
     );
     group.name = `Grupo elegido · ${peerReportCode(state.peerMetric) ? "media simple" : "agregado"}`;
+  }
+  for(const r of [...rows,...(group?[group]:[])]){
+    const shareable=Object.hasOwn(fields,r.metric),p=financial.periods.find(p=>p.date===r.date);
+    const share=scope=>{
+      if(!shareable||r.warning||!finite(r.value)||(!scope.endsWith('_foreign')&&(r.bank.endsWith('_foreign')||(r.bank==='group'&&banks.some(b=>b.endsWith('_foreign'))))))return null;
+      const denominator=bankFinancialValue(p?.peers.find(b=>b.slug===scope),r.metric);
+      return denominator>0?ratio(r.value,denominator):null;
+    };
+    r.share_local=share('system');r.share_foreign=share('system_foreign');
   }
   return {
     rows,

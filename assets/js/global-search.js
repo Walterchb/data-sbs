@@ -11,8 +11,12 @@ import {
 } from "./report-detail.js";
 import { lockPageScroll } from "./modal-scroll.js";
 const aliases = {
-  roe: "rentabilidad patrimonio retorno capital return equity",
-  roa: "rentabilidad activos retorno return assets",
+  roae: "roe rentabilidad patrimonio promedio sbs",
+  roaa: "roa rentabilidad activo promedio sbs",
+  mora_real: "mora real morosidad castigos car riesgo",
+  npl_writeoffs: "morosidad castigos atrasados",
+  roe: "roae rentabilidad patrimonio retorno capital return equity",
+  roa: "roaa rentabilidad activos retorno return assets",
   npl: "mora morosidad atrasados incumplimiento",
   car: "cartera alto riesgo refinanciados",
   coverage: "cobertura provisiones",

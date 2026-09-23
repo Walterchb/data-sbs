@@ -149,7 +149,7 @@ export async function buildReportPdf(report, lib, fonts) {
   // One formula list and one shared input glossary; results and details stay in Results.
   const sources=new Map(),annex=reportAnnex(report.items);
   const sourceId=v=>{
-    if(v.source&&!sources.has(v.source))sources.set(v.source,{n:sources.size+1,date:v.date,code:v.id?.startsWith('B-2402:')?'B-2402':'B-2201'});
+    if(v.source&&!sources.has(v.source))sources.set(v.source,{n:sources.size+1,date:v.date,code:v.id?.match(/^(B-\d+):/)?.[1]||'B-2201'});
     return v.source?`S${String(sources.get(v.source).n).padStart(2,'0')}`:'';
   };
   if(report.annexes!==false && report.items.length){

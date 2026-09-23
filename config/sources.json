@@ -70,5 +70,11 @@
     "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2344",
     "frequency": "monthly",
     "start_year": 2021
+  },
+  "B-2369": {
+    "title": "Flujo de créditos castigados por tipo",
+    "url": "https://www.sbs.gob.pe/app/stats_net/stats/EstadisticaSistemaFinancieroResultados.aspx?c=B-2369",
+    "frequency": "monthly",
+    "start_year": 2021
   }
 }

@@ -213,8 +213,11 @@ def extract_dedicated(sheets,p,code):
 
 def extract(raw,url,code,workbook,date):
     p=period_base(url,date,raw);sheets=workbook(raw)
-    validate_header_date(sheets,date,code)
-    if code in ('B-2401','B-2336'):extract_columns(sheets,p,code)
+    if code!='B-2369':validate_header_date(sheets,date,code)
+    if code=='B-2369':
+        from writeoff_parser import extract_writeoffs
+        extract_writeoffs(sheets,p)
+    elif code in ('B-2401','B-2336'):extract_columns(sheets,p,code)
     elif code in ('B-2340','B-2402','B-2368'):extract_rows(sheets,p,code)
     elif code in ('B-230809','B-234021'):extract_dedicated(sheets,p,code)
     elif code in ('B-2334','B-2344'):
