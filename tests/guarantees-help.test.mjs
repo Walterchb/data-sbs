@@ -1,0 +1,38 @@
+import {accountTable} from '../assets/js/tables.js';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {guaranteeModel} from '../assets/js/guarantees.js';
+import {selectReport} from '../assets/js/entities.js';
+import {accountTheory} from '../assets/js/account-theory.js';
+import {metricHelp} from '../assets/js/report-detail.js';
+import {buildEntries,searchEntries} from '../assets/js/global-search.js';
+const read=p=>JSON.parse(fs.readFileSync(new URL('../'+p,import.meta.url)));
+const data=read('data/reports/B-2366.json'),financial=read('data/financial.json');
+test('guarantees preserve subtotal hierarchy, full precision and exact dates',()=>{
+ const m=guaranteeModel(selectReport(data,'banbif'),'2026-06','');
+ assert.equal(m.total,15766471.122);assert.equal(m.rows.length,10);assert.equal(m.rows.filter(r=>r.child).length,4);
+ const parts=m.rows.filter(r=>!r.child&&r.r.label!=='Total créditos directos');
+ assert.ok(Math.abs(parts.reduce((a,r)=>a+r.value,0)-m.total)<.01);
+ const child=m.rows.filter(r=>r.child).reduce((a,r)=>a+r.value,0),subtotal=parts.find(r=>r.r.label.includes('preferidas · Total')).value;
+ assert.ok(Math.abs(child-subtotal)<.01);
+ const cut={...data,periods:data.periods.filter(p=>p.date!=='2026-05')};assert.equal(guaranteeModel(cut,'2026-06','').rows[0].mom,null);
+ assert.equal(guaranteeModel(selectReport(data,'system'),'2026-06','').total,null);
+ assert.ok(guaranteeModel(selectReport(data,'system_foreign'),'2026-06','').total>m.total);
+ const key=Object.keys(data.periods.at(-1).peers).find(k=>k.includes('falabella'));assert.equal(guaranteeModel(selectReport(data,key),'2026-07','').anomaly,true);
+ assert.equal(guaranteeModel(data,'2021-01','').rows[0].yoy,null);
+});
+test('contextual help distinguishes exposure, provision, income and collateral value',()=>{
+ const get=id=>accountTheory(financial.catalog.find(r=>r.id===id));
+ assert.match(get('balance:136'),/derivados/);assert.match(get('balance:119'),/provisión, no el monto/);assert.match(get('income:42'),/ingreso, no exposición/);assert.match(get('income:65'),/saldo acumulado/);assert.match(get('balance:138'),/40 sin utilizar/);
+ assert.match(metricHelp('B-2366',data.catalog[0]),/no es una tasación/);
+ assert.match(metricHelp('B-2401',{id:'x',label:'Gastos de Operación / Margen Financiero Total'}),/depreciación \+ amortización/);
+ assert.match(metricHelp('B-2368',{id:'x',label:'Posición Global en M.E. (a)+(b)+(c)'}),/posición larga/);
+ for(const r of financial.catalog)assert.doesNotMatch(accountTheory(r),/Rubro agregado de la fuente|undefined/);
+ const table=accountTable(financial,{date:'2026-06',statement:'balance',query:'créditos indirectos',collapsed:new Set(),sort:'hierarchy',mainOnly:false,tableView:'snapshot'});
+ assert.match(table.html,/data-account="balance:137"/);assert.match(table.html,/data-account="balance:138"/);
+ const entries=buildEntries(financial,read('assets/search-index.json').reports);
+ const found=searchEntries(entries,'créditos indirectos',100,true);
+ for(const id of ['balance:137','balance:138','balance:119','income:42','income:65'])assert.ok(found.some(r=>r.target.account===id),id);
+ assert.ok(searchEntries(entries,'garantías',100).some(r=>r.target.report==='B-2366'));
+});

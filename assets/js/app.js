@@ -1,3 +1,5 @@
+import {guaranteeModel} from './guarantees.js';
+import {metricHelpSource} from './metric-theory.js';
 import {withLocalIndicators,SBS_GLOSSARY} from './sbs-ratios.js';
 import { initCalculator } from "./calculator.js";
 import { reportRows, metricLabel, metricHelp, REPORT_NAMES } from "./report-detail.js";
@@ -373,7 +375,7 @@ function recoverUrl() {
     state.statement = state.account.split(":")[0];
   }
   if (
-    ["derived", "concentration", "structure", "B-2369"].includes(p.get("report")) ||
+    ["derived", "concentration", "structure", "B-2369", "B-2366"].includes(p.get("report")) ||
     manifest.reports[p.get("report")]
   )
     state.report = p.get("report");
@@ -932,6 +934,7 @@ function balanceView() {
   );
 }
 function reportView() {
+  if(state.report === "B-2366")return guaranteesView();
   if (state.report === "derived") return derivedView();
   if (state.report === "structure") return structureView();
   if (state.report === "concentration") {
@@ -1001,7 +1004,7 @@ function reportView() {
   const body=rows.map(({r,date,group,prior,quarter,year,yearStart,share,help})=>{
     const header=group && group!==lastGroup ? `<tr class="table-group"><th scope="rowgroup" colspan="${columns}">${e(group)}</th></tr>` : "";
     lastGroup=group;
-    return header+`<tr class="${r.id===state.reportMetric?'peer-highlight':''}"><td><button class="text-button" data-report-metric="${r.id}" data-help="${e(help)}">${e(state.report === "B-234021" ? r.label.replace(/^.*? \| /, "") : r.label)}</button>${p.calculated?.[r.id]?'<small>Calculado</small>':p.origins?.[r.id]?`<small>${e(p.origins[r.id])}</small>`:""}</td><td class="number">${format(p.values[r.id],r.unit)}</td>${sector?`<td class="number">${format(share,'PERCENT')}</td>`:''}<td class="number">${deltaCell(p.values[r.id],prior,r.unit)}</td>${quarterly?`<td class="number">${deltaCell(p.values[r.id],quarter,r.unit)}</td>`:''}<td class="number">${deltaCell(p.values[r.id],yearStart,r.unit)}</td><td class="number">${deltaCell(p.values[r.id],year,r.unit)}</td>${capital?`<td class="number">${format(p.peers?.system?.[r.id],r.unit)}</td>`:''}<td>${month(date)}</td></tr>`;
+    return header+`<tr class="${r.id===state.reportMetric?'peer-highlight':''}"><td><button class="text-button" data-report-metric="${r.id}" data-help="${e(help)}" data-help-source="${e(metricHelpSource(state.report,r))}">${e(state.report === "B-234021" ? r.label.replace(/^.*? \| /, "") : r.label)}</button>${p.calculated?.[r.id]?'<small>Calculado</small>':p.origins?.[r.id]?`<small>${e(p.origins[r.id])}</small>`:""}</td><td class="number">${format(p.values[r.id],r.unit)}</td>${sector?`<td class="number">${format(share,'PERCENT')}</td>`:''}<td class="number">${deltaCell(p.values[r.id],prior,r.unit)}</td>${quarterly?`<td class="number">${deltaCell(p.values[r.id],quarter,r.unit)}</td>`:''}<td class="number">${deltaCell(p.values[r.id],yearStart,r.unit)}</td><td class="number">${deltaCell(p.values[r.id],year,r.unit)}</td>${capital?`<td class="number">${format(p.peers?.system?.[r.id],r.unit)}</td>`:''}<td>${month(date)}</td></tr>`;
   }).join('');
   const table=wrapTable(`<table class="metric-table"><thead><tr><th>Indicador / magnitud</th><th class="number">${capital?e(entityName()):'Valor'}</th>${sector?'<th class="number" data-help="Saldo del sector / total de créditos a actividades empresariales de la misma entidad y fecha × 100. Orden descendente; el filtro conserva el total oficial.">% del total ↓</th>':''}<th class="number">MoM</th>${quarterly?'<th class="number">QoQ</th>':''}<th class="number">YTD</th><th class="number">YoY</th>${capital?'<th class="number">Banca múltiple</th>':''}<th>Periodo declarado</th></tr></thead><tbody>${body}</tbody></table>`,"Datos regulatorios",true);
   return (
@@ -1026,6 +1029,23 @@ function reportView() {
     `<section class="panel"><div class="panel-head"><h2>${state.report === "B-2402" ? "Datos SBS y magnitudes calculadas" : "Detalle de la fuente"}</h2><div class="controls"><label class="sr-only" for="report-search">Buscar indicador</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar indicador, moneda o componente…"></div></div>${rows.length ? table : '<div class="empty">No hay indicadores que coincidan con la búsqueda.</div>'}<p class="footnote">YTD: variación frente a diciembre del año anterior. QoQ: variación frente al trimestre anterior (tres meses). Ratios: cambios en pb. Importes: cambios en %. Múltiplos: diferencias en veces. No se calculan comparaciones sin el periodo exacto.</p>${state.report === "B-2402" ? `<details class="help"><summary>Ver cálculo</summary><p>TIER 1 = APR × (TIER 1/APR) ÷ 100. Patrimonio efectivo total = APR × RCG ÷ 100. TIER 2 = Patrimonio efectivo total − TIER 1. La participación de cada nivel es su monto dividido entre el patrimonio efectivo total × 100.</p><p>Fuente: B-2402. Se utiliza toda la precisión disponible y se redondea solo al mostrar. Se requiere APR y ambos ratios del mismo periodo para cada entidad; si faltan datos o hay una advertencia de fecha, se muestra —.</p></details>` : ""}</section>`
   );
 }
+function guaranteesView(){
+ const m=guaranteeModel(reportData,state.date,state.reportMetric,state.reportQuery);
+ const top=heading('Indicadores',`Créditos por tipo de garantía · ${e(entityName())}`)+reportTabs();
+ if(!m.period||!finite(m.total)){
+  exportRows=[];
+  return top+panel('Garantías · B-2366','',`<div class="empty">${e(reportData.coverage_note||'Sin datos publicados para esta entidad, fecha y ámbito.')} ${['system','bcp'].includes(state.entity)?'Esta fuente incluye sucursales en el exterior; consulta la variante con exterior.':''}</div>`);
+ }
+ state.reportMetric=m.metric.id;
+ const points=rangePoints(m.points,m.period.date),unit=m.metric.unit;
+ const help=r=>metricHelp('B-2366',r);
+ exportRows=[['periodo','garantia','saldo_miles_soles','participacion_pct','mom_pct','ytd_pct','yoy_pct','origen_monto','formula_definicion','fuente'],...m.rows.map(x=>[m.period.date,x.r.label,x.value,x.share,x.mom,x.ytd,x.yoy,x.r.unit==='PERCENT'?'Calculado: total × participación SBS / 100':'Total publicado SBS',help(x.r),m.period.source_url])];
+ const table=wrapTable(`<table class="structure-table guarantee-table"><thead><tr><th>Tipo de garantía</th><th class="number" data-help="Total publicado por SBS. Los montos de componentes se calculan como total × porcentaje / 100. No representan el valor de tasación de las garantías.">Saldo · S/ MM</th><th class="number" data-help="Participación publicada por SBS sobre el total de créditos directos. Preferidas es un subtotal; sus cuatro componentes no deben sumarse nuevamente.">% del total</th><th class="number">MoM</th><th class="number">YTD</th><th class="number">YoY</th></tr></thead><tbody>${m.rows.map(x=>`<tr class="${x.child?'structure-child ':''}${x.r.id===state.reportMetric?'structure-selected':''}"><th scope="row"><div class="row-title"><button class="text-button" data-report-metric="${x.r.id}" data-help="${e(help(x.r))}" data-help-source="${e(metricHelpSource('B-2366'))}">${e(x.child?x.r.label.split(' · ')[1]:x.r.label.replace(' · Total',' · subtotal'))}</button></div></th><td class="number">${num(finite(x.value)?x.value/1000:null)}</td><td class="number">${format(x.share,'PERCENT')}</td><td class="number">${format(x.mom,'PERCENT',true)}</td><td class="number">${format(x.ytd,'PERCENT',true)}</td><td class="number">${format(x.yoy,'PERCENT',true)}</td></tr>`).join('')}</tbody></table>`,'Créditos por garantía',true);
+ return top+(m.period.date!==state.date?notice(`Último dato disponible: ${month(m.period.date)}.`):'')+
+ panel(m.metric.label,`${month(m.period.date)} · ${unit==='PERCENT'?'Participación publicada SBS':'Total de créditos directos'}`,`${lineChart(points,unit,m.metric.label)}${statStrip(points,unit)}<p class="source-note">${e(help(m.metric))}</p>`,rangeButtons(points,unit,m.metric.label))+
+ panel('Detalle de la fuente',`Total de créditos directos: S/ ${num(m.total/1000)} MM`,(m.anomaly?notice('La fuente contiene una participación fuera de 0–100%. Se conserva la cifra publicada; los montos derivados pueden reflejar correcciones de la fuente.'):'')+table+'<p class="footnote">Porcentajes y total publicados por SBS. Montos por componente calculados, no tasaciones. MoM, YTD y YoY comparan esos montos. Preferidas incluye sus cuatro componentes; no sumarlos de nuevo.</p>',`<label class="sr-only" for="report-search">Buscar garantía</label><input id="report-search" type="search" value="${e(state.reportQuery)}" placeholder="Buscar garantía…">`);
+}
+
 function structureView() {
   const m = structureModel(reportData, state);
   state.structureMetric = m.selected;
@@ -1092,7 +1112,7 @@ function structureView() {
     ]),
   ];
   const table = wrapTable(
-    `<table class="structure-table"><thead><tr><th>Componente</th><th class="number">Saldo · S/ MM</th><th class="number">Peso</th><th class="number">YoY</th><th class="number">YTD</th><th class="number">MoM</th></tr></thead><tbody>${all.map((r) => `<tr class="${r.child ? "structure-child" : ""} ${r.name === m.selected ? "structure-selected" : ""}"><th scope="row"><button class="text-button" data-structure-item="${e(r.name)}" aria-pressed="${r.name === m.selected}">${e(r.name)}</button></th><td class="number">${num(finite(r.value) ? r.value / 1000 : null)}</td><td class="number">${format(r.share, "PERCENT")}</td><td class="number">${change(r.changes.yoy)}</td><td class="number">${change(r.changes.ytd)}</td><td class="number">${change(r.changes.mom)}</td></tr>`).join("")}</tbody></table>`,
+    `<table class="structure-table"><thead><tr><th>Componente</th><th class="number">Saldo · S/ MM</th><th class="number">Peso</th><th class="number">YoY</th><th class="number">YTD</th><th class="number">MoM</th></tr></thead><tbody>${all.map((r) => `<tr class="${r.child ? "structure-child" : ""} ${r.name === m.selected ? "structure-selected" : ""}"><th scope="row"><div class="row-title"><button class="text-button" data-structure-item="${e(r.name)}" data-help="${e(metricHelp(reportData.code,{id:r.name,label:r.name,unit:r.name==='Total'?'PEN_THOUSAND':'PERCENT'}))}" data-help-source="${e(metricHelpSource(reportData.code))}" aria-pressed="${r.name === m.selected}">${e(r.name)}</button></div></th><td class="number">${num(finite(r.value) ? r.value / 1000 : null)}</td><td class="number">${format(r.share, "PERCENT")}</td><td class="number">${change(r.changes.yoy)}</td><td class="number">${change(r.changes.ytd)}</td><td class="number">${change(r.changes.mom)}</td></tr>`).join("")}</tbody></table>`,
     "Estructura por componente",
     true,
   );
@@ -1132,14 +1152,14 @@ function structureView() {
 }
 function reportTabs() {
   return `<div class="pillars" aria-label="Fuentes regulatorias"><button data-report="derived" aria-pressed="${state.report === "derived"}">Ratios de análisis</button><button data-report="structure" aria-pressed="${state.report === "structure"}">Estructura</button><button data-report="concentration" aria-pressed="${state.report === "concentration"}">Concentración</button>${Object.entries(
-    {...manifest.sources,"B-2369":{title:"Castigos"}},
+    {...manifest.sources,"B-2369":{title:"Castigos"},"B-2366":{title:"Garantías"}},
   )
     .filter(
       ([c]) => !["B-2201", "B-2349", "B-2350", "B-2334", "B-2344"].includes(c),
     )
     .map(
       ([c, s]) =>
-        `<button data-report="${c}" aria-pressed="${c === state.report}">${e({ "B-2401": "Indicadores", "B-2336": "Sectores", "B-2402": "Capital", "B-2340": "Liquidez", "B-230809": "RCL", "B-234021": "RFNE", "B-2368": "Posición ME", "B-2369":"Castigos" }[c] || s.title)}</button>`,
+        `<button data-report="${c}" aria-pressed="${c === state.report}">${e({ "B-2401": "Indicadores", "B-2336": "Sectores", "B-2402": "Capital", "B-2340": "Liquidez", "B-230809": "RCL", "B-234021": "RFNE", "B-2368": "Posición ME", "B-2369":"Castigos", "B-2366":"Garantías" }[c] || s.title)}</button>`,
     )
     .join("")}</div>`;
 }
@@ -1407,7 +1427,7 @@ async function render() {
       reportCode
         ? requested.report === "structure" && requested.view === "reports"
           ? Data.loadStructure(reportCode)
-          : reportCode==="B-2369"?Data.loadStructure(reportCode):Data.load(reportCode)
+          : ["B-2369","B-2366"].includes(reportCode)?Data.loadStructure(reportCode):Data.load(reportCode)
         : Promise.resolve(null),
       requested.view === "peers"
         ? Promise.all(
@@ -1885,7 +1905,7 @@ function derivedView() {
             const v = current()?.metrics[k]?.value;
             const group=Object.entries(RATIO_GROUPS).find(([,list])=>list.includes(k));
             const header=group[1][0]===k?`<tr class="table-group"><th colspan="4" scope="rowgroup">${e(group[0])}</th></tr>`:'';
-            return header+`<tr class="${k === state.reportMetric ? "peer-highlight" : ""}"><td><button class="text-button" data-report-metric="${k}" data-help="${e(RATIO_HELP[k])}">${e(METRICS[k].label)}</button></td><td class="number">${format(v, unitOf(k))}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -1)), unitOf(k), k)}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -12)), unitOf(k), k)}</td></tr>`;
+            return header+`<tr class="${k === state.reportMetric ? "peer-highlight" : ""}"><td><button class="text-button" data-report-metric="${k}" data-help="${e(RATIO_HELP[k])}" data-help-source="${e(['mora_real','npl_writeoffs','writeoffs_12m'].includes(k)?metricHelpSource('B-2369'):['roae','roaa','npl','coverage','car'].includes(k)?SBS_GLOSSARY:metricHelpSource('B-2201'))}">${e(METRICS[k].label)}</button></td><td class="number">${format(v, unitOf(k))}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -1)), unitOf(k), k)}</td><td class="number">${deltaCell(v, metricAt(overview, k, shift(state.date, -12)), unitOf(k), k)}</td></tr>`;
           })
           .join("")}</tbody></table>`,
         "Ratios calculados",

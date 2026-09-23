@@ -1,51 +1,156 @@
+import {SBS_GLOSSARY} from './sbs-ratios.js';
+export const SBS_MANUAL='https://www.sbs.gob.pe/regulacion/plan-de-cuentas/sistema-financiero/bancos-financieras-y-otros';
+// Keys identify B-2201 rows, not account codes. Same labels need different explanations.
 const concepts = {
-  "balance:9":
-    "Recursos de disponibilidad inmediata, como caja y saldos en bancos. Ayudan a atender pagos y retiros; no equivalen por sí solos a los activos líquidos admisibles del RCL.",
-  "balance:17":
-    "Inversiones después de ajustes y provisiones. Su liquidez y riesgo dependen del instrumento, vencimiento y clasificación contable.",
-  "balance:25":
-    "Cartera de créditos neta de provisiones y otros ajustes. Para ratios sobre créditos brutos se suman vigentes, refinanciados/reestructurados y atrasados.",
-  "balance:26":
-    "Créditos que se mantienen en situación vigente. Es una clasificación de pago; no significa que todos tengan el mismo nivel de riesgo.",
-  "balance:37":
-    "Créditos cuyas condiciones se modificaron por dificultades de pago. Junto con los atrasados forman la cartera de alto riesgo.",
-  "balance:38":
-    "Créditos vencidos más créditos en cobranza judicial. Se usan como numerador de la morosidad bajo el criterio SBS.",
-  "balance:41":
-    "Provisiones acumuladas que reducen el valor contable de la cartera. Es un saldo de balance; distinto del gasto por provisiones del periodo.",
-  "balance:59":
-    "Recursos y derechos del banco: disponible, inversiones, créditos y otros activos. Activo = pasivo + patrimonio.",
-  "balance:76":
-    "Obligaciones frente al público, incluidos depósitos y otras obligaciones. El total de depósitos excluye otras obligaciones e incorpora depósitos del sistema financiero.",
-  "balance:78":
-    "Depósitos que pueden retirarse a la vista. Son una fuente de fondeo cuya estabilidad depende del comportamiento de los depositantes.",
-  "balance:79":
-    "Depósitos de ahorro. Contribuyen al fondeo del banco; su saldo puede variar por retiros y abonos.",
-  "balance:80":
-    "Depósitos con un plazo pactado. Su costo y vencimiento influyen en el gasto financiero y la gestión de liquidez.",
-  "balance:124":
-    "Obligaciones del banco con depositantes, financiadores y otros acreedores. Compararlo con el patrimonio permite analizar el apalancamiento contable.",
-  "balance:126":
-    "Participación residual de los accionistas: activos menos pasivos. No equivale al patrimonio efectivo regulatorio.",
-  "balance:127":
-    "Aportes de los accionistas y capitalizaciones reconocidas como capital social. Es un componente del patrimonio, no el patrimonio completo.",
-  "income:9":
-    "Ingresos financieros acumulados del año. Incluyen los conceptos del estado SBS y no deben confundirse automáticamente con ingresos exclusivamente por intereses.",
-  "income:20":
-    "Costo financiero acumulado, incluido el fondeo y otros conceptos financieros. Su evolución ayuda a entender el margen del negocio.",
-  "income:34":
-    "Ingresos financieros menos gastos financieros. Mide el margen antes de provisiones de créditos directos.",
-  "income:36":
-    "Gasto acumulado por provisiones de créditos directos. Afecta el resultado del periodo; no es el saldo de provisiones del balance.",
-  "income:38":
-    "Margen financiero después de provisiones para créditos directos. Permite observar cuánto margen queda tras ese costo crediticio.",
-  "income:56":
-    "Gastos administrativos acumulados: personal, servicios y otros conceptos. En relación con ingresos o márgenes ayudan a evaluar eficiencia.",
-  "income:62":
-    "Margen operacional después de gastos administrativos. Todavía no es la utilidad neta: faltan otros cargos e impuestos.",
-  "income:79":
-    "Utilidad o pérdida acumulada desde enero. Para el resultado de un mes se resta el acumulado anterior; en enero el acumulado ya corresponde al mes.",
+ 'balance:9':'Dinero en caja y saldos disponibles en bancos, incluido el BCRP. Sirve para atender pagos y retiros. Parte puede estar sujeta a encaje o restricciones: disponible no significa efectivo enteramente libre.',
+ 'balance:10':'Efectivo físico del banco. Forma parte del disponible, no de los depósitos que debe a sus clientes.',
+ 'balance:11':'Saldos que el banco mantiene en otras entidades y corresponsales para pagos, liquidación y manejo de liquidez. Son activos del banco.',
+ 'balance:12':'Operaciones de compensación, como cheques recibidos cuyo cobro entre bancos está en proceso. Todavía deben liquidarse.',
+ 'balance:13':'Otros componentes del disponible que el reporte agrupa sin mayor apertura. Su disponibilidad concreta requiere revisar las notas de los estados financieros.',
+ 'balance:15':'Fondos colocados temporalmente en otras empresas financieras. Son un activo; los fondos recibidos de otros bancos se muestran en el pasivo.',
+ 'balance:17':'Portafolio de inversiones después de los ajustes y provisiones aplicables. Su riesgo y facilidad de venta dependen de los instrumentos y de su clasificación contable.',
+ 'balance:18':'Inversiones medidas a precio de mercado cuyos cambios de valor afectan los resultados. La ganancia contable no necesariamente implica una venta o entrada de efectivo.',
+ 'balance:19':'Inversiones clasificadas como disponibles para la venta. Su tratamiento de valorización y deterioro sigue el manual aplicable al periodo; no equivale a efectivo libre.',
+ 'balance:20':'Instrumentos de deuda clasificados para mantenerse hasta su vencimiento. Su saldo contable no tiene por qué coincidir con el precio al que podrían venderse hoy.',
+ 'balance:21':'Participaciones en otras empresas sobre las que existe control, influencia significativa o control conjunto. No representan créditos a clientes.',
+ 'balance:22':'Inversiones vinculadas a materias primas. Están expuestas a cambios de precio y no forman parte de la cartera de préstamos.',
+ 'balance:23':'Correcciones por deterioro de las inversiones. Reducen su valor contable; no confundir con las provisiones de créditos.',
+ 'balance:25':'Créditos directos brutos menos provisiones e ingresos aún no devengados. Brutos = vigentes + refinanciados y reestructurados + atrasados. Para morosidad se usa el saldo bruto, no este saldo neto.',
+ 'balance:26':'Cartera registrada como vigente según las reglas contables SBS. Un préstamo vigente puede tener riesgo crediticio; “vigente” no equivale a categoría Normal ni a garantía de pago.',
+ 'balance:27':'Financiamiento mediante cuentas corrientes deudoras o sobregiros. Aquí el cliente debe al banco; una cuenta corriente de depósito aparece en el pasivo.',
+ 'balance:28':'Saldo utilizado de tarjetas de crédito. La línea disponible sin utilizar es un compromiso contingente y aparece por separado.',
+ 'balance:29':'Adelantos contra documentos de cobro, como letras. El banco anticipa fondos y descuenta intereses; debe distinguirse de una simple comisión por cobranza.',
+ 'balance:30':'Financiamiento mediante adquisición de cuentas por cobrar, como facturas. El riesgo depende de quién debe pagar y de si existe recurso contra el cedente.',
+ 'balance:31':'Dinero prestado que el cliente debe devolver según el contrato. En esta fila se muestran préstamos vigentes; la cartera atrasada se presenta aparte.',
+ 'balance:32':'Leasing: el banco financia el uso de un bien mediante cuotas y normalmente una opción de compra. El saldo es financiamiento al cliente, no inmuebles de uso propio del banco.',
+ 'balance:33':'Créditos destinados a vivienda bajo la clasificación SBS. No toda operación respaldada por una hipoteca es un crédito hipotecario para vivienda: también puede financiar una empresa.',
+ 'balance:34':'Financiamientos desembolsados para operaciones de comercio exterior. Una carta de crédito todavía contingente se consulta en Contingentes, no se suma aquí automáticamente.',
+ 'balance:35':'Financiamientos pendientes de la liquidación correspondiente. El detalle de cada operación se verifica en las notas; no es sinónimo de créditos atrasados.',
+ 'balance:36':'Otras modalidades de créditos vigentes sin apertura individual en B-2201. No permite atribuir todo el importe a un producto específico.',
+ 'balance:37':'Refinanciados: cambian plazo o monto por dificultades de pago. Reestructurados: siguen un proceso formal de reestructuración. Sumados a los atrasados forman la cartera de alto riesgo (CAR).',
+ 'balance:38':'Atrasados = vencidos + cobranza judicial. Morosidad = atrasados / créditos directos brutos × 100. Es una clasificación de situación de pago; no es lo mismo que cartera pesada por categoría de riesgo.',
+ 'balance:39':'Créditos o cuotas registrados como vencidos según las reglas SBS. El umbral y si se registra la cuota o el saldo completo dependen del tipo de crédito; no basta aplicar un único número de días a toda la cartera.',
+ 'balance:40':'Créditos cuya recuperación está en un proceso judicial. Ya están incluidos en Atrasados; no sumarlos otra vez al total de cartera.',
+ 'balance:41':'Saldo acumulado para cubrir pérdidas crediticias que reduce el activo. Cobertura = provisiones / atrasados × 100. El gasto del año está en Resultados → Provisiones para créditos directos; saldo y gasto son distintos.',
+ 'balance:42':'Intereses y comisiones que aún no corresponde reconocer como ingreso. Se deducen para determinar el crédito neto presentado; no son provisiones por incobrabilidad.',
+ 'balance:44':'Derechos de cobro distintos de la cartera de créditos, netos de provisiones. Incluyen operaciones diversas según las cuentas del reporte.',
+ 'balance:46':'Intereses y otros rendimientos ya devengados, pendientes de cobro. Haber reconocido un ingreso no significa haberlo recibido en efectivo.',
+ 'balance:53':'Bienes destinados a realizarse o recibidos para recuperar deudas, después de ajustes. Un inmueble adjudicado todavía debe venderse para convertirse en efectivo.',
+ 'balance:55':'Locales, mobiliario y equipos de uso del banco, netos de depreciación y deterioro. No son créditos hipotecarios ni bienes entregados en leasing.',
+ 'balance:57':'Otros recursos y derechos no incluidos en los rubros anteriores. El agregado requiere notas para distinguir sus componentes; no se presume que todo sea líquido.',
+ 'balance:59':'Recursos y derechos del banco. Identidad contable: activo = pasivo + patrimonio. Incluye créditos netos, inversiones y disponible, con riesgos y liquidez diferentes.',
+ 'balance:76':'Recursos captados del público y otras obligaciones agrupadas en este rubro. En esta herramienta, Depósitos suma vista, ahorro, plazo, restringidos y depósitos del sistema financiero, y excluye Otras obligaciones.',
+ 'balance:78':'Depósitos del público exigibles a la vista, como cuentas corrientes. Son dinero que el banco debe al depositante, aunque para este último sean un activo.',
+ 'balance:79':'Ahorros de los clientes mantenidos en el banco. Financian parte de sus activos y pueden variar con los abonos y retiros.',
+ 'balance:80':'Depósitos del público con plazo o condiciones pactadas. En este balance incluye CTS como subcomponente; no sumar CTS de nuevo al total de esta fila.',
+ 'balance:81':'Depósitos representados por certificados bancarios o de depósito. Son parte de los depósitos a plazo en esta presentación.',
+ 'balance:82':'Dinero depositado hasta una fecha o por un plazo acordado. Su vencimiento y tasa influyen en la liquidez y en el costo de fondeo.',
+ 'balance:83':'Depósitos por compensación por tiempo de servicios (CTS), un beneficio laboral peruano. Aquí son parte de Depósitos a plazo; en otras fuentes SBS pueden aparecer por separado.',
+ 'balance:84':'Otros depósitos a plazo sin apertura en este reporte. Ya están incluidos en el subtotal Depósitos a plazo.',
+ 'balance:85':'Depósitos sujetos a restricciones de disponibilidad. Por ejemplo, un depósito afectado en garantía puede tener condiciones para su liberación.',
+ 'balance:86':'Obligaciones con el público distintas de los depósitos identificados por separado. La tarjeta Depósitos de la herramienta excluye este agregado.',
+ 'balance:87':'Obligaciones exigibles a la vista dentro de Otras obligaciones. No confundir con la fila Depósitos a la vista.',
+ 'balance:88':'Obligaciones con el público relacionadas con operaciones de inversión. No son las inversiones propias del banco que aparecen en el activo.',
+ 'balance:90':'Depósitos recibidos de otras entidades financieras y organismos internacionales. Son pasivos de fondeo; se distinguen de los depósitos del público.',
+ 'balance:91':'Depósitos a la vista recibidos de entidades financieras, no del público. El acreedor del banco es otra entidad.',
+ 'balance:92':'Depósitos de ahorro recibidos de entidades financieras dentro de este rubro. No duplicarlos con el subtotal del sistema financiero.',
+ 'balance:93':'Depósitos a plazo recibidos de entidades financieras. Son parte del fondeo institucional.',
+ 'balance:95':'Fondos obtenidos temporalmente de otros bancos para necesidades de liquidez. Son un pasivo; los fondos colocados se muestran en el activo.',
+ 'balance:97':'Financiamiento que el banco recibe de otras instituciones. No son préstamos que el banco otorga a sus clientes.',
+ 'balance:98':'Adeudos con instituciones domiciliadas en el país. Es una parte de Adeudos y obligaciones financieras.',
+ 'balance:99':'Adeudos con instituciones del exterior u organismos internacionales. El domicilio del acreedor no identifica por sí solo la moneda del préstamo.',
+ 'balance:101':'Deuda emitida por el banco sin subordinación, como bonos. Es fondeo obtenido de inversionistas; genera obligaciones de pago.',
+ 'balance:102':'Bonos emitidos para financiar operaciones de arrendamiento financiero. Son pasivos del banco, no el saldo de leasing otorgado.',
+ 'balance:103':'Instrumentos de deuda asociados al financiamiento hipotecario. Se muestran como obligaciones del emisor.',
+ 'balance:104':'Otros títulos de deuda no subordinada emitidos por el banco. El reporte agrupa instrumentos con condiciones que pueden ser diferentes.',
+ 'balance:106':'Obligaciones de pago por operaciones diversas. No corresponde sumarlas a depósitos sin conocer su naturaleza.',
+ 'balance:108':'Intereses y otros gastos devengados todavía pendientes de pago. Es el saldo adeudado al cierre; el gasto acumulado del año se ve en Resultados.',
+ 'balance:116':'Otros compromisos registrados como pasivos. El detalle requiere revisar las notas de los estados financieros.',
+ 'balance:118':'Provisiones registradas en el pasivo, incluidos créditos indirectos y otras obligaciones. Son distintas de la provisión de créditos directos que reduce el activo.',
+ 'balance:119':'Provisión acumulada por el riesgo de créditos indirectos. Esta cifra es la provisión, no el monto de cartas fianza ni líneas concedidas. Relación: Contingentes → avales/cartas y líneas no utilizadas; el gasto está en Resultados → Provisiones para créditos indirectos.',
+ 'balance:120':'Provisiones de pasivo para obligaciones diferentes de los créditos indirectos. No son depósitos ni capital regulatorio.',
+ 'balance:122':'Deuda con menor prioridad de cobro que obligaciones no subordinadas. Solo la parte que cumpla las condiciones regulatorias puede computar en patrimonio efectivo; no toda deuda subordinada es capital.',
+ 'balance:124':'Obligaciones del banco con depositantes, financiadores y otros acreedores. Pasivo / patrimonio contable mide apalancamiento; no usa el patrimonio efectivo regulatorio.',
+ 'balance:126':'Recursos contables de los accionistas: activo menos pasivo. Incluye capital, reservas y resultados. El patrimonio efectivo tiene reglas regulatorias adicionales y puede ser distinto.',
+ 'balance:127':'Capital social aportado o capitalizado por los accionistas. Es solo una parte del patrimonio.',
+ 'balance:128':'Otros aportes o conceptos de capital adicional, como primas de emisión. No equivale automáticamente al capital adicional de nivel 1 regulatorio.',
+ 'balance:129':'Utilidades u otros recursos destinados a reservas patrimoniales. No son provisiones para cubrir créditos problemáticos ni dinero separado necesariamente en caja.',
+ 'balance:130':'Ajustes reconocidos directamente en patrimonio. Pueden cambiar el patrimonio sin pasar por la utilidad neta del periodo.',
+ 'balance:131':'Utilidades o pérdidas de ejercicios anteriores pendientes de aplicar. No corresponden al resultado generado solo en el año actual.',
+ 'balance:132':'Utilidad o pérdida del ejercicio incorporada al patrimonio. Se relaciona con el Resultado neto del ejercicio en el estado de resultados.',
+ 'balance:134':'Suma de pasivo y patrimonio. Debe coincidir con el activo total; no es un recurso adicional que deba sumarse a este.',
+ 'balance:136':'Compromisos fuera de balance. B-2201 reúne créditos indirectos, derivados y otros contingentes: este total no debe usarse íntegro como créditos indirectos. Busca las filas de avales/cartas y líneas no utilizadas.',
+ 'balance:137':'Créditos indirectos: el banco asume compromisos de pago por su cliente, por ejemplo una carta fianza. Si debe honrarla, puede surgir un crédito directo contra ese cliente. Esta fila no incluye las líneas no utilizadas, que aparecen debajo.',
+ 'balance:138':'Créditos indirectos: compromisos aprobados aún no usados por el cliente. Ejemplo: una línea de 100 con 60 usados deja 40 sin utilizar; solo los 60 desembolsados son crédito directo. Ejemplo ilustrativo.',
+ 'balance:139':'Compromisos de derivados como forwards, swaps u opciones. Su importe contingente no es una pérdida ni un crédito desembolsado; no debe añadirse automáticamente a los créditos indirectos.',
+ 'balance:140':'Otros compromisos contingentes sin apertura individual. No permite asumir que todos sean créditos indirectos.',
+ 'income:9':'Ingresos del negocio financiero reconocidos en el año: rendimientos y otros conceptos de esta sección. Incluyen más que intereses y no equivalen a cobros de efectivo.',
+ 'income:13':'Ingresos generados por los créditos directos. No es el saldo de préstamos: consulta ese saldo en el activo del balance.',
+ 'income:14':'Ganancias por cambios en el valor de inversiones reconocidos en resultados. Pueden existir sin que el instrumento haya sido vendido.',
+ 'income:15':'Ganancias por participaciones en subsidiarias, asociadas o negocios conjuntos. No son intereses de préstamos.',
+ 'income:16':'Resultado positivo por variaciones del tipo de cambio. No equivale a crecimiento de saldos por nuevas operaciones.',
+ 'income:17':'Ganancias reconocidas por derivados. No representan su valor nocional o importe contingente.',
+ 'income:20':'Costo del fondeo y otros gastos financieros. Incluye conceptos distintos de los intereses; se resta de ingresos financieros para obtener el margen bruto.',
+ 'income:27':'Pérdidas de valorización de inversiones reconocidas en resultados. Revisar junto con ganancias y provisiones por deterioro, que son conceptos diferentes.',
+ 'income:28':'Pérdidas por participaciones en subsidiarias, asociadas o negocios conjuntos. Se distinguen del riesgo de la cartera de créditos.',
+ 'income:29':'Primas que paga el banco al Fondo de Seguro de Depósitos. Es un gasto de la entidad, no el importe de depósitos asegurados.',
+ 'income:30':'Resultado negativo por movimientos del tipo de cambio. Se analiza junto con la ganancia cambiaria y la posición en moneda extranjera.',
+ 'income:31':'Pérdidas reconocidas por derivados. No son iguales al valor nocional de los contratos.',
+ 'income:34':'Ingresos financieros − gastos financieros. Muestra el margen previo a provisiones de créditos directos.',
+ 'income:36':'Gasto por provisiones de créditos directos acumulado del año. Afecta resultados; la provisión acumulada al cierre está en el balance. Tampoco equivale al flujo de castigos.',
+ 'income:38':'Margen financiero bruto − provisiones para créditos directos. Es el margen restante después de este costo crediticio.',
+ 'income:40':'Ingresos por servicios, como comisiones. Permiten distinguir la actividad de servicios del margen financiero.',
+ 'income:42':'Ingresos por servicios vinculados a créditos indirectos, como comisiones de cartas fianza. Esta cifra es ingreso, no exposición contingente ni provisión.',
+ 'income:43':'Ingresos por administrar bienes o recursos por encargo. El patrimonio administrado de terceros no se convierte por ello en un activo propio del banco.',
+ 'income:46':'Costos asociados a los servicios financieros. Se restan de ingresos por servicios para obtener el margen neto de servicios.',
+ 'income:48':'Gastos de servicios asociados a créditos indirectos. No son el gasto de provisiones de esos créditos, presentado en otra fila.',
+ 'income:49':'Gastos relacionados con fideicomisos y comisiones de confianza. Se analizan frente a los ingresos de esos servicios.',
+ 'income:52':'Ganancia o pérdida al vender cartera. No es el precio total de la venta ni el importe de créditos transferidos.',
+ 'income:54':'Margen financiero neto + ingresos por servicios − gastos por servicios + resultado por venta de cartera. Es previo a gastos administrativos.',
+ 'income:56':'Costo de personal, directorio, servicios de terceros e impuestos y contribuciones de esta sección. Gasto operativo, en el indicador SBS, añade depreciación y amortización.',
+ 'income:57':'Costo del personal reconocido en el año. Es gasto, no número de trabajadores ni remuneración promedio.',
+ 'income:58':'Gastos del directorio. Forman parte de los gastos administrativos.',
+ 'income:59':'Servicios contratados a proveedores externos. Se incluye en gastos administrativos.',
+ 'income:60':'Impuestos y contribuciones incluidos en administración. El impuesto a la renta se presenta por separado más adelante.',
+ 'income:62':'Margen operacional − gastos administrativos. Aún faltan otras provisiones, depreciación, amortización e impuesto a la renta para llegar a la utilidad neta.',
+ 'income:64':'Agrupa cargos por deterioro, provisiones de indirectos y otros activos, depreciación y amortización. Las provisiones de créditos directos ya se descontaron en el margen financiero neto.',
+ 'income:65':'Gasto por provisiones de créditos indirectos reconocido en el año. El saldo acumulado está en Balance → Provisiones → Créditos indirectos; los compromisos aparecen en Contingentes.',
+ 'income:66':'Gasto por deterioro de inversiones. No equivale a toda pérdida por variación de su precio.',
+ 'income:67':'Gasto por riesgo de incobrabilidad de cuentas por cobrar distintas de los créditos directos.',
+ 'income:68':'Gasto por deterioro de bienes recibidos o destinados a realización. No es un castigo de cartera de préstamos.',
+ 'income:69':'Otras provisiones de resultados no detalladas por separado. Su naturaleza concreta requiere las notas.',
+ 'income:70':'Distribución contable del costo de activos físicos a lo largo de su vida útil. Reduce el resultado sin implicar un pago de efectivo en ese momento.',
+ 'income:71':'Distribución contable del costo de intangibles u otros activos amortizables. Aquí no significa devolución del capital de un préstamo.',
+ 'income:73':'Otros ingresos y gastos no agrupados en los márgenes anteriores. El saldo neto puede ocultar movimientos distintos; revisa las notas.',
+ 'income:75':'Resultado después de los cargos anteriores y antes del impuesto a la renta. No equivale al efectivo generado por el banco.',
+ 'income:77':'Impuesto a la renta reconocido en resultados. Puede diferir del impuesto pagado en efectivo durante el periodo.',
+ 'income:79':'Utilidad o pérdida acumulada desde enero. Resultado del mes = acumulado actual − acumulado anterior (enero ya es mensual). Para ROAE/ROAA se obtiene la utilidad de doce meses, no se multiplica un mes por doce.',
 };
+const relatedSources=new Set(['balance:9','balance:15','balance:25','balance:26','balance:37','balance:38','balance:39','balance:40','balance:41','balance:59','balance:90','balance:95','balance:124','balance:126','balance:127','balance:132','balance:137','balance:138','income:56','income:79']);
+export function accountHelpSource(r){return relatedSources.has(r.id)?SBS_GLOSSARY:SBS_MANUAL;}
 export function accountTheory(r) {
-  return `${r.path?.join(" › ") || r.label}. ${concepts[r.id] || `Componente de ${r.path?.slice(0, -1).join(" › ") || r.group || "los estados financieros"}. Mantén su jerarquía: sumar un subtotal con sus componentes duplica el importe.`} ${r.kind === "ytd" ? "Resultado acumulado desde enero; compara el mismo mes entre años." : "Saldo al cierre del periodo."} Fuente B-2201; MN y ME están expresadas en soles. La tabla muestra S/ MM.`;
+ let meaning=concepts[r.id];
+ const row=Number(r.id?.split(':')[1]);
+ if(!meaning&&r.statement==='balance'&&row>=47&&row<=51)meaning=`Rendimientos devengados pendientes de cobro originados en ${r.label.toLowerCase()}. Es el rendimiento por cobrar, no el principal del activo que lo genera.`;
+ if(!meaning&&r.statement==='balance'&&row>=109&&row<=114)meaning=`Intereses y gastos pendientes de pago por ${r.label.toLowerCase()}. Es un pasivo acumulado, no el saldo principal del fondeo ni el gasto anual.`;
+ if(!meaning&&r.statement==='income'&&row>=10&&row<=12)meaning=`Rendimientos generados por ${r.label.toLowerCase()}. Es ingreso del periodo; el saldo del activo que lo genera se ve en el balance.`;
+ if(!meaning&&r.statement==='income'&&row>=21&&row<=26)meaning=`Costo financiero de ${r.label.toLowerCase()}. Es gasto del periodo; el saldo principal de la obligación se ve en el pasivo.`;
+ if(!meaning&&['income:18','income:32','income:44','income:50'].includes(r.id))meaning=`Otros ${r.path?.[0]?.toLowerCase()||'conceptos'} que la fuente no desagrega. No permite inferir la composición completa sin las notas del banco.`;
+ if(!meaning&&r.id==='income:41')meaning='Ingresos por servicios vinculados a cuentas por cobrar. No es el saldo pendiente de cobro del balance.';
+ if(!meaning&&r.id==='income:47')meaning='Gastos por servicios vinculados a cuentas por pagar. No es el saldo de la obligación del balance.';
+ meaning ||= 'Rubro agregado de la fuente. B-2201 no ofrece una apertura suficiente para atribuirle una operación específica; consulta su jerarquía y las notas del banco.';
+ const base=relatedSources.has(r.id)?'Base: Glosario SBS. Lectura y ejemplos explicativos.':'Guía de lectura bancaria según el rubro B-2201; consultar el Manual SBS para su dinámica contable.';
+ return `${meaning}\n\n${r.kind==='ytd'?'Resultados acumulados desde enero.':'Saldo al cierre.'} MN y ME expresadas en soles; vista en S/ MM.\n${base}`;
 }
+export const ACCOUNT_ALIASES={
+ 'balance:25':'creditos directos colocaciones cartera bruta cartera neta',
+ 'balance:37':'car refinanciacion reestructuracion',
+ 'balance:38':'mora morosidad atrasados',
+ 'balance:41':'cobertura provisiones acumuladas',
+ 'balance:137':'creditos indirectos creditos contingentes carta fianza aval carta credito',
+ 'balance:138':'creditos indirectos lineas disponibles no desembolsados',
+ 'balance:119':'provisiones creditos indirectos saldo',
+ 'income:42':'comisiones creditos indirectos',
+ 'income:65':'gasto provisiones creditos indirectos',
+ 'balance:136':'compromisos fuera de balance',
+};

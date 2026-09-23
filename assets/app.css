@@ -3218,3 +3218,11 @@ button.text-button.has-table-help { cursor:pointer; }
 .report-page-group h5{display:flex;justify-content:space-between;margin:0 0 10px;font-size:13px}
 .report-page-group h5 span{font-size:11px;font-weight:400;color:var(--muted)}
 .report-page-group .report-attachment{margin-bottom:8px}
+
+/* Source-backed help stays outside table layout and remains readable on touch. */
+.table-help-tooltip { pointer-events:auto; max-height:calc(100dvh - 24px); overflow:auto; overscroll-behavior:contain; }
+.table-help-body { white-space:pre-line; }
+.table-help-source { display:inline-block; margin-top:9px; color:#a8d9fc; text-decoration:underline; text-underline-offset:3px; }
+.table-help-source:focus-visible { outline:2px solid #a8d9fc; outline-offset:3px; }
+.guarantee-table .structure-child th:first-child { padding-left:28px; font-weight:400; }
+.table-help-tooltip { width:min(370px,calc(100vw - 20px)); box-sizing:border-box; }

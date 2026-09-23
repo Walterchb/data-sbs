@@ -99,7 +99,7 @@ export function filterTree(catalog, query, collapsed = new Set()) {
     for (const r of catalog)
       if (
         tokens.every((t) =>
-          norm([...r.path, r.code || "", r.reference].join(" ")).includes(t),
+          norm([...r.path, r.code || "", r.reference, r.aliases || ""].join(" ")).includes(t),
         )
       ) {
         selected.add(r.id);

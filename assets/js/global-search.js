@@ -1,3 +1,4 @@
+import {accountTheory,ACCOUNT_ALIASES} from './account-theory.js';
 import { CAPITAL_CALCULATED } from "./capital.js";
 import { norm } from "./analytics.js";
 import { escape as e, month } from "./format.js";
@@ -145,7 +146,8 @@ export function buildEntries(financial, reports) {
     entries.push({
       title: r.label,
       path: `Cuentas SBS · ${r.path.join(" › ")}`,
-      description: `${r.reference}. ${r.kind === "ytd" ? "Acumulado desde enero" : "Saldo de cierre"}.`,
+      description: accountTheory(r),
+      aliases: ACCOUNT_ALIASES[r.id] || "",
       target: { view: "balance", account: r.id, statement: r.statement },
     });
   for (const [code, report] of Object.entries(reports)) {

@@ -1,8 +1,10 @@
+import {officialMetricTheory,componentTheory} from './metric-theory.js';
 import {RETURN_HELP,MORA_HELP,ADJUSTED_NPL_HELP} from './sbs-ratios.js';
 import { norm, finite, shift, ratio } from "./analytics.js";
 export const REPORT_NAMES = {
   "B-2401": "Indicadores",
   "B-2369": "Castigos",
+  "B-2366": "Garantías",
   "B-2336": "Sectores",
   "B-2402": "Capital",
   "B-2340": "Liquidez",
@@ -199,6 +201,8 @@ export function reportRows(data, p, query = "") {
 }
 
 export function metricHelp(code, row) {
+  const specific=officialMetricTheory(code,row);
+  if(specific)return specific;
   const group = metricGroup(code, row);
   const theory = {
     Solvencia:
@@ -215,6 +219,6 @@ export function metricHelp(code, row) {
       "Describe la capacidad para atender obligaciones de corto plazo. Importa la moneda y el horizonte, además del porcentaje.",
   };
   return (
-    sourceMetricHelp(code, row) + (theory[group] ? " " + theory[group] : "")
+    componentTheory(code,row) + sourceMetricHelp(code, row) + (theory[group] ? " " + theory[group] : "")
   );
 }

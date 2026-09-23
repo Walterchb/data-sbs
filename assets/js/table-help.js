@@ -23,10 +23,13 @@ const headers = {
   MN: "Moneda nacional. En los EEFF B-2201 se expresa en soles.",
   ME: "Moneda extranjera. B-2201 expresa su equivalente en soles; RCL publica ME en dólares. Respeta la unidad indicada en cada dato.",
 };
+let closeTimer;
+const deferClose=()=>{clearTimeout(closeTimer);closeTimer=setTimeout(close,140);};
 let tooltip,
   active,
   pinned = false;
 function close() {
+  clearTimeout(closeTimer);
   if (!tooltip) return;
   tooltip.hidden = true;
   active?.removeAttribute("aria-describedby");
@@ -44,11 +47,22 @@ function display(el, pin = false) {
     tooltip.className = "table-help-tooltip";
     tooltip.role = "tooltip";
     document.body.append(tooltip);
+    tooltip.addEventListener("pointerenter",()=>clearTimeout(closeTimer));
+    tooltip.addEventListener("pointerleave",()=>{if(!pinned)deferClose();});
+    tooltip.addEventListener("focusin",()=>clearTimeout(closeTimer));
+    tooltip.addEventListener("focusout",()=>{if(!pinned)deferClose();});
   }
   close();
   active = el;
   pinned = pin;
-  tooltip.textContent = el.dataset.help;
+  const body=document.createElement("div");
+  body.className="table-help-body";body.textContent=el.dataset.help.trim();
+  tooltip.replaceChildren(body);
+  const source=el.dataset.helpSource;
+  if(source && /^https:\/\/(www\.)?sbs\.gob\.pe\//.test(source)){
+    const link=document.createElement("a");link.href=source;link.target="_blank";link.rel="noopener";
+    link.textContent="Consultar fuente SBS ↗";link.className="table-help-source";tooltip.append(link);
+  }
   tooltip.hidden = false;
   el.setAttribute("aria-describedby", tooltip.id);
   const r = el.getBoundingClientRect(),
@@ -85,6 +99,7 @@ export function enhanceTableHelp(root) {
       b.innerHTML =
         '<svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor"/><path d="M10 9v5m0-8v1" stroke="currentColor" stroke-width="1.5"/></svg>';
       b.dataset.help = cell.dataset.help;
+      if(cell.dataset.helpSource)b.dataset.helpSource=cell.dataset.helpSource;
       b.setAttribute("aria-label", "Definición de " + cell.textContent);
       cell.after(b);
       if (cell.parentElement.classList.contains("row-title"))
@@ -95,21 +110,22 @@ export function enhanceTableHelp(root) {
   root.dataset.helpBound = "true";
   root.addEventListener("pointerover", (ev) => {
     if (ev.pointerType === "touch" || pinned) return;
-    display(ev.target.closest("[data-help]"));
+    const el=ev.target.closest("[data-help]");
+    if(el){clearTimeout(closeTimer);if(el!==active)display(el);}else deferClose();
   });
   root.addEventListener("pointerout", (ev) => {
     if (
       !pinned &&
       !ev.target.closest("[data-help]")?.contains(ev.relatedTarget)
     )
-      close();
+      deferClose();
   });
   root.addEventListener(
     "focusin",
     (ev) => !pinned && display(ev.target.closest("[data-help]")),
   );
   root.addEventListener("focusout", () => {
-    if (!pinned) close();
+    if (!pinned) deferClose();
   });
   root.addEventListener("click", (ev) => {
     const el = ev.target.closest(".table-help-button,th[data-help]");
@@ -119,7 +135,7 @@ export function enhanceTableHelp(root) {
     if (ev.key === "Escape") close();
   });
   document.addEventListener("click", (ev) => {
-    if (!ev.target.closest("[data-help]")) close();
+    if (!ev.target.closest("[data-help],#table-help-tooltip")) close();
   });
   window.addEventListener(
     "scroll",
@@ -132,4 +148,5 @@ export function enhanceTableHelp(root) {
     },
     true,
   );
+  window.addEventListener("resize",close);
 }

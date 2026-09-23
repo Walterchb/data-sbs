@@ -217,6 +217,9 @@ def extract(raw,url,code,workbook,date):
     if code=='B-2369':
         from writeoff_parser import extract_writeoffs
         extract_writeoffs(sheets,p)
+    elif code=='B-2366':
+        from guarantee_parser import extract_guarantees
+        extract_guarantees(sheets,p)
     elif code in ('B-2401','B-2336'):extract_columns(sheets,p,code)
     elif code in ('B-2340','B-2402','B-2368'):extract_rows(sheets,p,code)
     elif code in ('B-230809','B-234021'):extract_dedicated(sheets,p,code)

@@ -1,5 +1,5 @@
 import {sourceReference} from './report-reference.js';
-import { accountTheory } from "./account-theory.js";
+import { accountTheory, accountHelpSource, ACCOUNT_ALIASES } from "./account-theory.js";
 import { escape, format, num, month } from "./format.js";
 import {
   finite,
@@ -40,7 +40,7 @@ export function accountTable(data, state) {
         (current?.values[b.id]?.[2] ?? -Infinity) -
         (current?.values[a.id]?.[2] ?? -Infinity),
     );
-  catalog = filterTree(treeOrder(catalog), state.query, state.collapsed);
+  catalog = filterTree(treeOrder(catalog).map(r=>({...r,aliases:ACCOUNT_ALIASES[r.id]||""})), state.query, state.collapsed);
   if (state.mainOnly) catalog = catalog.filter((r) => r.depth <= 1);
   if (!catalog.length)
     return {
@@ -84,7 +84,7 @@ export function accountTable(data, state) {
     const expanded = Boolean(state.query.trim()) || !state.collapsed.has(r.id);
     const title =
       r.path.join(" › ") + (state.showReferences ? ` · ${sourceReference(r)}` : "");
-    const cell = `<td><div class="account-label" style="--depth:${r.depth}">${hasChildren ? `<button class="tree-toggle" data-collapse="${r.id}" aria-expanded="${expanded}" aria-label="${escape((expanded ? "Plegar " : "Expandir ") + r.label)}" ${state.query.trim() ? 'disabled title="La búsqueda muestra las coincidencias con sus padres"' : ""}><i class="fa-solid fa-chevron-${expanded ? "down" : "right"}" aria-hidden="true"></i></button>` : '<span class="tree-spacer" aria-hidden="true"><i class="fa-solid fa-circle"></i></span>'}<div class="row-title"><button class="text-button" data-account="${r.id}" data-help="${escape(accountTheory(r))}"><span class="cell-text">${escape(r.label)}</span></button>${state.showReferences ? `<small class="row-reference"><span class="cell-text">${escape(sourceReference(r))}</span></small>` : ""}</div></div></td>`;
+    const cell = `<td><div class="account-label" style="--depth:${r.depth}">${hasChildren ? `<button class="tree-toggle" data-collapse="${r.id}" aria-expanded="${expanded}" aria-label="${escape((expanded ? "Plegar " : "Expandir ") + r.label)}" ${state.query.trim() ? 'disabled title="La búsqueda muestra las coincidencias con sus padres"' : ""}><i class="fa-solid fa-chevron-${expanded ? "down" : "right"}" aria-hidden="true"></i></button>` : '<span class="tree-spacer" aria-hidden="true"><i class="fa-solid fa-circle"></i></span>'}<div class="row-title"><button class="text-button" data-account="${r.id}" data-help="${escape(accountTheory(r))}" data-help-source="${escape(accountHelpSource(r))}"><span class="cell-text">${escape(r.label)}</span></button>${state.showReferences ? `<small class="row-reference"><span class="cell-text">${escape(sourceReference(r))}</span></small>` : ""}</div></div></td>`;
     const vals = history
       ? dates
           .map(
