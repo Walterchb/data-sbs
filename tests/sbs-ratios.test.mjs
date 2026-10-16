@@ -32,7 +32,7 @@ test('SBS ratios require exact months; null is not zero and local castigos are n
  const p=result.periods.find(p=>p.date==='2026-06');
  assert.ok(p.values.c2fc8dfb2b1132c2>0);assert.ok(p.calculated.c2fc8dfb2b1132c2);
  assert.equal(p.values.b0a34c3fc7712c6e,null);assert.equal(p.values['calc:mora_real'],null);
- assert.equal(p.values['37473705943c6830'],read('reports/B-2340.json').periods.at(-1).peers.system['868f609caf5bd530']);
+ assert.equal(p.values['37473705943c6830'],read('reports/B-2340.json').periods.find(source=>source.date===p.date).peers.system['868f609caf5bd530']);
  assert.equal(official.periods.at(-1).peers.system,undefined,'original data not mutated');
 });
 test('peer shares use exact official domestic and foreign totals and never divide ratios',()=>{

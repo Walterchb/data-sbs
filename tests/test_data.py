@@ -1,4 +1,5 @@
 import copy
+import gzip
 from datetime import date
 import json
 from pathlib import Path
@@ -82,6 +83,10 @@ class HealthTests(unittest.TestCase):
         self.assertIn('2026-06',h['missing_periods'])
         self.assertTrue(any('desactualizada' in w for w in h['warnings']))
         self.assertEqual(inspect('B-2401',[],date.today())['status'],'ERROR')
+    def test_future_period_is_rejected(self):
+        p=parse('B-2401')
+        self.assertIn('Fecha futura',inspect('B-2401',[p],date(2026,6,30))['errors'])
+        self.assertNotIn('Fecha futura',inspect('B-2401',[p],date(2026,7,31))['errors'])
     def test_wrong_statement_schema_fails(self):
         p=parse('B-2201');p['banbif']['balance'][0]['label']='NUEVO FORMATO'
         with self.assertRaises(ValueError):normalize_financial(p)
@@ -90,8 +95,32 @@ class HealthTests(unittest.TestCase):
         self.assertTrue(inspect('B-2201',[p],date.today())['errors'])
         p=parse('B-2201');p['banbif']['balance'][0]['mn']+=10000
         self.assertTrue(inspect('B-2201',[p],date.today())['errors'])
+    def test_build_accepts_monthly_rollover_and_rejects_future_or_invalid_data(self):
+        # A frozen source snapshot, never the moving production hub.
+        db=json.loads(gzip.decompress((ROOT/'tests/fixtures/build-july-2026.json.gz').read_bytes()))
+        for code, periods in [('B-2201',db['financial']['periods']),('B-2401',db['reports']['B-2401']['periods'])]:
+            next_period=copy.deepcopy(periods[-1])
+            def advance(value):
+                if isinstance(value,dict):return {k:advance(v) for k,v in value.items()}
+                if isinstance(value,list):return [advance(v) for v in value]
+                if isinstance(value,str):return value.replace('2026-07-31','2026-08-31')
+                return value
+            periods.append(advance(next_period))
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)
+            self.assertEqual(build(db,out,date(2026,9,7))['errors'],0)
+            overview=json.loads((out/'overview.json').read_text())
+            self.assertEqual(overview['latest_period'],'2026-08')
+            self.assertEqual([p['date'] for p in overview['periods']],['2026-07','2026-08'])
+            before=(out/'overview.json').read_bytes()
+            self.assertGreater(build(db,out,date(2026,7,31))['errors'],0)
+            self.assertEqual((out/'overview.json').read_bytes(),before)
+            db['financial']['periods'].append(copy.deepcopy(db['financial']['periods'][-1]))
+            self.assertGreater(build(db,out,date(2026,9,7))['errors'],0)
+            self.assertEqual((out/'overview.json').read_bytes(),before)
+
     def test_build_idempotent_and_fails_without_replacing_data(self):
-        db=json.loads((ROOT/'data/hub.json').read_text())
+        db=json.loads(gzip.decompress((ROOT/'tests/fixtures/build-july-2026.json.gz').read_bytes()))
         with tempfile.TemporaryDirectory() as tmp:
             out=Path(tmp);result=build(db,out,date(2026,9,7));self.assertEqual(result['errors'],0)
             before={str(f.relative_to(out)):f.read_bytes() for f in out.rglob('*.json')}

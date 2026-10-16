@@ -24,7 +24,13 @@ class GuaranteesTests(unittest.TestCase):
  def test_all_months_reconcile_with_independent_financial_credit_totals(self):
   report=json.loads((ROOT/'data/reports/B-2366.json').read_text());fin=json.loads((ROOT/'data/financial.json').read_text());by_date={p['date']:p for p in fin['periods']}
   total=next(r['id'] for r in report['catalog'] if r['label']=='Total créditos directos')
-  self.assertEqual(len(report['periods']),67)
+  dates=[p['date'] for p in report['periods']]
+  self.assertTrue(dates)
+  self.assertEqual(dates,sorted(set(dates)))
+  start=json.loads((ROOT/'config/sources.json').read_text())['B-2366']['start_year']
+  y,m=map(int,dates[-1].split('-'))
+  expected=[f'{i//12:04d}-{i%12+1:02d}' for i in range(start*12,y*12+m)]
+  self.assertEqual(dates,expected, 'Missing or extra monthly observations')
   for p in report['periods']:
    v=by_date[p['date']]['values'];credit=sum(v['balance:'+str(n)][2] for n in (26,37,38))
    self.assertAlmostEqual(credit,p['values'][total],delta=.1,msg=p['date'])

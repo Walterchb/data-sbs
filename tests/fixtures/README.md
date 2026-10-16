@@ -12,3 +12,35 @@ Celdas reales de los ocho archivos utilizados para verificar regresiones. Se eli
 | [B-2368.json](B-2368.json) | [2026-06-30](https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Junio/B-2368-jn2026.XLS) | `df4e3f7f1998110c781cb0c169483eea04dab10eab8de38346c5b2ae0ef105c1` |
 | [B-230809.json](B-230809.json) | [2026-06-30](https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Junio/B-230809-jn2026.XLS) | `05c658b9e0b51326ccb6a027a99d7185d458e83a73bb43a07ede6eabe95e5b4b` |
 | [B-234021.json](B-234021.json) | [2026-07-31](https://intranet2.sbs.gob.pe/estadistica/financiera/2026/Julio/B-234021-jl2026.XLS) | `f0a1b273f6f5763ec3ca4d16fb229b9545be0be163f869ed18f50d06962c8f2d` |
+
+## Build snapshot (July 2026)
+
+`build-july-2026.json.gz` is a deterministic gzip (`mtime=0`) snapshot of parsed
+source observations from commit `2c0156b4f7cd2d1a23dff3685eeffe1687913270`.
+It contains July 2026 financial/source observations (June for sources without
+July), including supplemental reports. Download sync diagnostics are omitted.
+It is test input, not a publication or a substitute for current SBS data.
+Build/idempotence/atomic-failure tests use this fixed snapshot with a fixed clock.
+The rollover test clones observations into August as explicitly synthetic data;
+it does not claim those values were published by SBS. Live reconciliation,
+continuity and frontend smoke tests still run against generated `data/`.
+
+Recreate it from that commit in a clean checkout (Python standard library only):
+
+```python
+import gzip, json, sys
+from pathlib import Path
+sys.path.insert(0, 'scripts')
+from supplemental_data import with_supplemental_reports
+source = with_supplemental_reports(json.loads(Path('data/hub.json').read_text()))
+source['financial']['periods'] = [p for p in source['financial']['periods']
+                                  if p['date'] == '2026-07-31']
+for report in source['reports'].values():
+    month = '2026-07' if any(p['date'][:7] == '2026-07' for p in report['periods']) else '2026-06'
+    report['periods'] = [p for p in report['periods'] if p['date'][:7] == month]
+    report.pop('sync', None)
+raw = (json.dumps(source, ensure_ascii=False, separators=(',', ':')) + '\n').encode()
+Path('tests/fixtures/build-july-2026.json.gz').write_bytes(gzip.compress(raw, mtime=0))
+```
+
+SHA-256 (gzip bytes): `d3e1e5bb3161f636eb9bfb1666a624a36b7fa0867d4c3606ddc8a9ee6f30b9d7`.

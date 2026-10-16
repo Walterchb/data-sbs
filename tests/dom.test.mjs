@@ -20,6 +20,20 @@ window.HTMLDialogElement.prototype.close = function () {
   this.dispatchEvent(new window.Event("close"));
 };
 window.matchMedia = () => ({ matches: true });
+// Live-data smoke tests derive the default cut and rendered amounts from the
+// loaded overview. Historical selections below remain explicit regression cases.
+const overview = JSON.parse(await readFile(new URL('data/overview.json', root), 'utf8'));
+const latest = overview.periods.find(p => p.date === overview.latest_period);
+assert.ok(latest, 'Overview latest_period must reference an observation');
+const latestDate = latest.date;
+const number = value => new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
+const latestAssets = number(latest.metrics.assets.value / 1000);
+const latestNpl = number(latest.metrics.npl.value) + '%';
+const monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const [latestYear, latestMonth] = latestDate.split('-').map(Number);
+const latestLong = `${monthNames[latestMonth - 1]} ${latestYear}`;
+const latestShort = `${monthNames[latestMonth - 1].slice(0, 3).replace(/^./, c => c.toUpperCase())} ${latestYear}`;
+const latestEnd = `${new Date(Date.UTC(latestYear, latestMonth, 0)).getUTCDate()}/${String(latestMonth).padStart(2, '0')}/${latestYear}`;
 const requests = [];
 let failPath = "";
 let delayedPath = "",
@@ -76,9 +90,9 @@ async function change(id, value) {
 await ready();
 
 test("all views and controls render with real data and no JS errors", async () => {
-  assert.equal(document.getElementById("period").value, "2026-07");
-  assert.ok(document.body.textContent.includes("23,316.79"));
-  assert.ok(document.body.textContent.includes("3.09%"));
+  assert.equal(document.getElementById("period").value, latestDate);
+  assert.ok(document.body.textContent.includes(latestAssets));
+  assert.ok(document.body.textContent.includes(latestNpl));
   assert.ok(
     !requests.some((p) => p.includes("hub.json")),
     "Large raw hub must not load in browser",
@@ -126,7 +140,7 @@ test("all views and controls render with real data and no JS errors", async () =
   await change("table-sort", "hierarchy");
   await click("#expand-all");
   await click('[data-account="balance:41"]');
-  assert.ok(document.body.textContent.includes("928.86"));
+  assert.ok(document.body.textContent.includes(number(latest.metrics.provisions.value / 1000)));
   await change("table-view", "annual");
   assert.ok(document.querySelector(".history-table"));
   await change("table-view", "monthly");
@@ -176,10 +190,16 @@ test("all views and controls render with real data and no JS errors", async () =
       await click("#detail-close");
       await click("#last");
     }
-    if (code === "B-234021")
+    if (code === "B-234021") {
+      await change("period", "2026-07");
       assert.ok(document.body.textContent.includes("105.02%"));
-    if (code === "B-2368")
+      await click("#last");
+    }
+    if (code === "B-2368") {
+      await change("period", "2026-06");
       assert.ok(document.body.textContent.includes("10.23 MM"));
+      await click("#last");
+    }
     await click('[data-range="60"]');
   }
   await click('[data-report="concentration"]');
@@ -271,7 +291,7 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   assert.ok(
     document
       .getElementById("detail-body")
-      .textContent.includes("S/ 23,316.79 MM"),
+      .textContent.includes(`S/ ${latestAssets} MM`),
   );
   assert.equal(document.getElementById("detail-title").textContent, "ACTIVOS");
   await click("#detail-close");
@@ -297,7 +317,7 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   assert.ok(document.querySelector("#detail-body table"));
   assert.equal(document.querySelectorAll("#detail-body tbody tr").length, 24);
   assert.ok(
-    document.getElementById("detail-body").textContent.includes("Jul 2026"),
+    document.getElementById("detail-body").textContent.includes(latestShort),
   );
   let copied = "";
   Object.defineProperty(window.navigator, "clipboard", {
@@ -312,11 +332,8 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   await click("#series-copy");
   assert.equal(copied.split("\r\n").length, 25);
   assert.match(copied, /Periodo\tIndicador\tValor \(S\/ MM\)/);
-  assert.match(
-    copied,
-    /31\/07\/2026\tCréditos brutos\t15692\.39\t31\/07\/2026/,
-  );
-  assert.ok(!copied.includes("15,692"));
+  assert.ok(copied.includes(`${latestEnd}\tCréditos brutos\t${(latest.metrics.credits.value / 1000).toFixed(2)}\t${latestEnd}`));
+  assert.ok(copied.split('\r\n').slice(1).every(row => !row.split('\t')[2].includes(',')), 'Export numbers must not contain thousands separators');
   assert.match(copied, /Entidad SBS/);
   assert.match(copied, /Banco Interamericano de Finanzas/);
   assert.match(
@@ -339,7 +356,7 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
       .textContent.includes("Cómo se actualiza"),
   );
   assert.ok(
-    document.getElementById("detail-body").textContent.includes("julio 2026"),
+    document.getElementById("detail-body").textContent.includes(latestLong),
   );
   assert.ok(
     document
@@ -348,8 +365,8 @@ test("compact cards reveal details, date bounds hold, and refresh is direct", as
   );
   await click('#detail-body [data-nav="health"]');
   assert.equal(document.getElementById("detail-dialog").open, false);
-  await change("period", "2030-01");
-  assert.equal(document.getElementById("period").value, "2026-07");
+  await change("period", `${latestYear + 1}-01`);
+  assert.equal(document.getElementById("period").value, latestDate);
   await change("period", "2021-01");
   assert.equal(document.getElementById("prev").disabled, true);
   const before = requests.filter((p) => p === "./data/manifest.json").length;

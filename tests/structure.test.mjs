@@ -7,6 +7,17 @@ const report = (code) =>
   JSON.parse(
     readFileSync(new URL(`../data/reports/${code}.json`, import.meta.url)),
   );
+function assertMonthlyHistory(r) {
+  const dates = r.periods.map(p => p.date);
+  assert.ok(dates.length > 0);
+  assert.deepEqual(dates, [...new Set(dates)].sort());
+  const sources = JSON.parse(readFileSync(new URL('../config/sources.json', import.meta.url)));
+  const [year, month] = dates.at(-1).split('-').map(Number);
+  const expected = [];
+  for (let i = sources[r.code].start_year * 12; i < year * 12 + month; i++)
+    expected.push(`${Math.floor(i / 12)}-${String(i % 12 + 1).padStart(2, '0')}`);
+  assert.deepEqual(dates, expected, 'History must contain every month, including new observations');
+}
 const base = {
   entity: "banbif",
   date: "2026-07",
@@ -16,7 +27,7 @@ const base = {
 test("structure preserves official totals, deposit weights and exact comparison periods", () => {
   const r = report("B-2344"),
     m = structureModel(r, base);
-  assert.equal(r.periods.length, 67);
+  assertMonthlyHistory(r);
   assert.ok(Math.abs(m.total - 16489585.034) < 0.001);
   assert.ok(
     Math.abs(m.rows.reduce((s, r) => s + r.value, 0) - m.total) < 0.001,
@@ -34,7 +45,7 @@ test("structure preserves official totals, deposit weights and exact comparison 
 test("credit situation, classification cutover and bank scope remain distinct", () => {
   const r = report("B-2334"),
     m = structureModel(r, base);
-  assert.equal(r.periods.length, 67);
+  assertMonthlyHistory(r);
   assert.ok(Math.abs(m.total - 15692393.887) < 0.001);
   const overdue = structureModel(r, { ...base, structureStatus: "Atrasados" });
   assert.ok(overdue.total > 0 && overdue.total < m.total);
@@ -106,4 +117,15 @@ test("supplemental reports load without manifest registration, reuse cache and r
   fail = true;
   await assert.rejects(Data.refresh(), /503/);
   assert.equal((await Data.loadStructure("B-2334")).version, "second");
+});
+
+test("monthly history permits growth but rejects a missing, duplicate or unordered observation", () => {
+  const r = structuredClone(report("B-2344"));
+  const [year, month] = r.periods.at(-1).date.split('-').map(Number);
+  const next = new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 7);
+  r.periods.push({...r.periods.at(-1), date: next});
+  assertMonthlyHistory(r);
+  assert.throws(() => assertMonthlyHistory({...r, periods: r.periods.slice(1)}));
+  assert.throws(() => assertMonthlyHistory({...r, periods: [...r.periods, r.periods.at(-1)]}));
+  assert.throws(() => assertMonthlyHistory({...r, periods: [...r.periods].reverse()}));
 });

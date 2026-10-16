@@ -193,7 +193,8 @@ test('capital presets use the exact entity, date and regulatory units',async()=>
  assert.ok(Math.abs(total.value-t1.value-t2.value)<1e-8);assert.equal(total.unit,'money');
  assert.ok(Math.abs(buildPreset('capital_rcg',ctx,date).value-.15046569190903158)<1e-12);
  assert.ok(Math.abs(buildPreset('capital_tier1_share',ctx,date).value-t1.value/total.value)<1e-12);
- assert.throws(()=>buildPreset('capital_total',ctx,'2026-07'),/No hay capital/);
+ const missing={...ctx,capital:{...report,periods:report.periods.filter(p=>p.date!==date)}};
+ assert.throws(()=>buildPreset('capital_total',missing,date),/No hay capital/);
  assert.throws(()=>buildPreset('capital_total',ctx,date,'1'),/Total/);
  assert.throws(()=>buildPreset('capital_total',{...ctx,capital:selectReport(report,'missing'),entity:'missing'},date),/Falta/);
  assert.notEqual(buildPreset('capital_total',{...ctx,capital:selectReport(report,'bbva'),entity:'bbva'},date).value,total.value);
@@ -216,4 +217,17 @@ test('annex shares inputs without mixing entities, dates, currencies or raw prec
  annex.formulas.forEach((f,i)=>assert.equal(evaluateFormula(parseFormula(f.expression),shared),items[i].value));
  assert.equal(formulaLabel('a+1e-3+bb',{a:'C',bb:'D'}),'C+1e-3+D');
  assert.equal(captureCalculation({name:'Mayúsculas',expression:'a/2',variables:{a:account}}).expression,'A/2');
+});
+
+test('capital availability follows observations when a new month arrives', async () => {
+ const fs=await import('node:fs');const {buildPreset}=await import('../assets/js/report-presets.js');
+ const source=JSON.parse(fs.readFileSync(new URL('../data/reports/B-2402.json',import.meta.url)));
+ const last=source.periods.at(-1), [year,month]=last.date.split('-').map(Number);
+ const next=new Date(Date.UTC(year,month,1)).toISOString().slice(0,7);
+ const ctx={capital:source,entity:'banbif',entityName:'BanBif'};
+ assert.throws(()=>buildPreset('capital_total',ctx,next),/No hay capital/);
+ const advanced={...source,periods:[...source.periods,{...last,date:next,effective:Object.fromEntries(Object.keys(last.effective).map(k=>[k,next]))}]};
+ assert.throws(()=>buildPreset('capital_total',{...ctx,capital:{...source,periods:[...source.periods,{...last,date:next}]}},next),/Falta un dato/, 'A new file date cannot legitimize stale effective dates');
+ assert.equal(buildPreset('capital_total',{...ctx,capital:advanced},next).value,buildPreset('capital_total',ctx,last.date).value);
+ assert.throws(()=>buildPreset('capital_total',{...ctx,capital:{...advanced,periods:advanced.periods.filter(p=>p.date!==last.date)}},last.date),/No hay capital/);
 });
