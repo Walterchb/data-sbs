@@ -60,6 +60,10 @@ python scripts/sync_hub.py
 
 Por defecto revisa periodos faltantes, formatos pendientes de reprocesar y los últimos meses susceptibles de revisión. Hasta cuatro descargas concurrentes. Conserva datos válidos si falla una descarga, informa errores y bloquea la publicación si la validación falla.
 
+Los reportes no tienen que llegar al mismo tiempo. Una fuente aún no publicada o un fallo de transporte conserva su última información válida, con su fecha original; no impide publicar novedades válidas de otras fuentes. Los periodos faltantes se vuelven a consultar en cada ejecución y se incorporan cuando llegan, sin duplicarlos. DATA HEALTH muestra los fallos de descarga. Los controles de estructura, fechas y conciliación siguen activos: una fuente crítica inválida o sin datos válidos sí bloquea la entrega.
+
+Los indicadores que dependen de varias fuentes permanecen sin dato cuando falta algún componente. En particular, mora con castigos exige los doce meses exactos de B-2369: no se imputa cero ni se mezcla el balance nuevo con castigos de otro mes. Las pruebas cubren fuentes desfasadas, cada mes ausente y recuperación posterior. GitHub Actions mantiene la consulta diaria; su horario puede retrasarse y no garantiza disponibilidad de la SBS.
+
 ```bash
 python scripts/sync_hub.py --refresh-all
 python scripts/sync_hub.py --reports B-2401 B-2402

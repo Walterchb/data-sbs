@@ -196,6 +196,10 @@ def build(db,output,today=None):
     today=today or date.today();health=[];out={};financial=[]
     raw=db.get('financial',{}).get('periods',[])
     health.append(inspect('B-2201',raw,today,True))
+    financial_sync=db.get('meta',{}).get('financial_sync',{})
+    if financial_sync.get('errors'):
+        health[0]['warnings'].append(f"{financial_sync['errors']} errores en la última descarga; se conservan datos previos")
+        health[0]['status']='ERROR' if health[0]['errors'] else 'WARNING'
     for p in raw:
         try:
             f=normalize_financial(p)

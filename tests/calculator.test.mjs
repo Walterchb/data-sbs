@@ -151,8 +151,16 @@ test('preset formulas reconcile with source ratios and reject missing historical
  const {withAnalysisRatios}=await import('../assets/js/analysis-ratios.js');
  const writeoffs=JSON.parse(fs.readFileSync(new URL('../data/reports/B-2369.json',import.meta.url)));
  const ctx={financial,writeoffs,entity:'banbif',entityName:'Banco Interamericano de Finanzas'};
- const date=financial.periods.at(-1).date, expected=withAnalysisRatios(overview,financial,writeoffs).periods.find(p=>p.date===date);
+ const {writeoffMonths}=await import('../assets/js/sbs-ratios.js');
+ const latest=financial.periods.at(-1).date;
+ const analysis=withAnalysisRatios(overview,financial,writeoffs);
  for(const preset of REPORT_PRESETS.filter(p=>!p.id.startsWith("capital_"))){
+  // SBS reports need not arrive together. Test dependent formulas on a complete window.
+  const date=['mora_real','npl_writeoffs'].includes(preset.id)
+   ? [...financial.periods].reverse().find(p=>writeoffMonths(writeoffs,'banbif',p.date).every(m=>Number.isFinite(m.value)))?.date
+   : latest;
+  assert.ok(date,`${preset.id}: no complete historical test window`);
+  const expected=analysis.periods.find(p=>p.date===date);
   const item=buildPreset(preset.id,ctx,date);
   assert.ok(Number.isFinite(item.value),preset.id);
   if(!preset.id.endsWith('_analytic')){
@@ -161,6 +169,7 @@ test('preset formulas reconcile with source ratios and reject missing historical
   }
  }
  assert.throws(()=>buildPreset('roe_analytic',ctx,financial.periods[0].date),/Falta/);
+ const date=latest;
  const zero={...ctx,financial:{...financial,periods:financial.periods.map(p=>p.date===date?{...p,values:{...p.values,'balance:126':[0,0,0]}}:p)}};
  assert.throws(()=>buildPreset('leverage',zero,date),/cero/);
 });

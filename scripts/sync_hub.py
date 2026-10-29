@@ -22,6 +22,10 @@ MONTH_CODES={v:k for k,v in MONTHS.items()}
 VERSION='5.0'
 
 
+class DownloadError(OSError):
+    """Transport failure, distinct from malformed downloaded data."""
+
+
 def atomic_json(path, value):
     content=json.dumps(value,ensure_ascii=False,allow_nan=False,separators=(',',':'))+'\n'
     if path.exists() and path.read_text()==content:return False
@@ -39,7 +43,7 @@ def fetch(url):
         except HTTPError as exc:
             if exc.code in (403,404):raise
             error=exc
-        except (OSError,TimeoutError) as exc:error=exc
+        except (OSError,TimeoutError) as exc:error=DownloadError(str(exc))
         if attempt==0:time.sleep(.5)
     raise error
 
@@ -94,7 +98,8 @@ def synchronize(db, args):
                 p=f.result();s['existing'][d]=p;s['updated']+=1
             except FileNotFoundError:s['missing'].append(d)
             except Exception as e:
-                s['errors'].append({'date':d,'error':str(e)[:500]})
+                kind='unavailable' if isinstance(e,(HTTPError,DownloadError)) else 'invalid'
+                s['errors'].append({'date':d,'error':str(e)[:500],'kind':kind})
                 print(f'WARNING {code} {d}: {e}',flush=True)
     failed=False
     for code,s in summaries.items():
@@ -111,7 +116,11 @@ def synchronize(db, args):
         if code=='B-2201':db['financial']={'periods':periods};db['meta']['financial_sync']=sync
         else:db.setdefault('reports',{})[code]={**source,'source':source['url'],'schema_version':VERSION,'sync':sync,'periods':periods}
         db['meta'].setdefault('source_health',{})[code]=sync
-        if code in ('B-2201','B-2401') and (s['errors'] or not valid or len(valid)!=len(periods)):failed=True
+        # A temporary source outage must not freeze other validated reports.
+        # Keep prior periods and retry on the next run; never relax parser or
+        # build validation, and never treat absent observations as zero.
+        invalid=any(e['kind']!='unavailable' for e in s['errors'])
+        if code in ('B-2201','B-2401') and (invalid or not valid or len(valid)!=len(periods)):failed=True
     db['meta']['sync_version']=VERSION
     db['meta']['latest_financial']=max((p['date'] for p in db['financial']['periods']),default=None)
     return failed
